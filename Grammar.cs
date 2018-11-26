@@ -70,11 +70,6 @@ namespace Parakeet
             return new CharRule(c);
         }
 
-        public static Rule Pattern(string s)
-        {
-            return new RegexRule(new Regex(s));
-        }
-
         public static Rule CharSet(string s)
         {
             return new CharSetRule(s);

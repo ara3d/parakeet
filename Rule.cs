@@ -73,18 +73,12 @@ namespace Parakeet
 
         public ParserState Parse(string input)
         {
-            var state = new ParserState { Input = input, Pos = 0 };
+            var state = new ParserState(input);
             if (!Match(state))
                 throw new Exception(string.Format("Rule {0} failed to match", Name));
             return state;
         }
-
-        public bool Match(string input)
-        {
-            var state = new ParserState { Input = input, Pos = 0 };
-            return Match(state);
-        }
-
+        
         public virtual Rule Init(string name)
         {
             Name = name;
@@ -193,8 +187,8 @@ namespace Parakeet
     {
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos >= state.Input.Length) return false;
-            state.Pos++;
+            if (state.AtEnd) return false;
+            state.Advance();
             return true;
         }
 
@@ -344,7 +338,7 @@ namespace Parakeet
     {
         protected override bool InternalMatch(ParserState state)
         {
-            return state.Pos == state.Input.Length;
+            return state.AtEnd;
         }
 
         public override string Definition => "_EOF_";
@@ -396,7 +390,7 @@ namespace Parakeet
         public override string Definition => $"{Child}?";
     }
 
-    public class StringRule : Rule
+    public unsafe class StringRule : Rule
     {
         readonly string s;
 
@@ -407,22 +401,24 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos + s.Length > state.Input.Length)
+            var ptr = state.Ptr;
+            if (state.Ptr + s.Length > state.End)
                 return false;
             for (var i = 0; i < s.Length; ++i)
             {
-                var c = state.Input[state.Pos + i];
-                if (c != s[i])
+                if (*state.Ptr++ != s[i])
+                {
+                    state.Ptr = ptr;
                     return false;
+                }
             }
-            state.Pos += s.Length;
             return true;
         }
 
         public override string Definition => $"\"{s}\"";
     }
 
-    public class CharRule : Rule
+    public unsafe class CharRule : Rule
     {
         public char C;
 
@@ -433,18 +429,18 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos >= state.Input.Length)
+            if (state.AtEnd)
                 return false;
-            if (state.Input[state.Pos] != C)
+            if (*state.Ptr != C)
                 return false;
-            state.Pos++;
+            state.Ptr++;
             return true;
         }
 
         public override string Definition => $"[{C}]";
     }
 
-    public class CharSetRule : Rule
+    public unsafe class CharSetRule : Rule
     {
         public readonly string Set;
 
@@ -456,20 +452,20 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos >= state.Input.Length)
-                return false;
-            var c = state.Input[state.Pos++];
+            if (state.AtEnd) return false;
+
+            var c = *state.Ptr++;
             for (var i = 0; i < Set.Length; ++i)
                 if (Set[i] == c)
                     return true;
-            state.Pos--;
+            state.Ptr--;
             return false;
         }
 
         public override string Definition => $"[{Set}]";
     }
 
-    public class CharRangeRule : Rule
+    public unsafe class CharRangeRule : Rule
     {
         public readonly char Lo;
         public readonly char Hi;
@@ -483,38 +479,18 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos >= state.Input.Length)
+            if (state.AtEnd)
                 return false;
-            var c = state.Input[state.Pos];
+            var c = *state.Ptr;
             if (c < Lo || c > Hi) return false;
-            state.Pos++;
+            state.Ptr++;
             return true;
         }
 
         public override string Definition => $"[{Lo}-{Hi}]";
     }
 
-    public class RegexRule : Rule
-    {
-        readonly Regex re;
-
-        public RegexRule(Regex re)
-        {
-            this.re = re;
-        }
-
-        protected override bool InternalMatch(ParserState state)
-        {
-            var m = re.Match(state.Input, state.Pos);
-            if (m == null || m.Index != state.Pos) return false;
-            state.Pos += m.Length;
-            return true;
-        }
-
-        public override string Definition => $"regex({re})";
-    }
-
-    public class CharTableRule : Rule
+    public unsafe class CharTableRule : Rule
     {
         public readonly bool[] Table = new bool[255];
 
@@ -564,10 +540,10 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            if (state.Pos >= state.Input.Length) return false;
-            var c = state.Input[state.Pos];
+            if (state.AtEnd) return false;
+            var c = *state.Ptr;
             if (!Table[c]) return false;
-            state.Pos++;
+            state.Ptr++;
             return true;
         }
     }
