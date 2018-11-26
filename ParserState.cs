@@ -16,23 +16,6 @@ namespace Parakeet
         public readonly int NodeCount;
     }
 
-    public readonly struct ParseNode
-    {
-        public int RuleId { get { return _ruleId >= 0 ? _ruleId : -_ruleId; } }
-        public bool IsEnd {  get { return _ruleId < 0; } }
-        public readonly int Pos;
-        readonly int _ruleId;
-        public Rule Rule
-        {
-            get { return Rule.RuleLookup[RuleId]; }
-        }
-        public ParseNode(int ruleId, int pos)
-        {
-            _ruleId = ruleId;
-            Pos = pos;
-        }
-    }
-
     public unsafe class ParserState
     {
         public string Input;
@@ -108,18 +91,16 @@ namespace Parakeet
             return $"{Index}/{Input.Length}: {Context}";
         }
             
-        public ParserInternalState AddNode(Rule r, bool beginOrEnd)
+        public int AddNode(Rule r)
         {
-            var state = GetState();
             var n = NodeCount++;
             Debug.Assert(n <= Nodes.Count, "NodeCount should never be more than the number of valid nodes");
-            var index = beginOrEnd ? r.Index : -r.Index;
-            var node = new ParseNode(index, Index);
+            var node = new ParseNode(r.Index, Index);
             if (n == Nodes.Count)
                 Nodes.Add(node);
             else
                 Nodes[n] = node;
-            return state;
+            return n;
         }
     }
 }

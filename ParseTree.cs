@@ -1,151 +1,136 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Parakeet
 {
-    public class Node 
+    /// <summary>
+    /// This is the data structure stored every time a parse node is created. 
+    /// </summary>
+    public struct ParseNode
     {
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public Node()
-        {
-        }
-
-        /// <summary>
-        /// Constructor 
-        /// </summary>
-        public Node(int begin, int id, string input)
-        {
-            Begin = begin;
-            RuleId = id;
-            Input = input;
-        }
-
-        /// <summary>
-        /// Input string used to create AST node.
-        /// </summary>
-        public string Input;
-
-        /// <summary>
-        /// Index where AST content starts within Input.
-        /// </summary>
-        public int Begin;
-
-        /// <summary>
-        /// Index where AST content ends within Input .
-        /// </summary>
-        public int End;
-
-        /// <summary>
-        /// The id of the associated rule.
-        /// </summary>
         public int RuleId;
+        public int Pos;
+        public int Next;
+        public int End;
+        public ParseNode(int ruleId, int pos)
+        {
+            RuleId = ruleId;
+            Pos = pos;
+            Next = -1;
+            End = pos;
+        }
+        public Rule Rule => Rule.RuleLookup[RuleId];
+        public int Length => End - Pos;
+    }
+
+    /// <summary>
+    /// Encapsulates the list of nodes, and the input string.
+    /// </summary>
+    public class ParseTree
+    {
+        public readonly IReadOnlyList<ParseNode> Nodes;
+        public readonly string Input;
+
+        public ParseTree(string input, IReadOnlyList<ParseNode> nodes)
+        {
+            Input = input;
+            Nodes = nodes;
+        }
+
+        public IEnumerable<Node> GetRoots()
+        {
+            var node = new Node(this, 0);
+            while (node.IsValid)
+            {
+                yield return node;
+                node = node.Sibling;
+            }            
+        }
+    }
+
+    /// <summary>
+    /// This is a Node in the parse tree, intended to be consumed by the users.
+    /// </summary>
+    public readonly struct Node
+    {
+        public readonly ParseTree Tree;
+        public readonly int Id;
+
+        public Node(ParseTree tree, int id)
+        {
+            Tree = tree;
+            Id = id;
+        }
 
         /// <summary>
-        /// List of child nodes. Made public for the transformer. 
-        /// TODO: prevent the transformer from accessing this list directly.
+        /// Returns child nodes
         /// </summary>
-        public List<Node> _nodes = NoNodes;
+        public IEnumerable<Node> Nodes
+        {
+            get
+            {
+                var id = ParseNode.Next;
+                var tmp = new Node(Tree, Id + 1);
+                while (tmp.IsValid && tmp.Id != id)
+                {
+                    yield return tmp;
+                    tmp = tmp.Sibling;
+                }
+            }
+        }
 
         /// <summary>
-        /// Default list of no nodes
+        /// Returns the low-level data structure used in the list.
         /// </summary>
-        public static List<Node> NoNodes = new List<Node>();
+        public ParseNode ParseNode => Tree.Nodes[Id];
 
         /// <summary>
-        /// Safe accessor to the list of nodes.
+        /// Returns true if this node points to a valid ParseNode
         /// </summary>
-        public IReadOnlyList<Node> Nodes => _nodes ?? NoNodes;
+        public bool IsValid => Id >= 0 && Id < Tree.Nodes.Count;
+
+        /// <summary>
+        /// Returns the next sibling
+        /// </summary>
+        public Node Sibling => new Node(Tree, ParseNode.Next);
 
         /// <summary>
         /// Length of associated text. 
         /// </summary>
-        public int Length { get { return End > Begin ? End - Begin : 0; } }
+        public int Length => ParseNode.Length;
 
         /// <summary>
         /// Text associated with the parse result.
         /// </summary>
-        public string Text { get { return Input.Substring(Begin, Length); } }
-
-        /// <summary>
-        /// Text associated with the parse result.
-        /// </summary>
-        public string AbbreviatedText { get { return Length > 20 ? Input.Substring(Begin, 20) + "..." : Input.Substring(Begin, Length); } }
-
-        /// <summary>
-        /// Indicates whether there are any children nodes or not. 
-        /// </summary>
-        public bool IsLeaf { get { return Count == 0; } }                    
+        public string Text => Tree.Input.Substring(ParseNode.Pos, Length); 
 
         /// <summary>
         /// Returns the nth child node.
         /// </summary>
-        public Node this[int n]
-        {
-            get { return _nodes[n]; }
-        }
+        public Node this[int n] => Nodes.ElementAt(n);
 
         /// <summary>
         /// Returns the number of child nodes.
         /// </summary>
-        public int Count
-        {
-            get { return Nodes.Count; }
-        }
+        public int Count => Nodes.Count();
 
         /// <summary>
         /// Returns a string representation. 
         /// </summary>
         public override string ToString()
         {
-            return $"{Rule.Name}:{AbbreviatedText}";
+            return $"{Rule.Name}:{Text}";
         }
 
         /// <summary>
         /// Get the Rule that was associated with this node.
         /// </summary>
-        public Rule Rule
-        {
-            get { return Rule.RuleLookup[RuleId]; }
-        }
-
-        /// <summary>
-        /// Returns all the decenendant nodes.
-        /// </summary>
-        public IEnumerable<Node> Descendants
-        {
-            get
-            {               
-                foreach (var n in Nodes)
-                {
-                    foreach (var d in n.Descendants)
-                        yield return d;
-                    yield return n;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds a node to the tree. 
-        /// </summary>
-        /// <param name="node"></param>
-        public void AddNode(Node node)
-        {
-            if (_nodes == NoNodes)
-                _nodes = new List<Node> { node };
-            else
-                _nodes.Add(node);
-        }
+        public Rule Rule => Rule.RuleLookup[ParseNode.RuleId];
 
         /// <summary>
         /// Returns the name of the associated rule.
         /// </summary>
-        public string Label
-        {
-            get { return Rule.Name; }
-        }
+        public string Label => Rule.Name;        
 
         /// <summary>
         /// Returns the first node with the given label
@@ -153,6 +138,14 @@ namespace Parakeet
         public Node this[string name]
         {
             get { return Nodes.FirstOrDefault(n => n.Label == name); } 
+        }
+
+        /// <summary>
+        /// Compares whether the two nodes point to the same structure. 
+        /// </summary>
+        public bool Equals(Node other)
+        {
+            return other.Id == Id;
         }
     }
 }

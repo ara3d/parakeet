@@ -109,15 +109,9 @@ namespace Parakeet
         public Rule ZeroOrMore => new ZeroOrMoreRule(this);
         public Rule OneOrMore => new OneOrMoreRule(this);
 
-        // TODO: decide a better way to implement assertions
-        // Setting assertions_off speeds things up 
-#if !ASSERTIONS_OFF
         public Rule Assert => new ActionRule(this, (result, state) => {
             if (!result) throw new Exception($"Assertion failed parsing {this} while at {state}");
         });
-#else
-        public Rule Assert => this;
-#endif
 
         public Rule Log => new ActionRule(this, (result, state) => {
             Console.WriteLine($"Parsing of {this} returned {result} while at {state}");
@@ -203,11 +197,15 @@ namespace Parakeet
 
         protected override bool InternalMatch(ParserState state)
         {
-            Debug.Assert(!string.IsNullOrEmpty(Name), "Node rules must have a name");
-            var tmp = state.AddNode(this, true);
+            Debug.Assert(!string.IsNullOrEmpty(Name), "Node rules must have a name");            
+            var tmp = state.GetState();
+            var n = state.AddNode(this);
             if (Child.Match(state))
             {
-                state.AddNode(this, false);
+                var node = state.Nodes[n];
+                node.End = state.Index;
+                node.Next = state.NodeCount;
+                state.Nodes[n] = node;
                 return true;
             }
             // A NodeRule is usually used in another context that will restore state. 
