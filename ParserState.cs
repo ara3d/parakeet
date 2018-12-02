@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace Parakeet
 {
-    public unsafe readonly struct ParserInternalState
+    public unsafe readonly struct ParserState
     {
-        public ParserInternalState(char* ptr, int nodeCount)
+        public ParserState(char* ptr, int nodeCount)
         {
             Ptr = ptr;
             NodeCount = nodeCount;
@@ -16,7 +15,7 @@ namespace Parakeet
         public readonly int NodeCount;
     }
 
-    public unsafe class ParserState
+    public unsafe class Parser
     {
         public string Input;
         public GCHandle Handle;
@@ -28,7 +27,7 @@ namespace Parakeet
         public readonly Stack<Rule> Rules = new Stack<Rule>();
         public int NodeCount;
 
-        public ParserState(string input)
+        public Parser(string input)
         {
             Input = input;
             Handle = GCHandle.Alloc(Input, GCHandleType.Pinned);
@@ -56,12 +55,12 @@ namespace Parakeet
             return Nodes;
         }
 
-        public ParserInternalState GetState()
+        public ParserState GetState()
         {
-            return new ParserInternalState(Ptr, NodeCount);
+            return new ParserState(Ptr, NodeCount);
         }
 
-        public void RestoreState(in ParserInternalState state)
+        public void RestoreState(in ParserState state)
         {
             Ptr = state.Ptr;
             NodeCount = state.NodeCount;
@@ -95,7 +94,7 @@ namespace Parakeet
         {
             var n = NodeCount++;
             Debug.Assert(n <= Nodes.Count, "NodeCount should never be more than the number of valid nodes");
-            var node = new ParseNode(r.Index, Index);
+            var node = new ParseNode(r.Id, Index);
             if (n == Nodes.Count)
                 Nodes.Add(node);
             else

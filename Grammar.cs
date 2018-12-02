@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Text.RegularExpressions;
 
 namespace Parakeet
 {
@@ -11,11 +9,6 @@ namespace Parakeet
         public static NodeRule Node(Rule rule)
         {
             return new NodeRule(rule);
-        }
-
-        public static Rule NoNode(Rule rule)
-        {
-            return Node(rule);
         }
 
         public static RecursiveRule Recursive(Func<Rule> ruleGen)
@@ -72,12 +65,12 @@ namespace Parakeet
 
         public static Rule CharSet(string s)
         {
-            return new CharSetRule(s);
+            return new CharRule(s);
         }
 
         public static Rule CharRange(char a, char b)
         {
-            return new CharRangeRule(a, b);
+            return new CharRule(a, b);
         }
 
         public static Rule AnyChar = new AnyRule();

@@ -5,4 +5,7 @@ Parakeet evolved from the [Jigsaw parser](https://www.codeproject.com/Articles/2
 the [Myna parsing library in TypeScript](https://cdiggins.github.io/myna-parser/). 
 Parakeet is designed to be as fast as possible while retaining a clean and elegant grammar description. 
 
+## Related Work
 
+* https://github.com/benjamin-hodgson/Pidgin
+* https://github.com/sprache/Sprache

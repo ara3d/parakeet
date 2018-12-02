@@ -70,7 +70,7 @@ namespace Parakeet
             get
             {
                 var id = ParseNode.Next;
-                var tmp = new Node(Tree, Id + 1);
+                var tmp = FirstChild;
                 while (tmp.IsValid && tmp.Id != id)
                 {
                     yield return tmp;
@@ -78,6 +78,16 @@ namespace Parakeet
                 }
             }
         }
+
+        /// <summary>
+        /// Returns true if this node has any children
+        /// </summary>
+        public bool HasChild => ParseNode.Next != Id + 1;
+
+        /// <summary>
+        /// Returns the first child in the list (could be invalid, or the sibling) 
+        /// </summary>
+        public Node FirstChild => new Node(Tree, Id + 1);
 
         /// <summary>
         /// Returns the low-level data structure used in the list.
@@ -146,6 +156,14 @@ namespace Parakeet
         public bool Equals(Node other)
         {
             return other.Id == Id;
+        }
+
+        /// <summary>
+        /// Returns true if this node is associated with the given rule
+        /// </summary>
+        public bool IsRule(Rule r)
+        {
+            return ParseNode.RuleId == r.Id;
         }
     }
 }

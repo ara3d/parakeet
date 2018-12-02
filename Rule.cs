@@ -23,13 +23,13 @@ namespace Parakeet
         public List<Rule> Children = new List<Rule>();
 
         public string Name { get; private set; }
-        public int Index { get; private set; }
+        public int Id { get; private set; }
 
         public Rule Child => Children[0];
 
-        protected abstract bool InternalMatch(ParserState state);
+        protected abstract bool InternalMatch(Parser state);
 
-        public bool Match(ParserState state)
+        public bool Match(Parser state)
         {
             // HINT: This is a good place to set a conditional break-point when debugging.
             // Using the Name = X as a condition.
@@ -71,9 +71,9 @@ namespace Parakeet
             return Name ?? Definition;
         }
 
-        public ParserState Parse(string input)
+        public Parser Parse(string input)
         {
-            var state = new ParserState(input);
+            var state = new Parser(input);
             if (!Match(state))
                 throw new Exception(string.Format("Rule {0} failed to match", Name));
             return state;
@@ -90,9 +90,9 @@ namespace Parakeet
             if (RuleIds.ContainsKey(Name))
                 return this; // We don't 
 
-            Index = RuleIds.Count;
-            RuleIds.Add(Name, Index);
-            RuleLookup.Add(Index, this);
+            Id = RuleIds.Count;
+            RuleIds.Add(Name, Id);
+            RuleLookup.Add(Id, this);
 
             return this;
         }
@@ -122,15 +122,15 @@ namespace Parakeet
 
     public class ActionRule : Rule
     {
-        public readonly Action<bool, ParserState> Action;
+        public readonly Action<bool, Parser> Action;
 
-        public ActionRule(Rule r, Action<bool, ParserState> action)
+        public ActionRule(Rule r, Action<bool, Parser> action)
             : base(r)
         {
             Action = action;
         }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var result = Child.Match(state);
             Action(result, state);
@@ -146,7 +146,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var old = state.GetState();
             var result = Child.Match(state);
@@ -163,7 +163,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var old = state.GetState();
             if (Child.Match(state))
@@ -179,7 +179,7 @@ namespace Parakeet
 
     public class AnyRule : Rule
     {
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             if (state.AtEnd) return false;
             state.Advance();
@@ -195,7 +195,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             Debug.Assert(!string.IsNullOrEmpty(Name), "Node rules must have a name");            
             var tmp = state.GetState();
@@ -233,7 +233,7 @@ namespace Parakeet
             return base.Init(name);
         }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             return Child.Match(state);
         }
@@ -252,7 +252,7 @@ namespace Parakeet
             : base(rs)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var old = state.GetState();
             for (var i=0; i < Children.Count; ++i)
@@ -297,7 +297,7 @@ namespace Parakeet
         {
         }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var old = state.GetState();
             for (var i = 0; i < Children.Count; ++i)
@@ -334,7 +334,7 @@ namespace Parakeet
 
     public class EndRule : Rule
     {
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             return state.AtEnd;
         }
@@ -348,7 +348,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             while (Child.Match(state)) { }
             return true;
@@ -363,7 +363,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             if (!Child.Match(state)) return false;
             while (Child.Match(state)) { }
@@ -379,7 +379,7 @@ namespace Parakeet
             : base(r)
         { }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             Child.Match(state);
             return true;
@@ -397,7 +397,7 @@ namespace Parakeet
             this.s = s;
         }
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             var ptr = state.Ptr;
             if (state.Ptr + s.Length > state.End)
@@ -418,90 +418,27 @@ namespace Parakeet
 
     public unsafe class CharRule : Rule
     {
-        public char C;
-
-        public CharRule(char c)
-        {
-            C = c;
-        }
-
-        protected override bool InternalMatch(ParserState state)
-        {
-            if (state.AtEnd)
-                return false;
-            if (*state.Ptr != C)
-                return false;
-            state.Ptr++;
-            return true;
-        }
-
-        public override string Definition => $"[{C}]";
-    }
-
-    public unsafe class CharSetRule : Rule
-    {
-        public readonly string Set;
-
-        public CharSetRule(string s)
-        {
-            if (string.IsNullOrEmpty(s)) throw new ArgumentException();
-            Set = s;
-        }
-
-        protected override bool InternalMatch(ParserState state)
-        {
-            if (state.AtEnd) return false;
-
-            var c = *state.Ptr++;
-            for (var i = 0; i < Set.Length; ++i)
-                if (Set[i] == c)
-                    return true;
-            state.Ptr--;
-            return false;
-        }
-
-        public override string Definition => $"[{Set}]";
-    }
-
-    public unsafe class CharRangeRule : Rule
-    {
-        public readonly char Lo;
-        public readonly char Hi;
-
-        public CharRangeRule(char lo, char hi)
-        {
-            if (lo > hi) throw new ArgumentException();
-            this.Lo = lo;
-            this.Hi = hi;
-        }
-
-        protected override bool InternalMatch(ParserState state)
-        {
-            if (state.AtEnd)
-                return false;
-            var c = *state.Ptr;
-            if (c < Lo || c > Hi) return false;
-            state.Ptr++;
-            return true;
-        }
-
-        public override string Definition => $"[{Lo}-{Hi}]";
-    }
-
-    public unsafe class CharTableRule : Rule
-    {
         public readonly bool[] Table = new bool[255];
 
-        public CharTableRule(bool[] table)
+        public string _definition;
+
+        public CharRule(bool[] table)
         {
             Table = table;
+            var sb = new StringBuilder();
+            sb.Append('[');
+            for (var i = 0; i < Table.Length; ++i)
+                if (Table[i])
+                    sb.Append((char)i);
+            sb.Append(']');
+            _definition = sb.ToString();
         }
 
-        public CharTableRule(IEnumerable<CharTableRule> xs) 
+        public CharRule(IEnumerable<CharRule> xs) 
             : this(xs.ToArray())
         {  }
 
-        public CharTableRule(params CharTableRule[] xs)
+        public CharRule(params CharRule[] xs)
         {
             foreach (var x in xs)
             {
@@ -510,18 +447,18 @@ namespace Parakeet
             }
         }
 
-        public CharTableRule(string s)
+        public CharRule(string s)
         {
             foreach (var c in s)
                 Table[c] = true;
         }
 
-        public CharTableRule(char c)
+        public CharRule(char c)
         {
             Table[c] = true;
         }
 
-        public CharTableRule(char lo, char hi)
+        public CharRule(char lo, char hi)
         {
             while (lo <= hi)
             {
@@ -529,14 +466,14 @@ namespace Parakeet
             }
         }
 
-        public CharTableRule Invert
+        public CharRule Invert
         {
-            get { return new CharTableRule(Table.Select(x => !x).ToArray()); }
+            get { return new CharRule(Table.Select(x => !x).ToArray()); }
         }
 
-        public override string Definition => "_TODO_";
+        public override string Definition => _definition;
 
-        protected override bool InternalMatch(ParserState state)
+        protected override bool InternalMatch(Parser state)
         {
             if (state.AtEnd) return false;
             var c = *state.Ptr;

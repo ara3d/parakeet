@@ -49,23 +49,11 @@ namespace Parakeet
                 }
 
                 // Merge all of the char table rules 
-                var charTableRules = children.Where(x => x is CharTableRule).Select(x => x as CharTableRule);
-                var newList = children.Where(x => !(x is CharTableRule)).ToList();
-                newList.Add(new CharTableRule(charTableRules));
+                var charRules = children.OfType<CharRule>();
+                var newList = children.Where(x => !(x is CharRule)).ToList();
+                newList.Add(new CharRule(charRules));
                 r.Children = newList;
                 return r;
-            }
-            if (r is CharSetRule cs)
-            {
-                return new CharTableRule(cs.Set);
-            }
-            if (r is CharRangeRule cr)
-            {
-                return new CharTableRule(cr.Lo, cr.Hi);
-            }
-            if (r is CharRule c)
-            {
-                return new CharTableRule(c.C);
             }
             return r;
         }
