@@ -2,6 +2,9 @@
 
 Parakeet is a simple parsing library written in C#. 
 
+Parakeet is the paraing library being used by the 
+[Plato programming language project](https://github.com/cdiggins/plato). 
+
 ## Overview 
 
 Parakeet is a recursive descent (RD) parsing library based on the parsing expression grammar (PEG) formalization
