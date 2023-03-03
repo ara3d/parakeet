@@ -25,9 +25,6 @@ namespace Parakeet
         public static Rule NotAt(this Rule rule, [CallerMemberName] string name = "")
             => new NotAt(rule, name);
 
-        public static Rule ButNot(this Rule rule, Rule except, [CallerMemberName] string name = "")
-            => except.NotAt().Then(rule).WithName(name);
-
         public static Rule Except(this Rule rule, Rule except, [CallerMemberName] string name = "")
             => (except.NotAt() + rule).WithName(name);
 

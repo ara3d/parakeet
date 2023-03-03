@@ -285,7 +285,7 @@ namespace Parakeet
         public Rule Tokenizer => Token.ZeroOrMore() + OnError(AdvanceToEnd) + EndOfInput;
 
         // Structural pass 
-        public Rule TokenGroup => Node((Token | Separator).ButNot(Delimiter).OneOrMore());
+        public Rule TokenGroup => Node((Token | Separator).Except(Delimiter).OneOrMore());
         public Rule TypeStructure => Node(TypeKeyword + TokenGroup + BracedStructure);
         public Rule StatementStructure => Node(StatementKeyword + TokenGroup + BracedStructure.Optional());
         public Rule Element => Node(Structure | TokenGroup);

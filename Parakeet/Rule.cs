@@ -40,7 +40,7 @@ namespace Parakeet
         public static Rule operator !(Rule rule) => new NotAt(rule);
         public static implicit operator Rule(string s) => new StringMatchRule(s);
         public static implicit operator Rule(char c) => new CharMatchRule(c);
-        public static implicit operator Rule(char[] cs) => new Choice(cs.Select(c => (Rule)c));
+        public static implicit operator Rule(char[] cs) => new CharSetRule(cs);
         public static implicit operator Rule(string[] xs) => new Choice(xs.Select(x => (Rule)x));
         public static implicit operator Rule(Func<Rule> f) => new RecursiveRule(f);
         public string Name { get; } = string.Empty;

@@ -51,7 +51,49 @@ public ParserState Match(ParserState state, ParserCache cache)
 
 The `Match` will return `null` if the Rule failed to match, or a `ParserState` object if successful.
 
+### Fluent Syntax for Rules
+
+Rules can be combined using a fluent syntax (aka method chaining). 
+
+* `rule.At()` => `new At(rule)`
+* `rule.NotAt()` => `new NotAt(rule)`
+* `rule1.Then(rule2)` => `new Sequence(rule1, rule2)`
+* `rule1.ThenNot(rule2)` => `new Sequence(rule, rule2.NotAt())`
+* `rule.Optional()` => `new Optional(rule)`
+* `rule1.Or(rule2)` => `new Choice(rule1, rule2)`
+* `rule1.Except(rule2)` => `new Sequence(rule2.NotAt(), rule1)`
+* `rule.ZeroOrMore()` => `new ZeroOrMore(rule)`
+* `rule.OneOrMore()` => `new Sequence(rule, rule.ZeroOrMoree)`
+* `char1.To(char2)` => `new CharRangeRule(char1, char2)`
+
+### Overloaded Operators for Rules
+
+Rules can be combined using the following overloaded operators.
+
+* `rule1 + rule2` => `new SequenceRule(rule1, rule2)`
+* `rule1 | rule2` => `new ChoiceRule(rule1, rule2)`
+* `!rule` => `new NotAt(rule)`
+
+### Implicit Casts
+
+The following implicit casts are defined for Rules: 
+
+* `Rule(string s)` => `new StringMatchRule(s)`
+* `Rule(char c)` => `new CharMatchRule(c)`
+* `Rule(char[] cs)` => `new CharSetRule(cs)`
+* `Rule(string[] xs)` => `new Choice(xs.Select(x => (Rule)x))`
+
+### Primitive Rules
+
+* `StringMatchRule` - Matches a string
+* `AnyCharRule` - Matches any character, but fails at end of the file 
+* `CharRangeRule` - Matches any character within a range  
+* `CharSetRule` - Matches any character within a set
+* `CharMatchRule` - Matches a specific character
+
 ### Rule Combinators
+
+Rule combinators combine zero or more rules. 
 
 * `ZeroOrMore` - Tries to match a child rule as many times as possible, returning the original `ParserState` if not successful at least once. 
 * `Optional` - Tries to match a child rule exactly once, returning the original `ParserState` if the child rule fails. 
@@ -59,15 +101,7 @@ The `Match` will return `null` if the Rule failed to match, or a `ParserState` o
 * `Choice` - Matches a collection of rules one by one, until one succeeeds, or `null` if not successful.
 * `RecursiveRule` - Matches a child rule defined by a lambda, thus allowing Rule definitions to have cycles.
 * `TokenRule` - A rule that just matches it child without creating a node. Used for defining grammars. 
-* `NodeRule` - Creates a new `ParserNode` and adds it to the `ParserState`
-
-### Primitive Rules
-
-* `StringMatchRule`
-* `AnyCharRule`
-* `CharRangeRule`
-* `CharSetRule`
-* `CharMatchRule`
+* `NodeRule` - Creates a new `ParserNode` and adds it to the `ParserState`. May also eat whitespace (true by default). 
 
 ### Assertion Rules
 
