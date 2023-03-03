@@ -167,10 +167,9 @@ namespace Parakeet
 
         protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
         {
-            var start = state.Position;
             var result = Rule.Match(state, cache);
             if (result is null) return null;
-            var node = new ParseNode(result.Input, this, start, result.Position, result.Node);
+            var node = new ParserNode(this, state.To(result), result.Node);
             var r = new ParserState(result.Input, result.Position, node);
             // Parse the data to eat 
             var tmp = Eat?.Match(r, cache);

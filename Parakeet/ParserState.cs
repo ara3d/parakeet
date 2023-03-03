@@ -7,12 +7,12 @@
     {
         public ParserInput Input { get; }
         public int Position { get; }
-        public ParseNode Node { get; }
+        public ParserNode Node { get; }
 
         public bool AtEnd => Position >= Input.Length;
         public char Current => Input[Position];
 
-        public ParserState(ParserInput input, int position = 0, ParseNode node = null)
+        public ParserState(ParserInput input, int position = 0, ParserNode node = null)
             => (Input, Position, Node) = (input, position, node);
 
         public ParserState Advance()
@@ -35,5 +35,11 @@
 
         public string Indicator
             => Input.GetIndicator(Position);
+
+        public ParserState ClearNodes()
+            => new ParserState(Input, Position);
+
+        public ParserRange To(ParserState other)
+            => new ParserRange(this, other);
     }
 }

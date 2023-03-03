@@ -2,7 +2,7 @@ using Parakeet.Demos;
 
 namespace Parakeet.Tests
 {
-    public static class GrammarTests
+    public static class ParserTests
     {
         public static string[] Spaces = new[]
         {
@@ -184,7 +184,7 @@ abc
 
         public static CSharpGrammar Rules = new CSharpGrammar();
 
-        public static void OutputNodeCounts(ParseNode node)
+        public static void OutputNodeCounts(ParserNode node)
         {
             var d = new Dictionary<string,int>();
             var sum = 0;
@@ -361,17 +361,65 @@ abc
             var result = ParseTest(input, rule);
             Assert.IsTrue(result == 1);
         }
-       
+
+        public static string ParserTestsDllPath = typeof(ParserTests).Assembly.Location;
+        public static string ProjectFolder = Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
+        public static string SolutionFolder => Path.Combine(ProjectFolder, "..");
+        public static string ThisFile => Path.Combine(ProjectFolder, "ParserTests.cs");
+
+        [Test]
+        public static void TestFolders()
+        {
+            var slnFile = Path.Combine(SolutionFolder, "Parakeet.sln");
+            Assert.IsTrue(System.IO.File.Exists(slnFile));
+            Assert.IsTrue(System.IO.File.Exists(ThisFile));
+        }
+
         [Test]
         public static void TestFiles()
         {
-            var fs = Directory.GetFiles(@"C:\Users\cdigg\git\Plato.Collections\src", "*.cs");
+
+            var fs = Directory.GetFiles(ProjectFolder, "*.cs");
             foreach (var f in fs)
             {
                 Console.WriteLine($"Parsing file {f}");
                 var input = ParserInput.FromFile(f);
                 ParseTest(input, Grammar.Tokenizer, false);
                 Console.WriteLine();
+            }
+        }
+
+
+        public static void TestSummary()
+        {
+
+        }
+
+        public static IEnumerable<ParserRange> BetweenMatches(this IEnumerable<ParserRange> ranges)
+        {
+            ParserRange prev = null;
+            foreach (var range in ranges)
+            {
+                if (prev != null)
+                {
+                    if (range.Begin.Position > prev.End.Position)
+                    {
+                        yield return prev.End.To(range.Begin);
+                    }
+                }
+                prev = range;
+            }
+        }
+
+        [Test]
+        public static void OutputIdentifiers()
+        {
+            var text = ParserInput.FromFile(ThisFile);
+            var prs = text.GetMatches(Grammar.Identifier | Grammar.Token | Grammar.Delimiter);
+            var between = prs.BetweenMatches();
+            foreach (var range in between)
+            {
+                Console.WriteLine($"Failed to match at {range.Begin.Position} = {range.Text}");
             }
         }
 

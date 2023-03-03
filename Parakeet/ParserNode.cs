@@ -9,33 +9,32 @@ namespace Parakeet
     /// These nodes are stored as a linked list, and can be converted 
     /// to a tree representation after all parsing is completed. 
     /// </summary>
-    public class ParseNode
+    public class ParserNode
     {
-        public int Start { get; }
-        public int End { get; }
+        public ParserRange Range { get; }
         public Rule Rule { get; }
+        public int Start => Range.Begin.Position;
+        public int End => Range.End.Position;
         public string Name => Rule.Name;
-        public ParseNode Previous { get; }
-        public ParserInput Input { get; }
-        public int Count => Math.Max(End - Start, 0);
-        public string Contents => Input.Text.Substring(Start, Count);
+        public ParserNode Previous { get; }
+        public string Contents => Range.Text;
         
         public override string ToString()
-            => $"Node {Name}:{Start}:{End}:{EllidedContents}";
+            => $"Node {Name}:{Start}-{End}:{EllidedContents}";
 
         public const int MaxLength = 20;
 
         public string EllidedContents
-            => Count < MaxLength
+            => Contents.Length < MaxLength            
             ? Contents : $"{Contents.Substring(0, MaxLength - 1)}...";
 
-        public ParseNode(ParserInput input, Rule rule, int start, int end, ParseNode previous)
-            => (Input, Rule, Start, End, Previous) = (input, rule, start, end, previous);
+        public ParserNode(Rule rule, ParserRange range, ParserNode previous = null)
+            => (Rule, Range, Previous) = (rule, range, previous);
 
         public ParseTree ToParseTree()
             => ToParseTreeAndNode().Item1;
 
-        public (ParseTree, ParseNode) ToParseTreeAndNode()
+        public (ParseTree, ParserNode) ToParseTreeAndNode()
         {
             var node = this;
             if (node == null) return (null, null);
@@ -51,21 +50,30 @@ namespace Parakeet
             return (new ParseTree(node, children), prev);
         }
 
-        public IReadOnlyList<ParseNode> AllPreviousNodes()
+        public IEnumerable<ParserNode> AllNodes()
         {
-            var r = new List<ParseNode>();
-            for (var node=this; node != null; node = node.Previous)
-            {
-                r.Add(node);
-            }
-            r.Reverse();
-            return r;
+            for (var node = this; node != null; node = node.Previous)
+                yield return node;
         }
 
-        public bool IsChildOf(ParseNode parent)
+        public IEnumerable<ParserNode> SelfAndSiblings()
+        {
+            yield return this;
+            var current = this;
+            foreach (var node in AllNodes())
+            {
+                if (node.End < current.Start)
+                {
+                    current = node;
+                    yield return current;
+                }
+            }
+        }
+
+        public bool IsChildOf(ParserNode parent)
             => parent.IsParentOf(this);
 
-        public bool IsParentOf(ParseNode other)
+        public bool IsParentOf(ParserNode other)
         {
             var node = this;
             if (node == null || other == null) return false;
