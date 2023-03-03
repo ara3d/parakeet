@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Parakeet
 {
@@ -26,5 +28,7 @@ namespace Parakeet
             
         public int Length => End.Position - Begin.Position;
         public string Text => Begin.Input.Text.Substring(Begin.Position, Length);
+        public ParserNode Node => End.Node;
+        public IEnumerable<ParserNode> Nodes => Node.AllNodesReversed().Reverse();
     }
 }

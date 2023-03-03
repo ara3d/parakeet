@@ -4,6 +4,11 @@ namespace Parakeet.Tests
 {
     public static class ParserTests
     {
+        public static string ParserTestsDllPath = typeof(ParserTests).Assembly.Location;
+        public static string ProjectFolder = Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
+        public static string SolutionFolder => Path.Combine(ProjectFolder, "..");
+        public static string ThisFile => Path.Combine(ProjectFolder, "ParserTests.cs");
+
         public static string[] Spaces = new[]
         {
             "",
@@ -362,11 +367,6 @@ abc
             Assert.IsTrue(result == 1);
         }
 
-        public static string ParserTestsDllPath = typeof(ParserTests).Assembly.Location;
-        public static string ProjectFolder = Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
-        public static string SolutionFolder => Path.Combine(ProjectFolder, "..");
-        public static string ThisFile => Path.Combine(ProjectFolder, "ParserTests.cs");
-
         [Test]
         public static void TestFolders()
         {
@@ -420,6 +420,15 @@ abc
             foreach (var range in between)
             {
                 Console.WriteLine($"Failed to match at {range.Begin.Position} = {range.Text}");
+            }
+            Assert.IsFalse(between.Any());
+            foreach (var range in prs)
+            {
+                if (range.Node?.Name == "Identifier")
+                {
+                    Assert.IsTrue(range.Text.Length > 0);
+                    Console.WriteLine($"[{range.Node.Contents}]");
+                }
             }
         }
 

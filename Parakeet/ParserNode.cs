@@ -50,7 +50,7 @@ namespace Parakeet
             return (new ParseTree(node, children), prev);
         }
 
-        public IEnumerable<ParserNode> AllNodes()
+        public IEnumerable<ParserNode> AllNodesReversed()
         {
             for (var node = this; node != null; node = node.Previous)
                 yield return node;
@@ -60,7 +60,7 @@ namespace Parakeet
         {
             yield return this;
             var current = this;
-            foreach (var node in AllNodes())
+            foreach (var node in AllNodesReversed())
             {
                 if (node.End < current.Start)
                 {
