@@ -50,7 +50,7 @@ namespace Parakeet
             return r;
         }
 
-        public Rule Phrase(Rule r, [CallerMemberName] string name = "")
+        public Rule Node(Rule r, [CallerMemberName] string name = "")
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) return Lookup[name];

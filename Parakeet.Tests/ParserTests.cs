@@ -4,11 +4,12 @@ namespace Parakeet.Tests
 {
     public static class ParserTests
     {
-        public static string ParserTestsDllPath = typeof(ParserTests).Assembly.Location;
-        public static string ProjectFolder = Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
-        public static string DemosFolder = Path.Combine(SolutionFolder, "Parakeet.Demos");
-        public static string SolutionFolder => Path.Combine(ProjectFolder, "..");
-        public static string ThisFile => Path.Combine(ProjectFolder, "ParserTests.cs");
+        public static string ParserTestsDllPath => typeof(ParserTests).Assembly.Location;
+        public static string TestsProjectFolder => Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
+        public static string DemosProjectFolder => Path.Combine(SolutionFolder, "Parakeet.Demos");
+        public static string MainProjectFolder => Path.Combine(SolutionFolder, "Parakeet");
+        public static string SolutionFolder => Path.Combine(TestsProjectFolder, "..");
+        public static string ThisFile => Path.Combine(TestsProjectFolder, "ParserTests.cs");
 
         public static string[] Spaces = new[]
         {
@@ -170,7 +171,7 @@ abc
         {
             var cb = new CodeBuilder();
             AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos", Grammar.GetRules());
-            var path = Path.Combine(DemosFolder, "CSharpAst.cs");
+            var path = Path.Combine(DemosProjectFolder, "CSharpAst.cs");
             var text = cb.ToString();
             Console.WriteLine(text);
             System.IO.File.WriteAllText(path, text);
@@ -384,7 +385,7 @@ abc
         public static void TestFiles()
         {
 
-            var fs = Directory.GetFiles(ProjectFolder, "*.cs");
+            var fs = Directory.GetFiles(TestsProjectFolder, "*.cs");
             foreach (var f in fs)
             {
                 Console.WriteLine($"Parsing file {f}");
@@ -437,24 +438,33 @@ abc
             }
         }
 
-
         [Test]
         public static void OutputClasses()
         {
-            var text = ParserInput.FromFile(ThisFile);
-            var prs = text.GetMatches(Grammar.TypeStructure);
-            var between = prs.BetweenMatches();
-            foreach (var range in between)
+            var fs = Directory.GetFiles(MainProjectFolder, "*.cs");
+            foreach (var f in fs)
             {
-                Console.WriteLine($"Failed to match at {range.Begin.Position} = {range.Text}");
+                Console.WriteLine($"Classes for: {f}");
+                OutputClasses(f);
             }
-            Assert.IsFalse(between.Any());
+        }
+
+        public static void OutputClasses(string filePath)
+        {
+            var text = ParserInput.FromFile(filePath);
+            var prs = text.GetMatches(Grammar.TypeStructure | Grammar.Token);
             foreach (var range in prs)
             {
                 if (range.Node?.Name == nameof(TypeStructure))
                 {
                     Assert.IsTrue(range.Text.Length > 0);
-                    Console.WriteLine($"[{range.Node.Contents}]");
+                    var tree = range.Node.ToParseTree();
+                    Console.Write($"[{tree.Node.Name}:{tree.Children.Count}");
+                    for (var i=0; i < 2 && i < tree.Children.Count; i++)
+                    {
+                        Console.Write($":{tree.Children[i].Node.EllidedContents}");
+                    }
+                    Console.WriteLine("]");
                 }
             }
         }
