@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Parakeet
+﻿namespace Parakeet.Demos
 {
     public class Keywords
     {

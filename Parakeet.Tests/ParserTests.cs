@@ -6,6 +6,7 @@ namespace Parakeet.Tests
     {
         public static string ParserTestsDllPath = typeof(ParserTests).Assembly.Location;
         public static string ProjectFolder = Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
+        public static string DemosFolder = Path.Combine(SolutionFolder, "Parakeet.Demos");
         public static string SolutionFolder => Path.Combine(ProjectFolder, "..");
         public static string ThisFile => Path.Combine(ProjectFolder, "ParserTests.cs");
 
@@ -168,8 +169,8 @@ abc
         public static void OutputAstCode()
         {
             var cb = new CodeBuilder();
-            AstClassBuilder.OutputAstFile(cb, "PlatoParser", Grammar.GetRules());
-            var path = @"C:\Users\cdigg\git\plato\PlatoParser\CSharpAst.cs";
+            AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos", Grammar.GetRules());
+            var path = Path.Combine(DemosFolder, "CSharpAst.cs");
             var text = cb.ToString();
             Console.WriteLine(text);
             System.IO.File.WriteAllText(path, text);
@@ -240,6 +241,10 @@ abc
                 Console.WriteLine($"Parsing exception {pe.Message} occured at {pe.LastValidState} ");            
             }
             OutputParseErrors(cache);
+            if (cache.Errors.Count > 0) 
+            {
+                return 0;
+            }
 
             if (ps == null)
             {
@@ -424,7 +429,7 @@ abc
             Assert.IsFalse(between.Any());
             foreach (var range in prs)
             {
-                if (range.Node?.Name == "Identifier")
+                if (range.Node?.Name == nameof(Identifier))
                 {
                     Assert.IsTrue(range.Text.Length > 0);
                     Console.WriteLine($"[{range.Node.Contents}]");
@@ -432,6 +437,27 @@ abc
             }
         }
 
+
+        [Test]
+        public static void OutputClasses()
+        {
+            var text = ParserInput.FromFile(ThisFile);
+            var prs = text.GetMatches(Grammar.TypeStructure);
+            var between = prs.BetweenMatches();
+            foreach (var range in between)
+            {
+                Console.WriteLine($"Failed to match at {range.Begin.Position} = {range.Text}");
+            }
+            Assert.IsFalse(between.Any());
+            foreach (var range in prs)
+            {
+                if (range.Node?.Name == nameof(TypeStructure))
+                {
+                    Assert.IsTrue(range.Text.Length > 0);
+                    Console.WriteLine($"[{range.Node.Contents}]");
+                }
+            }
+        }
         /*
         [Test]
         public static void TestToken()

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Xml.Schema;
 
 namespace Parakeet
 {
@@ -58,8 +56,6 @@ namespace Parakeet
             return hashCode;
         }
     }
-
-
 
     public class TokenRule : Rule
     {
@@ -252,10 +248,13 @@ namespace Parakeet
                     newState = rule.Match(prevState, cache);
                     if (newState == null)
                     {
-                        var error = new ParseError(rule, this, state, prevState, msg);
-                        cache.Errors.Add(error);
                         if (onError != null)
-                            return onError.Match(prevState, cache);
+                        {
+                            var error = new ParseError(rule, this, state, prevState, msg);
+                            cache.Errors.Add(error);
+                            var recovery = onError.RecoveryRule;
+                            return recovery.Match(prevState, cache);
+                        }
                         return null;
                     }
                 }

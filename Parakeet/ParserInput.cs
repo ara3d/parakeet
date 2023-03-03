@@ -51,10 +51,10 @@ namespace Parakeet
             => Text.Substring(LineToChar[lineIndex], GetLineLength(lineIndex));
 
         public int GetLineBegin(int charIndex)
-            => LineToChar[CharToLine[charIndex]];
+            => LineToChar[GetLineIndex(charIndex)];
 
         public int GetLineIndex(int charIndex)
-            => CharToLine[charIndex];
+            => charIndex >= Length ? LineToChar.Count - 1 : CharToLine[charIndex];
 
         public int GetColumn(int charIndex)
             => charIndex - GetLineBegin(charIndex);

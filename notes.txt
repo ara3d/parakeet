@@ -1,0 +1,5 @@
+Ideas:
+
+* See how many types there are
+* Try extracting members of each type
+* 
