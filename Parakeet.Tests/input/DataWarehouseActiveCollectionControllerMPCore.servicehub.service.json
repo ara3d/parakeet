@@ -1,0 +1,11 @@
+{
+  "entryPoint": {
+    "assemblyPath": "Microsoft.DiagnosticsHub.DataWarehouse.ServiceModule.dll",
+    "fullClassName": "Microsoft.DiagnosticsHub.DataWarehouse.ServiceModule.Controllers.DataWarehouseActiveCollectionControllerMP",
+    "appBasePath": "%VSAPPIDDIR%",
+    "configPath": "%PkgDefApplicationConfigFile%",
+    "assemblySearchPathsConfig": "assemblySearchPathsConfig.json"
+  },
+  "host": "dotnet",
+  "hostId": "DataWarehouseHost"
+}

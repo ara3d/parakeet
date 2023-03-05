@@ -7,11 +7,10 @@ namespace Parakeet
     // The goal is to separate this into a C# and A Plato grammar.
     // First step though is to test this on my own source code. 
 
-    public class CSharpGrammar : Grammar
+    public class CSharpGrammar : CommonGrammar
     {
         public CSharpGrammar()
             => WhitespaceRule = WS;
-
 
         // Helper functions 
         public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Optional();
@@ -23,9 +22,10 @@ namespace Parakeet
         public Rule Keyword(string s) => s + IdentifierChar.NotAt() + WS;
 
         // TODO: make sure that it isn't part of a longer symbol
+        public Rule IntegerSuffix => Token(new[] { "ul", "UL", "u", "U", "l", "L", "lu", "lU", "Lu", "LU" });
+        public Rule FloatSuffix => Token("fFdDmM".ToCharSetRule());
+        public Rule Comma => Token(Symbol(","));
         public Rule Symbol(string s) => s + WS; 
-        public Rule UntilPast(Rule r) => RepeatUntilPast(AnyChar, r);
-        public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(delimiter);
         public Rule Symbols(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Symbol).ToArray());
         public Rule Keywords(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Keyword).ToArray());
         public Rule Braced(Rule r) => Delimited(Symbol("{"), r, Symbol("}"));
@@ -33,33 +33,7 @@ namespace Parakeet
         public Rule AngledBracketList(Rule r, Rule sep = null) => Delimited(Symbol("<"), List(r, sep), Symbol(">"));
 
         // Basic 
-        public Rule EndOfInput => EndOfInputRule.Default;
-        public Rule AnyChar => Token(AnyCharRule.Default);
-        public Rule AdvanceToEnd => AnyChar.ZeroOrMore();
-        public Rule Comma => Token(Symbol(","));
-        public Rule LowerCaseLetter => Token('a'.To('z'));
-        public Rule UpperCaseLetter => Token('A'.To('Z'));
-        public Rule Letter => Token(LowerCaseLetter | UpperCaseLetter);
-        public Rule Digit => Token('0'.To('9'));
-        public Rule DigitOrLetter => Token(Letter | Digit);
-        public Rule IdentifierFirstChar => Token('_' | Letter);
-        public Rule IdentifierChar => Token(IdentifierFirstChar | Digit);
-        public Rule FractionalPart => Token("." + Digits.Optional());
-        public Rule HexDigit => Token(Digit | 'a'.To('f') | 'A'.To('F'));
-        public Rule BinDigit => Token('0'.To('1'));
-        public Rule IntegerSuffix => Token(new[] { "ul", "UL", "u", "U", "l", "L", "lu", "lU", "Lu", "LU" });
-        public Rule FloatSuffix => Token("fFdDmM".ToCharSetRule());
-        public Rule Sign => Token("+-".ToCharSetRule());
-        public Rule ExponentPart => Token("eE".ToCharSetRule() + Sign.Optional() + Digits);
-        public Rule Digits => Token(Digit.OneOrMore());
-        public Rule SpaceChars => Token(" \t\n\r\0\v\f".ToCharSetRule());
-        public Rule Spaces => Token(SpaceChars.OneOrMore());
-        public Rule NewLine => Token(new[] { "\r\n", "\n" });
-        public Rule UntilNextLine => Token(AnyChar.Except(NewLine).ZeroOrMore().Then(NewLine.Optional()));        
-        public Rule SingleLineComment => Token("//" + UntilNextLine);
-        public Rule BlockComment => Token("/*" + UntilPast("*/"));
-        public Rule Comment => Token(SingleLineComment | BlockComment);
-        public Rule WS => Token((Spaces | Comment).ZeroOrMore());
+        public Rule WS => Token((Spaces | CppStyleComment).ZeroOrMore());
 
         // Literals 
         public Rule EscapedLiteralChar => Token('\\' + AnyChar); // TODO: handle special codes like \u codes and \x
@@ -281,7 +255,7 @@ namespace Parakeet
         public Rule Delimiter => "[]{}()".ToCharSetRule();
         public Rule TypeKeyword => Node(new[] { "class", "struct", "interface", "enum" });
         public Rule StatementKeyword => Node(new[] { "for", "if", "return", "break", "continue", "do", "foreach", "throw", "switch", "try", "catch", "finally", "using", "case", "default" });
-        public new Rule Token => Node(Separator | Comment | Spaces | OperatorToken | Identifier | Literal);
+        public new Rule Token => Node(Separator | CppStyleComment | Spaces | OperatorToken | Identifier | Literal);
         public Rule Tokenizer => Token.ZeroOrMore() + OnError(AdvanceToEnd) + EndOfInput;
 
         // Structural pass 

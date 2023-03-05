@@ -63,5 +63,11 @@ namespace Parakeet
             => new OnError(r);       
 
         public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
+
+        public Rule CharSet(params char[] chars)
+            => new CharSetRule(chars);
+
+        public Rule CharSet(string chars)
+            => new CharSetRule(chars.ToCharArray());
     }
 }

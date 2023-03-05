@@ -2,6 +2,7 @@ using Parakeet.Demos;
 
 namespace Parakeet.Tests
 {
+
     public static class ParserTests
     {
         public static string ParserTestsDllPath => typeof(ParserTests).Assembly.Location;
@@ -10,6 +11,7 @@ namespace Parakeet.Tests
         public static string MainProjectFolder => Path.Combine(SolutionFolder, "Parakeet");
         public static string SolutionFolder => Path.Combine(TestsProjectFolder, "..");
         public static string ThisFile => Path.Combine(TestsProjectFolder, "ParserTests.cs");
+        public static string InputFilesFolder => Path.Combine(ParserTests.TestsProjectFolder, "input");
 
         public static string[] Spaces = new[]
         {
@@ -170,7 +172,7 @@ abc
         public static void OutputAstCode()
         {
             var cb = new CodeBuilder();
-            AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos", Grammar.GetRules());
+            AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos.CSharp", Grammar.GetRules());
             var path = Path.Combine(DemosProjectFolder, "CSharpAst.cs");
             var text = cb.ToString();
             Console.WriteLine(text);
@@ -285,8 +287,8 @@ abc
                 Console.WriteLine($"Tree {tree}");
                 //Console.WriteLine($"Contents {tree.Contents}");
 
-                var ast = tree.ToNode();
-                Console.WriteLine($"Ast = {ast}");
+                //var ast = tree.ToNode();
+                //Console.WriteLine($"Ast = {ast}");
 
                 var expNodes = rule.OnlyNodes().Simplify();
                 if (expNodes != null)
@@ -356,7 +358,7 @@ abc
         [TestCase("a", nameof(CSharpGrammar.Token))]
         [TestCase("/* */", nameof(CSharpGrammar.Token))]
         [TestCase(" \n ", nameof(CSharpGrammar.Token))]
-        [TestCase("/* */", nameof(CSharpGrammar.Comment))]
+        [TestCase("/* */", nameof(CSharpGrammar.CppStyleComment))]
         [TestCase(" \n ", nameof(Spaces))]
         [TestCase("a", nameof(TokenGroup))]
         [TestCase("/* */", nameof(CSharpGrammar.TokenGroup))]
@@ -468,18 +470,5 @@ abc
                 }
             }
         }
-        /*
-        [Test]
-        public static void TestToken()
-        {           
-            {
-                var ps = SomeCode.Parse(Rules.Element.ZeroOrMore());
-                ps.OutputState();
-            }
-            {
-                var ps = MathEquation.Parse(Rules.Element.ZeroOrMore());
-                ps.OutputState();
-            }
-        }*/
     }
 }
