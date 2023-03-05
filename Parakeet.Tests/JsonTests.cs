@@ -1,4 +1,6 @@
-﻿using Parakeet.Demos;
+﻿using NUnit.Framework;
+using Parakeet.Demos;
+using System;
 
 namespace Parakeet.Tests
 {
@@ -39,6 +41,7 @@ namespace Parakeet.Tests
         [TestCase("{ }", nameof(JsonGrammar.Object))]
         [TestCase("{\"abc\":42}", nameof(JsonGrammar.Object))]
         [TestCase("{ \"abc\" : 42 }", nameof(JsonGrammar.Object))]
+        [TestCase("{\"Id\" :789 ,\"Name\":\"Albert\\tSimple\",\"Status\":\"Married\",\"Address\": \"Planet Earth\", \"Scores\":[1,2,3,4,5,6,7,8,9,10],\"Data\":null}\r\n", nameof(JsonGrammar.Json))]
         public static void TargetedTest(string input, string name)
         {
             var rule = Grammar.GetRuleFromName(name);
@@ -46,11 +49,33 @@ namespace Parakeet.Tests
             Assert.IsTrue(result == 1);
         }
 
-
-        [Test]
-        public static void JsonTest()
+        [TestCase("twitter.json")]
+        [TestCase("1900b0aE.dag.json")]
+        [TestCase("59ba4880.json")]
+        [TestCase("7D0144EC2C5F43E42EF6587E214E857ABF59718F.json")]
+        [TestCase("basic2.json")]
+        [TestCase("boon-small.json")]
+        [TestCase("catalog.json")]
+        [TestCase("DataWarehouseActiveCollectionControllerMPCore.servicehub.service.json")]
+        [TestCase("dicos.json")]
+        [TestCase("eucjp.json")]
+        [TestCase("events.json")]
+        [TestCase("fathers.json")]
+        [TestCase("func.deps.json")]
+        [TestCase("func.runtimeconfig.json")]
+        [TestCase("index.json")]
+        [TestCase("large.json")]
+        [TestCase("Microsoft.ServiceHub.Framework.AlwaysUnauthorizedService.deps.json")]
+        [TestCase("package.json")]
+        [TestCase("project.assets.json")]
+        [TestCase("small.json")]
+        [TestCase("tiny.json")]
+        [TestCase("twitter.json")]
+        [TestCase("yan-cui-10k-simple-objects.json")]
+        [TestCase("_oj-highly-nested.json")]        
+        public static void JsonFileTest(string fileName)
         {
-            var file = Path.Combine(ParserTests.InputFilesFolder, "twitter.json");
+            var file = Path.Combine(ParserTests.InputFilesFolder, fileName);
             var input = ParserInput.FromFile(file);
             var ps = input.Parse(Grammar.Json);
             Assert.IsNotNull(ps);
@@ -58,7 +83,7 @@ namespace Parakeet.Tests
             Assert.IsNotNull(node);
             var tree = node.ToParseTree();
             Assert.IsNotNull(tree);
-            tree.OutputTree();
+            //tree.OutputTree();
         }
     }
 }

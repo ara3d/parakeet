@@ -26,6 +26,6 @@ namespace Parakeet.Demos
         public Rule Object => Node("{" + WS + Members.Optional      () + "}");
         public Rule Value => Node(Object | Array | String | Number | True | False | Null);
         public Rule Element => Node(Recursive(() => Value + WS));
-        public Rule Json => Node(Element);
+        public Rule Json => Node(Element + WS);
     }
 }
