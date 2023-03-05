@@ -163,6 +163,7 @@ If you are interested it is apparently possible  to [Run roslyn in a web-page vi
 * https://github.com/IronyProject/Irony
 * https://github.com/teo-tsirpanis/Farkle
 * https://github.com/takahisa/parseq
+* https://github.com/picoe/Eto.Parse
 
 ### Parser Generator Tools
 
