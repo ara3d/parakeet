@@ -1,14 +1,20 @@
 # Parakeet
 
-Parakeet is a simple parsing library written in C#. Parakeet is the parsing library being used by the 
+**Parakeet** is a simple parsing library written in C#. Parakeet is the parsing library being used by the 
 [Plato programming language project](https://github.com/cdiggins/plato) to Parse both Plato 
 and C# source code. 
 
+![Parakeet1](https://user-images.githubusercontent.com/1759994/222930131-4edeb2ce-757f-4471-8905-8c24ecbc67f8.png)
+
+[Image by Hugo Wai](https://unsplash.com/photos/MEborZA-3Ps)
+
 ## Overview 
 
-Parakeet is a recursive descent (RD) parsing library based on the parsing expression grammar (PEG) formalization
-introduced by Bryan Ford. Parakeet parsers are defined directly in C# using operator overloading. 
+Parakeet is a [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser) (RD) parsing library based on the [parsing expression grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar) (PEG) formalization
+introduced by [Bryan Ford](https://bford.info/pub/lang/peg.pdf). Parakeet parsers are defined directly in C# using operator overloading. 
 Parakeet combines both lexical analysis (aka tokenization) and syntactic analysis in a single pass. 
+
+For an example of how to define grammars in Parakeet see the [C# Grammar](https://github.com/cdiggins/parakeet/blob/master/Parakeet.Demos/CSharpGrammar.cs).
 
 ## Primary Classes
 
@@ -40,7 +46,7 @@ in the relationship chain. This prevents stack overflow errors from occuring.
  
 ## Rules
 
-A Parakeet parser is defined by a class deriving from `Rule`. Some rules are defined by combining rules. 
+A Parakeet parser is defined by a class deriving from [`Rule`](https://github.com/cdiggins/parakeet/blob/master/Parakeet/Rule.cs). Some rules are defined by combining rules. 
 Those combining rules are called "combinators". 
 
 Ever rule has a single function:
@@ -164,6 +170,7 @@ If you are interested it is apparently possible  to [Run roslyn in a web-page vi
 * https://github.com/SickheadGames/TinyPG 
 * https://github.com/otac0n/Pegasus
 * https://github.com/qwertie/LLLPG-Samples
+* https://github.com/antlr
 
 ## References
 
