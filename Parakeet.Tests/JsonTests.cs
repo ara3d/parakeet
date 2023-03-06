@@ -1,6 +1,8 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Internal;
 using Parakeet.Demos;
 using System;
+using System.Data;
 
 namespace Parakeet.Tests
 {
@@ -8,45 +10,155 @@ namespace Parakeet.Tests
     {
         public static JsonGrammar Grammar = new JsonGrammar();
 
-        [Test]
-        [TestCase("1", nameof(JsonGrammar.Value))]
-        [TestCase("true", nameof(JsonGrammar.Value))]
-        [TestCase("false", nameof(JsonGrammar.Value))]
-        [TestCase("null", nameof(JsonGrammar.Value))]
-        [TestCase("\"Hello world\"", nameof(JsonGrammar.Value))]
-        [TestCase("1", nameof(JsonGrammar.Number))]
-        [TestCase("-1", nameof(JsonGrammar.Number))]
-        [TestCase("0", nameof(JsonGrammar.Number))]
-        [TestCase("123", nameof(JsonGrammar.Number))]
-        [TestCase("123.45", nameof(JsonGrammar.Number))]
-        [TestCase("123.45e00", nameof(JsonGrammar.Number))]
-        [TestCase("123.43e+123", nameof(JsonGrammar.Number))]
-        [TestCase("123e-123", nameof(JsonGrammar.Number))]
-        [TestCase("\"\"", nameof(JsonGrammar.String))]
-        [TestCase("\"a\"", nameof(JsonGrammar.String))]
-        [TestCase("\"a b c\"", nameof(JsonGrammar.String))]
-        [TestCase("\"a \\\" c\"", nameof(JsonGrammar.String))]
-        [TestCase("\"a \\\\ c\"", nameof(JsonGrammar.String))]
-        [TestCase("\"\\t\"", nameof(JsonGrammar.String))]
-        [TestCase("[]", nameof(JsonGrammar.Array))]
-        [TestCase("[1]", nameof(JsonGrammar.Array))]
-        [TestCase("[1,2]", nameof(JsonGrammar.Array))]
-        [TestCase("[ 1, 2,  3 , 4]", nameof(JsonGrammar.Array))]
-        [TestCase("[1,[], 2]", nameof(JsonGrammar.Array))]
-        [TestCase("[[]]", nameof(JsonGrammar.Array))]
-        [TestCase("[ [ ] ]", nameof(JsonGrammar.Array))]
-        [TestCase("[[],[],[[]]]", nameof(JsonGrammar.Array))]
-        [TestCase("[[1],[2],[[3],4]]", nameof(JsonGrammar.Array))]
-        [TestCase("{}", nameof(JsonGrammar.Object))]
-        [TestCase("{ }", nameof(JsonGrammar.Object))]
-        [TestCase("{\"abc\":42}", nameof(JsonGrammar.Object))]
-        [TestCase("{ \"abc\" : 42 }", nameof(JsonGrammar.Object))]
-        [TestCase("{\"Id\" :789 ,\"Name\":\"Albert\\tSimple\",\"Status\":\"Married\",\"Address\": \"Planet Earth\", \"Scores\":[1,2,3,4,5,6,7,8,9,10],\"Data\":null}\r\n", nameof(JsonGrammar.Json))]
-        public static void TargetedTest(string input, string name)
+        public static string[] Numbers = new[]
         {
-            var rule = Grammar.GetRuleFromName(name);
-            var result = ParserTests.ParseTest(input, rule);
-            Assert.IsTrue(result == 1);
+            "0",
+            "1",
+            "101",
+            "-1",
+            "-222",
+            "9999999999",
+            "-123.123",
+            "123.123",
+            "123e+12",
+            "123E+12",
+            "123e-12",
+            "123E-12",
+            "123e12",
+            "123E12",
+            "123.99e+12",
+            "123.99E+12",
+            "123.99e-12",
+            "123.99E-12",
+            "123.99e12",
+            "123.99E12",
+        };
+
+        public static string[] Strings = new[]
+        {
+            "\"\"",
+            "\"a\"",
+            "\"abc\"",
+            "\" a \"",
+            "\"\\\n\"",
+            "\"\\\n\"",
+            "\"\\\\\"",
+            "\"\\uFFFF\"",
+            "\"\\uffff\"",
+            "\"\\u9999\"",
+            "\"ab\\ncd\""
+        };
+
+        public static string[] ConstantValues = new[]
+        {
+            "true",
+            "false",
+            "null"
+        };
+
+        public static string[] Arrays = new[]
+        {
+            "[]",
+            "[ ]",
+            "[[]]",
+            "[[],[]]",
+            "[ [ ] , [ ] ]",
+            "[ [ ] , [ ] ]",
+            "[ 1 ]",
+            "[ 1 , 2 ]",
+            "[\n1\n,\n2\n,3]",
+            "[1]",
+            "[1,2]",
+            "[1,[],3]",
+            "[1,\"abc\",3]",
+            "[true,false,null]",
+            "[ true , false , null ]"
+        };
+
+        public static string[] Objects = new[] {
+            "{}",
+            "{\"a\":1}",
+            "{ \"a\" : 1 }",
+            "{ \"abc\" : \"\\n\" }",
+            "{ \"abc\" : true}",
+            "{ \"abc\" : false}",
+            "{ \"abc\" : null}",
+            "{\"a\":[]}",
+            "{\"a\":[1]}",
+            "{\"a\":{}}",
+            "{\"a\":{\"b\":99}}",
+            "{\"Id\" :789 ,\"Name\":\"Albert\\tSimple\",\"Status\":\"Married\",\"Address\": \"Planet Earth\", \"Scores\":[1,2,3,4,5,6,7,8,9,10],\"Data\":null}"
+        };
+
+        public static string[] Spaces = new[]
+        {
+            "",
+            " ",
+            "\n",
+            "\t",
+            "\r",
+            " \n ",
+            " \t ",
+            " \r ",
+            "\r\n",
+            "\n\r",
+        };
+
+        public static IEnumerable<TestCaseData> ParseTestData()
+        {
+            foreach (var x in Strings)
+            {
+                yield return new TestCaseData(x, Grammar.String);
+                yield return new TestCaseData(x, Grammar.Value);
+                yield return new TestCaseData(x, Grammar.Json);
+            }
+            foreach (var x in Arrays)
+            {
+                yield return new TestCaseData(x, Grammar.Array);
+                yield return new TestCaseData(x, Grammar.Value);
+                yield return new TestCaseData(x, Grammar.Json);
+            }
+            foreach (var x in Objects)
+            {
+                yield return new TestCaseData(x, Grammar.Object);
+                yield return new TestCaseData(x, Grammar.Value);
+                yield return new TestCaseData(x, Grammar.Json);
+            }
+            foreach (var x in Numbers)
+            {
+                yield return new TestCaseData(x, Grammar.Number);
+                yield return new TestCaseData(x, Grammar.Value);
+                yield return new TestCaseData(x, Grammar.Json);
+            }
+            foreach (var x in ConstantValues)
+            {
+                yield return new TestCaseData(x, Grammar.Value);
+                yield return new TestCaseData(x, Grammar.Json);
+            }
+            foreach (var x in Spaces)
+            {
+                yield return new TestCaseData(x, Grammar.WS);
+            }
+        }
+
+        [Test]
+        public static void WhiteSpaceWeirdness()
+        {
+            foreach (var x in Objects)
+            {
+                foreach (var s in Spaces)
+                {
+                    var input = s + x + s;
+                    Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json));
+                }
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(ParseTestData))]
+        public static void TestJsonRule(string input, Rule rule)
+        {
+            Assert.AreEqual(1, ParserTests.ParseTest(input, rule));
         }
 
         [TestCase("twitter.json")]
@@ -76,14 +188,9 @@ namespace Parakeet.Tests
         public static void JsonFileTest(string fileName)
         {
             var file = Path.Combine(ParserTests.InputFilesFolder, fileName);
+            //var input = System.IO.File.ReadAllText(file).Trim();
             var input = ParserInput.FromFile(file);
-            var ps = input.Parse(Grammar.Json);
-            Assert.IsNotNull(ps);
-            var node = ps.Node;
-            Assert.IsNotNull(node);
-            var tree = node.ToParseTree();
-            Assert.IsNotNull(tree);
-            //tree.OutputTree();
+            Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
         }
     }
 }
