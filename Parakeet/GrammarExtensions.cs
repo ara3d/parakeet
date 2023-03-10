@@ -14,7 +14,7 @@ namespace Parakeet
             if (rule is NodeRule nr)
                 return nr.Rule.Body();
             if (rule is RecursiveRule rr)
-                return rr.RuleFunc().Body();
+                return rr.Rule.Body();
             return rule;
         }
 
@@ -60,7 +60,7 @@ namespace Parakeet
                 case ZeroOrMore z:
                     return $"({z.Rule.ToDefinition()})*";
                 case RecursiveRule rec:
-                    return rec.RuleFunc().ToDefinition();
+                    return rec.Rule.ToDefinition();
                 case StringMatchRule sm:
                     return $"\"{sm.Pattern}\"";
                 case AnyCharRule ac:
@@ -93,7 +93,7 @@ namespace Parakeet
                 case ZeroOrMore z:
                     return z.Rule.HasNode();
                 case RecursiveRule rec:
-                    return rec.RuleFunc().HasNode();
+                    return rec.Rule.HasNode();
                 default:
                     return false;
             }
@@ -114,7 +114,7 @@ namespace Parakeet
                 case ZeroOrMore z:
                     return z.Rule.ChildrenWithNodes();
                 case RecursiveRule rec:
-                    return rec.RuleFunc().ChildrenWithNodes();
+                    return rec.Rule.ChildrenWithNodes();
                 default:
                     return Enumerable.Empty<Rule>();
             }
@@ -158,7 +158,7 @@ namespace Parakeet
                     }
                 case RecursiveRule rec:
                     {
-                        var tmp = rec.RuleFunc().OnlyNodes();
+                        var tmp = rec.Rule.OnlyNodes();
                         if (tmp != null)
                             return tmp;
                         break;

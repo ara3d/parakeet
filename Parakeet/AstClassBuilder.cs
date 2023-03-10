@@ -49,7 +49,7 @@ namespace Parakeet
                 return cb.WriteLine($"public AstZeroOrMore<{z.Rule.AstTypeName()}> {fieldName} => Children[{child}] as AstZeroOrMore<{z.Rule.AstTypeName()}>;");
 
             if (r is RecursiveRule rr)
-                return OutputAstField(cb, fieldNames, rr.RuleFunc(), index, child);
+                return OutputAstField(cb, fieldNames, rr.Rule, index, child);
 
             throw new NotImplementedException($"Unrecognized rule type {r}");
         }
@@ -79,7 +79,7 @@ namespace Parakeet
             if (r is Optional opt)
                 return opt.Rule.AstFieldName();
             if (r is RecursiveRule rec)
-                return rec.RuleFunc().AstFieldName();
+                return rec.Rule.AstFieldName();
             return "Node";
 
         }

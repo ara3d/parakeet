@@ -37,8 +37,8 @@ namespace Parakeet
         public static Rule Sequence(IEnumerable<Rule> rules)
             => new Sequence(rules.ToArray());
 
-        public static Rule Recursive(Func<Rule> f)
-            => new RecursiveRule(f);
+        public Rule Recursive(string inner, [CallerMemberName] string nodeName = "")
+            => Node(new RecursiveRule(() => GetRuleFromName(inner)), nodeName);
 
         public Rule Named(Rule r, [CallerMemberName] string name = "")
         {

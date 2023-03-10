@@ -26,7 +26,7 @@
         public Rule Members => Node(Member + OnError(AdvanceToEnd) + WS + ("," + WS + Member + WS).ZeroOrMore());
         public Rule Object => Node("{" + OnError(AdvanceToEnd) + WS + Members.Optional      () + "}");
         public Rule Value => Node(Object | Array | String | Number | True | False | Null);
-        public Rule Element => Node(Recursive(() => Value));
+        public Rule Element => Recursive(nameof(Value));
         public Rule Json => Node(WS + Element + WS);
     }
 }

@@ -128,11 +128,11 @@ namespace Parakeet
             | Identifier
             );
 
-        public Rule Expression => Node(Recursive(() =>
-            UnaryOperator.ZeroOrMore()
+        public Rule InnerExpression => Named(UnaryOperator.ZeroOrMore()
             + LeafExpression
-            + PostfixOperator.ZeroOrMore())
-            );
+            + PostfixOperator.ZeroOrMore());
+
+        public Rule Expression => Recursive(nameof(InnerExpression));
 
         // Statements 
         public Rule EOS => Named(Symbol(";"));
@@ -165,21 +165,23 @@ namespace Parakeet
         public Rule VarDecl => Node(TypeExpr + Identifier);
         public Rule VarDeclStatement => Node(VarDecl + Initialization + EOS);
 
-        public Rule Statement => Node(Recursive(() => 
-            EOS 
+        public Rule InnerStatement => Named(
+            EOS
             | CompoundStatement
-            | IfStatement 
-            | WhileStatement 
-            | DoWhileStatement 
-            | ReturnStatement 
-            | BreakStatement 
-            | ContinueStatement 
-            | ForStatement 
+            | IfStatement
+            | WhileStatement
+            | DoWhileStatement
+            | ReturnStatement
+            | BreakStatement
+            | ContinueStatement
+            | ForStatement
             | ForEachStatement
-            | VarDeclStatement 
+            | VarDeclStatement
             | TryStatement
             | ExpressionStatement
-        )); 
+        );
+
+        public Rule Statement => Recursive(nameof(InnerStatement)); 
 
         public Rule QualifiedIdentifier => Node(List(Identifier, Symbol(".")));
         public Rule Static => Node(Keyword("static").Optional());
@@ -200,7 +202,8 @@ namespace Parakeet
         public Rule ConstraintList => Node(ConstraintClause.ZeroOrMore());
 
         public Rule Kind => Node(Keywords("class", "struct", "interface", "enum"));
-        public Rule TypeDeclaration => Node(Recursive(() => Kind + Recovery + Identifier + TypeParameterList + BaseClassList + ConstraintList + Braced(MemberDeclaration.ZeroOrMore())));
+        public Rule InnerTypeDeclaration => Named(Kind + Recovery + Identifier + TypeParameterList + BaseClassList + ConstraintList + Braced(MemberDeclaration.ZeroOrMore()));
+        public Rule TypeDeclaration => Recursive(nameof(InnerTypeDeclaration));
         public Rule TypeDeclarationWithPreamble => Node(DeclarationPreamble + TypeDeclaration);
 
         public Rule FunctionParameterKeywords => Node(Keywords("ref", "out", "in", "params").Optional());
@@ -208,7 +211,7 @@ namespace Parakeet
         public Rule FunctionParameter => Node(AttributeList + FunctionParameterKeywords + TypeExpr + Identifier + DefaultValue);
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
         public Rule ExpressionBody => Node(Symbol("=>") + Recovery + Expression);
-        public Rule FunctionBody => Node(Recursive(() => ExpressionBody | CompoundStatement));
+        public Rule FunctionBody => Node(ExpressionBody | CompoundStatement);
         public Rule BaseCall => Node(Keyword("base") + Recovery + ParenthesizedExpression);
         public Rule ThisCall => Node(Keyword("this") + Recovery + ParenthesizedExpression);
         public Rule BaseOrThisCall => Node((Symbol(":") + (BaseCall | ThisCall)).Optional());
@@ -239,15 +242,18 @@ namespace Parakeet
 
         public Rule NamespaceDeclaration => Node(Keyword("namespace") + QualifiedIdentifier + Braced(TopDeclaration.ZeroOrMore()));
         public Rule FileScopedNamespace => Node(Keyword("namespace") + QualifiedIdentifier + EOS);
-        public Rule TopDeclaration => Node(Recursive(() => NamespaceDeclaration | TypeDeclarationWithPreamble));
+
+        public Rule InnerTopDeclaration => Named(NamespaceDeclaration | TypeDeclarationWithPreamble);
+        public Rule TopDeclaration => Recursive(nameof(InnerTopDeclaration));
+        
         public Rule File => Node(UsingDirective.ZeroOrMore() + FileScopedNamespace.Optional() + TopDeclaration.ZeroOrMore());
 
         public Rule ArrayRankSpecifier => Node(Bracketed(Comma.ZeroOrMore()));
         public Rule ArrayRankSpecifiers => Node(ArrayRankSpecifier.ZeroOrMore());
         public Rule TypeArgList => Node(AngledBracketList(TypeExpr));
         public Rule Nullable => Node(Symbol("?").Optional());
-        public Rule TypeExpr => Node(Recursive(() => QualifiedIdentifier + TypeArgList.Optional() + ArrayRankSpecifiers));
-
+        public Rule InnerTypeExpr => Named(QualifiedIdentifier + TypeArgList.Optional() + ArrayRankSpecifiers);
+        public Rule TypeExpr => Recursive(nameof(InnerTypeExpr));
         // Tokenization pass 
         public Rule OperatorChar => "!%^&|*?+-=/><:@#~$".ToCharSetRule();
         public Rule OperatorToken => OperatorChar.OneOrMore();
@@ -267,7 +273,8 @@ namespace Parakeet
         public Rule BracedStructure => Node("{" + Element.ZeroOrMore() + "}");
         public Rule BracketedStructure => Node("[" + Element.ZeroOrMore() + "]");
         public Rule ParenthesizedStructure => Node("(" + Element.ZeroOrMore() + ")");
-        public Rule Structure => Node(Recursive(() => BracketedStructure | ParenthesizedStructure | BracedStructure));
+        public Rule InnerStructure => Named(BracketedStructure | ParenthesizedStructure | BracedStructure);
+        public Rule Structure => Recursive(nameof(InnerStructure));
         public Rule FileStructure => Node(Element.ZeroOrMore());
 
         // Some C# features not supported:

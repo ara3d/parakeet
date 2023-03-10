@@ -65,9 +65,14 @@ namespace Parakeet
 
     public class RecursiveRule : Rule
     {
-        public Func<Rule> RuleFunc { get; }
+        public Rule Rule => CachedRule = CachedRule ?? (CachedRule = RuleFunc());
+        private Rule CachedRule { get; set; }
+        private Func<Rule> RuleFunc { get; }
         public RecursiveRule(Func<Rule> ruleFunc) => RuleFunc = ruleFunc;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => RuleFunc().Match(state, cache);
+        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        {
+            return Rule.Match(state, cache);
+        }
         public override bool Equals(object obj) => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
         public override int GetHashCode() => Hash(RuleFunc());
     }
