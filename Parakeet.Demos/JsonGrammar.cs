@@ -9,12 +9,12 @@
         public static readonly char Space = ' ';
         public static readonly char Tab = '\t';
 
-        public Rule WS => Token(CharSet(CarriageReturn, LineFeed, Space, Tab).ZeroOrMore());
-        public Rule Exponent => Token(CharSet('e', 'E') + Sign.Optional() + Digits);
-        public Rule Fraction => Token("." + Digits);
-        public Rule Integer => Token(CharSet('-').Optional() + ("0" | Digits));
-        public Rule EscapedChar => Token('\\' + (CharSet("\"\\/bfnrt") | 'u' + (HexDigit + HexDigit + HexDigit + HexDigit)));
-        public Rule StringChar => Token(EscapedChar | AnyChar.Except('\"'));
+        public Rule WS => Named(CharSet(CarriageReturn, LineFeed, Space, Tab).ZeroOrMore());
+        public Rule Exponent => Named(CharSet('e', 'E') + Sign.Optional() + Digits);
+        public Rule Fraction => Named("." + Digits);
+        public Rule Integer => Named(CharSet('-').Optional() + ("0" | Digits));
+        public Rule EscapedChar => Named('\\' + (CharSet("\"\\/bfnrt") | 'u' + (HexDigit + HexDigit + HexDigit + HexDigit)));
+        public Rule StringChar => Named(EscapedChar | AnyChar.Except('\"'));
         public Rule Number => Node(Integer + Fraction.Optional() + Exponent.Optional());
         public Rule String => Node('\"' + OnError(AdvanceToEnd) + StringChar.ZeroOrMore() + '\"');
         public Rule True => Node("true");

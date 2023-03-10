@@ -8,15 +8,19 @@
         public ParserInput Input { get; }
         public int Position { get; }
         public ParserNode Node { get; }
+        public bool Backwards { get; }
 
-        public bool AtEnd => Position >= Input.Length;
+        public bool AtEnd => Position < 0 || Position >= Input.Length;
         public char Current => Input[Position];
 
-        public ParserState(ParserInput input, int position = 0, ParserNode node = null)
-            => (Input, Position, Node) = (input, position, node);
+        public ParserState(ParserInput input, int position = 0, ParserNode node = null, bool backwards = false)
+            => (Input, Position, Node, Backwards) = (input, position, node, backwards);
+
+        public ParserState Reverse()
+            => new ParserState(Input, Position, Node, !Backwards);
 
         public ParserState Advance()
-            => AtEnd ? null : new ParserState(Input, Position + 1, Node);
+            => AtEnd ? null : new ParserState(Input, Backwards ? Position - 1 : Position + 1, Node);
 
         public ParserState JumpToEnd()
             => new ParserState(Input, Input.Length, Node);

@@ -14,7 +14,7 @@ namespace Parakeet
         public Rule Rule { get; }
         public int Start => Range.Begin.Position;
         public int End => Range.End.Position;
-        public string Name => Rule.Name;
+        public string Name => Rule.GetName();
         public ParserNode Previous { get; }
         public string Contents => Range.Text;
         

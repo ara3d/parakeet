@@ -9,7 +9,7 @@ namespace Parakeet
     {
         public static Rule Body(this Rule rule)
         {
-            if (rule is TokenRule tr)
+            if (rule is NamedRule tr)
                 return tr.Rule.Body();
             if (rule is NodeRule nr)
                 return nr.Rule.Body();
@@ -26,7 +26,7 @@ namespace Parakeet
                 var simplified = r.Body().Simplify();
                 if (justNodes != null)
                 {
-                    Console.WriteLine($"{r.Name}:");
+                    Console.WriteLine($"{r.GetName()}:");
                     Console.WriteLine($"  {r.Body().ToDefinition()}");
 
                     Console.WriteLine($"SIMPLIFIED:");
@@ -49,10 +49,8 @@ namespace Parakeet
         {
             switch (r)
             {
-                case NodeRule nr:
-                    return r.Name;
-                case TokenRule tr:
-                    return r.Name;
+                case NamedRule nr:
+                    return nr.Name;
                 case Sequence seq:
                     return $"({seq.Rules.ToDefinition("+")})";
                 case Choice ch:
@@ -76,7 +74,7 @@ namespace Parakeet
                 case CharSetRule set:
                     return $"[{new string(set.Chars)}]";
                 default:
-                    return r.Name;
+                    return "_unknown_";
             }
         }
 
@@ -128,11 +126,12 @@ namespace Parakeet
             {
                 case NodeRule nr:
                     return nr;
+
                 case Sequence seq:
                     {
                         var tmp = seq.Rules.Select(r1 => r1.OnlyNodes()).Where(x => x != null).ToList();
                         if (tmp.Count > 0)
-                            return new Sequence(tmp, r.Name);
+                            return new Sequence(tmp.ToArray());
                         break;
                     }
                 case Choice ch:
@@ -140,28 +139,28 @@ namespace Parakeet
                         var tmp = ch.Rules.Select(r1 => r1.OnlyNodes()).Where(x => x != null).ToList();
 
                         if (tmp.Count > 0)
-                            return new Choice(tmp, r.Name);
+                            return new Choice(tmp.ToArray());
                         break;
                     }
                 case Optional opt:
                     {
                         var tmp = opt.Rule.OnlyNodes();
                         if (tmp != null)
-                            return new Optional(tmp, r.Name);
+                            return new Optional(tmp);
                         break;
                     }
                 case ZeroOrMore z:
                     {
                         var tmp = z.Rule.OnlyNodes();
                         if (tmp != null)
-                            return new ZeroOrMore(tmp, r.Name);
+                            return new ZeroOrMore(tmp);
                         break;
                     }
                 case RecursiveRule rec:
                     {
                         var tmp = rec.RuleFunc().OnlyNodes();
                         if (tmp != null)
-                            return tmp.WithName(r.Name);
+                            return tmp;
                         break;
                     }
             }
@@ -174,6 +173,8 @@ namespace Parakeet
             {
                 case Sequence seq:
                     {
+                        // (A + B) + C => A + B + C
+                        // TODO: A* + A* => A*                         
                         var tmp = seq.Rules.SelectMany(
                             r1 =>
                             {
@@ -181,16 +182,17 @@ namespace Parakeet
                                 if (tmp1 is Sequence seq1)
                                     return seq1.Rules;
                                 return new[] { tmp1 };
-                            }).ToList();
-                        Debug.Assert(tmp.Count > 0);
+                            }).ToArray();
+                        Debug.Assert(tmp.Length > 0);
                         Debug.Assert(!tmp.Any(t => t is Sequence));
-                        if (tmp.Count == 1)
+                        if (tmp.Length == 1)
                             return tmp[0];
-                        return new Sequence(tmp, r.Name);
+                        return new Sequence(tmp);
                     }
 
                 case Choice ch:
                     {
+                        // (A | B) | C => A | B | C
                         var tmp = ch.Rules.SelectMany(
                             r1 =>
                             {
@@ -198,14 +200,14 @@ namespace Parakeet
                                 if (tmp1 is Choice ch1)
                                     return ch1.Rules;
                                 return new[] { tmp1 };
-                            }).ToList();
+                            }).ToArray();
 
-                        Debug.Assert(tmp.Count > 0);
+                        Debug.Assert(tmp.Length > 0);
                         Debug.Assert(!tmp.Any(t => t is Choice));
-                        if (tmp.Count == 1)
+                        if (tmp.Length == 1)
                             return tmp[0];
 
-                        if (tmp.Count == 2)
+                        if (tmp.Length == 2)
                         {
                             // A|A* => A*
                             {
@@ -239,12 +241,12 @@ namespace Parakeet
                             }
                         }
 
-                        return new Choice(tmp, r.Name);
+                        return new Choice(tmp);
                     }
 
                 case Optional opt:
                     {
-                        var tmp = new Optional(opt.Rule.Simplify(), r.Name);
+                        var tmp = new Optional(opt.Rule.Simplify());
 
                         // A*? => A*
                         if (tmp.Rule is ZeroOrMore)
@@ -267,7 +269,14 @@ namespace Parakeet
                     }
 
                 case ZeroOrMore z:
-                    return new ZeroOrMore(z.Rule.Simplify(), r.Name);
+                    {
+                        var tmp = new ZeroOrMore(z.Rule.Simplify());
+                        if (tmp.Rule is Optional opt)
+                        {
+                            return new ZeroOrMore(opt.Rule);
+                        }
+                        return tmp;
+                    }
             }
             return r;
         }

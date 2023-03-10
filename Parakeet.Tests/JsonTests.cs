@@ -1,8 +1,10 @@
-﻿using NUnit.Framework;
+﻿using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using NUnit.Framework.Internal;
 using Parakeet.Demos;
 using System;
 using System.Data;
+using System.Diagnostics;
 
 namespace Parakeet.Tests
 {
@@ -190,7 +192,28 @@ namespace Parakeet.Tests
             var file = Path.Combine(ParserTests.InputFilesFolder, fileName);
             //var input = System.IO.File.ReadAllText(file).Trim();
             var input = ParserInput.FromFile(file);
-            Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
+            Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, null, false));
+        }
+
+        [Test]
+        public static void CompareToNewtonsoft()
+        {
+            var file = Path.Combine(ParserTests.InputFilesFolder, "59ba4880.json");
+            var text = File.ReadAllText(file);
+            Console.WriteLine($"File size = {text.Length / 1000}k");
+            {
+                var sw = Stopwatch.StartNew();
+                JObject.Parse(text);
+                Console.WriteLine($"It took {sw.Elapsed} to parse using Newtonsoft");
+            }
+            {
+                var sw = Stopwatch.StartNew();
+                var ps = text.Parse(Grammar.Json);
+                Assert.NotNull(ps);
+                Assert.IsTrue(ps.AtEnd);
+                Console.WriteLine($"It took {sw.Elapsed} to parse using Parakeet");
+            }
+
         }
     }
 }

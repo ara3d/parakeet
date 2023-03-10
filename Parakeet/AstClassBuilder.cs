@@ -73,9 +73,9 @@ namespace Parakeet
             if (r is ZeroOrMore z)
                 return "ZeroOrMore" + z.Rule.AstFieldName();
             if (r is Sequence s)
-                return string.IsNullOrWhiteSpace(s.Name) ? "Sequence" : s.Name;
+                return "Sequence";
             if (r is Choice c)
-                return string.IsNullOrWhiteSpace(c.Name) ? "Choice" : c.Name;
+                return "Choice";
             if (r is Optional opt)
                 return opt.Rule.AstFieldName();
             if (r is RecursiveRule rec)
@@ -86,14 +86,14 @@ namespace Parakeet
 
         public static CodeBuilder OutputAstClass(CodeBuilder cb, Rule r)
         {
-            if (!(r is NodeRule))
+            if (!(r is NodeRule nr))
                 return cb;
 
             var body = r.Body()?.OnlyNodes()?.Simplify();
 
             cb = cb.WriteLine($"// Original Rule: {r.Body().ToDefinition()}");
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
-            cb = cb.Write($"public class {r.Name}");
+            cb = cb.Write($"public class {nr.Name}");
            
             if (body is Sequence)
             {
@@ -110,8 +110,8 @@ namespace Parakeet
 
             cb = cb.WriteLine("{").Indent();
 
-            cb = cb.WriteLine($"public {r.Name}(params AstNode[] children) : base(children) {{ }}");
-            cb = cb.WriteLine($"public override AstNode Transform(Func<AstNode, AstNode> f) => new {r.Name}(Children.Select(f).ToArray());");
+            cb = cb.WriteLine($"public {nr.Name}(params AstNode[] children) : base(children) {{ }}");
+            cb = cb.WriteLine($"public override AstNode Transform(Func<AstNode, AstNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
             var index = 0;
             if (body == null)
             {
@@ -163,7 +163,7 @@ namespace Parakeet
                     }
                     else
                     {
-                        cb.WriteLine($"case \"{nr.Name}\": return new {nr.Name}(node.Children.Select(ToNode).ToArray());");
+                        cb.WriteLine($"case \"{nr.Name}\": return new {nr.Name}(node.Children.Select(Create).ToArray());");
                     }
                 }
             }

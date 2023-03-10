@@ -31,29 +31,37 @@ namespace Parakeet
                 .Where(pi => typeof(Rule).IsAssignableFrom(pi.PropertyType))
                 .Select(pi => pi.GetValue(this) as Rule);
 
-        public static Rule Choice(IEnumerable<Rule> rules, [CallerMemberName] string name = "")
-            => new Choice(rules, name);
+        public static Rule Choice(IEnumerable<Rule> rules)
+            => new Choice(rules.ToArray());
 
-        public static Rule Sequence(IEnumerable<Rule> rules, [CallerMemberName] string name = "")
-            => new Sequence(rules, name);
+        public static Rule Sequence(IEnumerable<Rule> rules)
+            => new Sequence(rules.ToArray());
 
-        public static Rule Recursive(Func<Rule> f, [CallerMemberName] string name = "")
-            => new RecursiveRule(f, name);
+        public static Rule Recursive(Func<Rule> f)
+            => new RecursiveRule(f);
 
-        public Rule Token(Rule r, [CallerMemberName] string name = "")
+        public Rule Named(Rule r, [CallerMemberName] string name = "")
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentException("Name must not be null");
-            if (Lookup.ContainsKey(name)) return Lookup[name];
-            r = new TokenRule(r, name);
-            r = r.WithName(name);
+            if (string.IsNullOrEmpty(name)) 
+                throw new ArgumentException("Name must not be null");
+            if (Lookup.ContainsKey(name)) 
+                return Lookup[name];
+            r = r.Simplify();
+            r = new NamedRule(r, name);
             Lookup.Add(name, r);
             return r;
         }
 
+        public Rule Strings(params string[] values)
+            => new Choice(values.OrderByDescending(v => v.Length).Select(v => (Rule)v).ToArray());
+
         public Rule Node(Rule r, [CallerMemberName] string name = "")
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentException("Name must not be null");
-            if (Lookup.ContainsKey(name)) return Lookup[name];
+            if (string.IsNullOrEmpty(name)) 
+                throw new ArgumentException("Name must not be null");
+            if (Lookup.ContainsKey(name)) 
+                return Lookup[name];
+            r = r.Simplify();
             r = new NodeRule(r, WhitespaceRule, name);
             Lookup.Add(name, r);
             return r;
@@ -69,5 +77,27 @@ namespace Parakeet
 
         public Rule CharSet(string chars)
             => new CharSetRule(chars.ToCharArray());
+
+        public Rule After(Rule r)
+            => new LookBehind(r);
+
+        public Rule ZeroOrMore(Rule r)
+            => new ZeroOrMore(r);
+
+        public Rule OneOrMore(Rule r) 
+            => r + r.ZeroOrMore();
+        
+        public Rule TwoOrMore(Rule r) 
+            => r + r + r.ZeroOrMore();
+        
+        public Rule ThreeOrMore(Rule r) 
+            => r + r + r + r.ZeroOrMore();
+        
+        public Rule Optional(Rule r) 
+            => r.Optional();
+        
+        public Rule Not(Rule r) 
+            => r.NotAt();
     }
+
 }

@@ -13,186 +13,6 @@ namespace Parakeet.Tests
         public static string ThisFile => Path.Combine(TestsProjectFolder, "ParserTests.cs");
         public static string InputFilesFolder => Path.Combine(ParserTests.TestsProjectFolder, "input");
 
-        public static string[] Spaces = new[]
-        {
-            "",
-            " ",
-            "\t",
-            "\n \t",
-            "// abc",
-            "/* abc */",
-            @"/*
-abc
-*/",
-            @"// abc
-",
-            "/* */ /* */",
-        };
-
-        public static string[] Literals = new[]
-        {
-            "1",
-            "123",
-            "0xFF",
-            "0xff",
-            "12.34",
-            "1.23e41",
-            "'a'",
-            "'\\n'",
-            "\"\"",
-            "\"abc\"",
-            "true",
-            "false",
-            "null",
-        };
-
-        public static string[] Identifiers = new[]
-        {
-            "a",
-            "_",
-            "A_B",
-            "A123",
-            "A1_22_0x",
-            "_0x",
-            "___",
-            "a.b",
-            "a . b",
-            "abc._123.DEF"
-        };
-
-        public static string[] Types = new[]
-        {
-            "int",
-            "System.Object",
-            "int[]",
-            "x",
-            "List<int>",
-            "List<int,int>",
-            "System.List<int>",
-            "List<float>[]",
-            "float[][]",
-            "List<float[]>",
-            "List<a,b,c>",
-            "list<a, b<int, float>, c[]>",
-            "list<system.int>",
-        };
-
-        public static string[] Expressions = new[]
-        {
-            "x",
-            "++x",
-            "3 + 1",
-            "(x)",
-            "(3 - 3)",
-            "+x",
-            "x++",
-            "x()",
-            "(x, y)",
-            "x(1)",
-            "x()()",
-            "xs[1]",
-            "xs[1](2)",
-            "(x) => 42",
-            "(int x) => 42",
-            "x => 42",
-            "x => { return 42; }",
-            "(int x, float y) => x + y",
-            "(x,y) => x + y",
-            "x + y + z",
-            "x(1) + y(2)",
-            "x = z++",
-            "++x++",
-            "++++x",
-            "x.ToString()",
-            "x.abc",
-            "f()",
-            "f(1, 2)",
-            "f()()",
-            "f(f())",
-            "f(f(f(),1),f())",
-            "throw x",
-            "typeof(int)",
-            "typeof(T<a,b>)",
-            "typeof(T[])",
-            "default",
-            "default(T)",
-            "default (T<a,b>)",
-            "default (T[])",
-            "new T()",
-            "new()",
-            "new T[] { 1,2,3}",
-            "new T<int,int>()",
-            "new T(1, a)",
-            "new() { 1, 2, 3 }",
-            "new T() { a=1, b = 3 }",
-            "nameof(x)",
-            "nameof(abc.def)",
-            "x?.a",
-            "x ?. a",
-            "x += x = 2",
-            "x += x + 2",
-            "x = x += 3",
-            "x=y=z",
-        };
-
-        public static string[] Statements = new[]
-        {
-            "var x;",
-            ";",
-            "var x = 12;",
-            "int x;",
-            "T<A> x;",
-            "T<A,B> x;",
-            "f();",
-            "f(1, 2, 3);",
-            "if(b);",
-            "return;",
-            "break;",
-            "return 12;",
-            "continue;", 
-            "if(b);else;",
-            "if(b)break;else continue;",
-            "for(;;);",
-            "for(var x; b < 12; ++i);",
-            "{}",
-            "{;}",
-            "{continue;}",
-            "{{}}",
-            "{;{};}",
-            "++x;",
-            "do{}while(b);",
-            "foreach(var x in xs);",
-            "try{}catch(var e){}",
-            "try{}finally{}",
-            "try{}catch(Exception e){}finally{}",
-        };
-
-
-        [Test]
-        public static void OutputAstCode()
-        {
-            var cb = new CodeBuilder();
-            AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos.CSharp", Grammar.GetRules());
-            var path = Path.Combine(DemosProjectFolder, "CSharpAst.cs");
-            var text = cb.ToString();
-            Console.WriteLine(text);
-            System.IO.File.WriteAllText(path, text);
-        }
-
-        [Test]
-        public static void GrammarDefinition()
-        {
-            Grammar.OutputDefinitions();
-        }
-
-        public static string TestDigits = "0123456789";
-        public static string TestNumbersThenUpperCaseLetters = "0123ABC";
-        public static string HelloWorld = "Hello world!";
-        public static string MathEquation = "(1.23 + (4.56 / 7.9) - 0.8)";
-        public static string SomeCode = "var x = 123; x += 23; f(1, a);";
-
-        public static CSharpGrammar Rules = new CSharpGrammar();
-
         public static void OutputNodeCounts(ParserNode node)
         {
             var d = new Dictionary<string,int>();
@@ -222,16 +42,16 @@ abc
             }
         }
 
-        public static int ParseTest(ParserInput input, Rule rule, bool outputInput = true)
+        public static int ParseTest(ParserInput input, Rule rule, ParserCache? cache = null, bool outputInput = true)
         {
-            var cache = new ParserCache(input.Length);
+            cache ??= new ParserCache(input.Length);
             if (outputInput)
             {
-                Console.WriteLine($"Testing Rule {rule.Name} with input {input}");
+                Console.WriteLine($"Testing Rule {rule.GetName()} with input {input}");
             }
             else
             {
-                Console.WriteLine($"Testing Rule {rule.Name}");
+                Console.WriteLine($"Testing Rule {rule.GetName()}");
             }
 
             ParserState ps = null;
@@ -291,6 +111,7 @@ abc
                 //Console.WriteLine($"Ast = {ast}");
 
                 var expNodes = rule.OnlyNodes().Simplify();
+                /*
                 if (expNodes != null)
                 {
                     Console.WriteLine("Expected parse tree is null");
@@ -299,81 +120,11 @@ abc
                 {
                     Console.WriteLine($"Expected parse tree = {expNodes.ToDefinition()}");
                 }
+                */
             }
             return ps.AtEnd ? 1 : 0;
         }
 
-        public static CSharpGrammar Grammar = new CSharpGrammar();
-
-        [Test] public static void TestSpaces() => TestInputsAndRule(Spaces, Grammar.WS);
-        [Test] public static void TestLiterals() => TestInputsAndRule(Literals, Grammar.Literal);
-        [Test] public static void TestLiteralExpressions() => TestInputsAndRule(Literals, Grammar.Expression);
-        [Test] public static void TestTypes() => TestInputsAndRule(Types, Grammar.TypeExpr);
-        [Test] public static void TestStatements() => TestInputsAndRule(Statements, Grammar.Statement);
-        [Test] public static void TestExpressions() => TestInputsAndRule(Expressions, Grammar.Expression);
-        [Test] public static void TestIdentifiers() => TestInputsAndRule(Identifiers, Grammar.QualifiedIdentifier);
-
-        public static void TestInputsAndRule(string[] inputs, Rule r)
-        {
-            var pass = 0;
-            var total = 0;
-            foreach (var input in inputs)
-            {
-                pass += ParseTest(input, r);
-                total++;
-            }
-            Assert.AreEqual(total, pass);
-        }
-
-        [Test]
-        [TestCase("<T,T>", nameof(CSharpGrammar.TypeArgList))]
-        [TestCase("<T1, T2>", nameof(CSharpGrammar.TypeArgList))]
-        [TestCase("?", nameof(CSharpGrammar.Nullable))]
-        [TestCase("[]", nameof(CSharpGrammar.ArrayRankSpecifier))]
-        [TestCase("[,,]", nameof(CSharpGrammar.ArrayRankSpecifier))]
-        [TestCase("[ , , ] ", nameof(CSharpGrammar.ArrayRankSpecifier))]
-        [TestCase("= 12", nameof(CSharpGrammar.Initialization))]
-        [TestCase("", nameof(CSharpGrammar.InitializationClause))]
-        [TestCase("", nameof(CSharpGrammar.VariantClause))]
-        [TestCase("", nameof(CSharpGrammar.InvariantClause))]
-        [TestCase("var x=12", nameof(CSharpGrammar.InitializationClause))]
-        [TestCase("b < 12", nameof(CSharpGrammar.InvariantClause))]
-        [TestCase("++i", nameof(CSharpGrammar.InvariantClause))]
-        [TestCase("(a)", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("a", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("()", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("(a,b)", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("(int a,int b)", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("(list<int, int> a,int[] b)", nameof(CSharpGrammar.LambdaParameters))]
-        [TestCase("a", nameof(CSharpGrammar.LambdaParameter))]
-        [TestCase("int a", nameof(CSharpGrammar.LambdaParameter))]
-        [TestCase("List<int> a", nameof(CSharpGrammar.LambdaParameter))]
-        [TestCase("List<int, int> a", nameof(CSharpGrammar.LambdaParameter))]
-        [TestCase("int[] a", nameof(CSharpGrammar.LambdaParameter))]
-        [TestCase("{}", nameof(BracedStructure))]
-        [TestCase("{ }", nameof(BracedStructure))]
-        [TestCase("{a}", nameof(BracedStructure))]
-        [TestCase("{ /* */ }", nameof(BracedStructure))]
-        [TestCase("{a b c;}", nameof(BracedStructure))]
-        [TestCase("a", nameof(CSharpGrammar.Token))]
-        [TestCase("/* */", nameof(CSharpGrammar.Token))]
-        [TestCase(" \n ", nameof(CSharpGrammar.Token))]
-        [TestCase("/* */", nameof(CSharpGrammar.CppStyleComment))]
-        [TestCase(" \n ", nameof(Spaces))]
-        [TestCase("a", nameof(TokenGroup))]
-        [TestCase("/* */", nameof(CSharpGrammar.TokenGroup))]
-        [TestCase("a b c", nameof(CSharpGrammar.TokenGroup))]
-        [TestCase("a b c;", nameof(CSharpGrammar.TokenGroup))]
-        [TestCase("a b c;", nameof(CSharpGrammar.TokenGroup))]
-        [TestCase("a b c;", nameof(Element))]
-        [TestCase("a", nameof(Element))]
-        [TestCase("{ a }", nameof(Element))]
-        public static void TargetedTest(string input, string name)
-        {
-            var rule = Grammar.GetRuleFromName(name);
-            var result = ParseTest(input, rule);
-            Assert.IsTrue(result == 1);
-        }
 
         [Test]
         public static void TestFolders()
@@ -381,26 +132,6 @@ abc
             var slnFile = Path.Combine(SolutionFolder, "Parakeet.sln");
             Assert.IsTrue(System.IO.File.Exists(slnFile));
             Assert.IsTrue(System.IO.File.Exists(ThisFile));
-        }
-
-        [Test]
-        public static void TestFiles()
-        {
-
-            var fs = Directory.GetFiles(TestsProjectFolder, "*.cs");
-            foreach (var f in fs)
-            {
-                Console.WriteLine($"Parsing file {f}");
-                var input = ParserInput.FromFile(f);
-                ParseTest(input, Grammar.Tokenizer, false);
-                Console.WriteLine();
-            }
-        }
-
-
-        public static void TestSummary()
-        {
-
         }
 
         public static IEnumerable<ParserRange> BetweenMatches(this IEnumerable<ParserRange> ranges)
@@ -416,58 +147,6 @@ abc
                     }
                 }
                 prev = range;
-            }
-        }
-
-        [Test]
-        public static void OutputIdentifiers()
-        {
-            var text = ParserInput.FromFile(ThisFile);
-            var prs = text.GetMatches(Grammar.Identifier | Grammar.Token | Grammar.Delimiter);
-            var between = prs.BetweenMatches();
-            foreach (var range in between)
-            {
-                Console.WriteLine($"Failed to match at {range.Begin.Position} = {range.Text}");
-            }
-            Assert.IsFalse(between.Any());
-            foreach (var range in prs)
-            {
-                if (range.Node?.Name == nameof(Identifier))
-                {
-                    Assert.IsTrue(range.Text.Length > 0);
-                    Console.WriteLine($"[{range.Node.Contents}]");
-                }
-            }
-        }
-
-        [Test]
-        public static void OutputClasses()
-        {
-            var fs = Directory.GetFiles(MainProjectFolder, "*.cs");
-            foreach (var f in fs)
-            {
-                Console.WriteLine($"Classes for: {f}");
-                OutputClasses(f);
-            }
-        }
-
-        public static void OutputClasses(string filePath)
-        {
-            var text = ParserInput.FromFile(filePath);
-            var prs = text.GetMatches(Grammar.TypeStructure | Grammar.Token);
-            foreach (var range in prs)
-            {
-                if (range.Node?.Name == nameof(TypeStructure))
-                {
-                    Assert.IsTrue(range.Text.Length > 0);
-                    var tree = range.Node.ToParseTree();
-                    Console.Write($"[{tree.Node.Name}:{tree.Children.Count}");
-                    for (var i=0; i < 2 && i < tree.Children.Count; i++)
-                    {
-                        Console.Write($":{tree.Children[i].Node.EllidedContents}");
-                    }
-                    Console.WriteLine("]");
-                }
             }
         }
     }
