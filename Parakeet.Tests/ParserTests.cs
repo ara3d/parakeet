@@ -1,5 +1,3 @@
-using Parakeet.Demos;
-
 namespace Parakeet.Tests
 {
 
@@ -110,7 +108,7 @@ namespace Parakeet.Tests
                 //var ast = tree.ToNode();
                 //Console.WriteLine($"Ast = {ast}");
 
-                var expNodes = rule.OnlyNodes().Simplify();
+                var expNodes = rule.OnlyNodes().Optimize();
                 /*
                 if (expNodes != null)
                 {

@@ -56,7 +56,7 @@ namespace Parakeet
 
         public static int NumAstChildren(Rule r)
         {
-            var body = r.Body()?.OnlyNodes()?.Simplify();
+            var body = r.Body()?.OnlyNodes()?.Optimize();
             if (body == null)
                 return 0;
             if (body is Sequence sequence)
@@ -89,7 +89,7 @@ namespace Parakeet
             if (!(r is NodeRule nr))
                 return cb;
 
-            var body = r.Body()?.OnlyNodes()?.Simplify();
+            var body = r.Body()?.OnlyNodes()?.Optimize();
 
             cb = cb.WriteLine($"// Original Rule: {r.Body().ToDefinition()}");
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");

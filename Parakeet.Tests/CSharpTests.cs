@@ -217,7 +217,7 @@ abc
         [Test]
         public static void GrammarDefinition()
         {
-            Grammar.OutputDefinitions();
+            Grammar.OutputDefinitions(true);
         }
 
         public static CSharpGrammar Grammar = new CSharpGrammar();

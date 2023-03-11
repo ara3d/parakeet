@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Parakeet
+﻿namespace Parakeet
 {
     public static class RuleExtensions
     {

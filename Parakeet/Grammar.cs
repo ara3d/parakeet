@@ -46,7 +46,7 @@ namespace Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            //r = r.Simplify();
+            r = r.Optimize();
             r = new NamedRule(r, name);
             Lookup.Add(name, r);
             return r;
@@ -61,7 +61,7 @@ namespace Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            //r = r.Simplify();
+            r = r.Optimize();
             r = new NodeRule(r, WhitespaceRule, name);
             Lookup.Add(name, r);
             return r;

@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using NUnit.Framework.Internal;
 using Parakeet.Demos;
-using System;
-using System.Data;
 using System.Diagnostics;
 
 namespace Parakeet.Tests
@@ -11,6 +7,19 @@ namespace Parakeet.Tests
     public static class JsonTests
     {
         public static JsonGrammar Grammar = new JsonGrammar();
+
+        [Test]
+        public static void GrammarDefinition()
+        {
+            foreach (var r in Grammar.GetRules())
+            {
+                if (r != null)
+                {
+                    Console.WriteLine($"{r.GetName()} => ");
+                    Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
+                }
+            }
+        }
 
         public static string[] Numbers = new[]
         {

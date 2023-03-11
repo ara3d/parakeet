@@ -11,70 +11,81 @@ namespace Parakeet
         {
             if (rule is NamedRule tr)
                 return tr.Rule.Body();
-            if (rule is NodeRule nr)
-                return nr.Rule.Body();
             if (rule is RecursiveRule rr)
                 return rr.Rule.Body();
             return rule;
         }
 
-        public static void OutputDefinitions(this Grammar grammar)
+        public static void OutputDefinitions(this Grammar grammar, bool shortForm)
         {
             foreach (var r in grammar.GetRules())
             {
                 var justNodes = r.Body().OnlyNodes();
-                var simplified = r.Body().Simplify();
+                var simplified = r.Body().Optimize();
                 if (justNodes != null)
                 {
                     Console.WriteLine($"{r.GetName()}:");
-                    Console.WriteLine($"  {r.Body().ToDefinition()}");
+                    Console.WriteLine($"  {r.Body().ToDefinition(shortForm)}");
 
-                    Console.WriteLine($"SIMPLIFIED:");
-                    Console.WriteLine($"  {simplified.ToDefinition()}");
+                    Console.WriteLine($"OPTIMIZED:");
+                    Console.WriteLine($"  {simplified.ToDefinition(shortForm)}");
 
                     Console.WriteLine($"JUST NODES:");
-                    Console.WriteLine($"  {justNodes.ToDefinition()}");
+                    Console.WriteLine($"  {justNodes.ToDefinition(shortForm)}");
 
-                    var justNodesSimplified = justNodes.Simplify();
-                    Console.WriteLine($"JUST NODES SIMPLIFIED:");
-                    Console.WriteLine($"  {justNodesSimplified.ToDefinition()}");
+                    var justNodesSimplified = justNodes.Optimize();
+                    Console.WriteLine($"JUST NODES OPTIMIZED:");
+                    Console.WriteLine($"  {justNodesSimplified.ToDefinition(shortForm)}");
                 }
             }
         }
 
-        public static string ToDefinition(this IEnumerable<Rule> rules, string sep)
-            => string.Join(sep, rules.Select(r => r.ToDefinition()));
+        public static string ToDefinition(this IEnumerable<Rule> rules, string sep, bool shortForm, string indent)
+            => string.Join(sep, rules.Select(r => r.ToDefinition(shortForm, indent + "  ")));
 
-        public static string ToDefinition(this Rule r)
+        public static string ToDefinition(this Rule r, bool shortForm = true, string indent = "")
         {
+            var nextLine = shortForm ? "" : $"\n{indent}";
             switch (r)
             {
+                case NodeRule nodeRule:
+                    return nodeRule.Name;
                 case NamedRule nr:
-                    return nr.Name;
+                    return shortForm 
+                        ? nr.Name 
+                        : $"({nr.Name}:{nextLine}{nr.Rule.ToDefinition(false, indent)})";
                 case Sequence seq:
-                    return $"({seq.Rules.ToDefinition("+")})";
+                    return $"({seq.Rules.ToDefinition(nextLine + "+", shortForm, indent)})";
                 case Choice ch:
-                    return $"({ch.Rules.ToDefinition("|")})";
+                    return $"({ch.Rules.ToDefinition(nextLine + "|", shortForm, indent)})";
                 case Optional opt:
-                    return $"({opt.Rule.ToDefinition()})?";
+                    return $"({opt.Rule.ToDefinition(shortForm, indent)})?";
                 case ZeroOrMore z:
-                    return $"({z.Rule.ToDefinition()})*";
+                    return $"({z.Rule.ToDefinition(shortForm, indent)})*";
                 case RecursiveRule rec:
-                    return rec.Rule.ToDefinition();
+                    return rec.Rule.ToDefinition(shortForm, indent);
                 case StringMatchRule sm:
                     return $"\"{sm.Pattern}\"";
-                case AnyCharRule ac:
-                    return $".";
+                case AnyCharRule _:
+                    return $"_ANY_";
                 case NotAt not:
-                    return $"!({not.Rule.ToDefinition()})";
+                    return $"!({not.Rule.ToDefinition(shortForm, indent)})";
                 case At at:
-                    return $"&({at.Rule.ToDefinition()})";
+                    return $"&({at.Rule.ToDefinition(shortForm, indent)})";
                 case CharRangeRule range:
                     return $"[{range.Low}..{range.High}]";
                 case CharSetRule set:
                     return $"[{new string(set.Chars)}]";
+                case CharMatchRule charMatch:
+                    return $"[{charMatch.Ch}]";
+                case OnError set:
+                    return $"_RECOVER_";
+                case EndOfInputRule endOfInputRule:
+                    return $"_END_";
+                case LookBehind lb:
+                    return $"~({lb.Rule.ToDefinition(shortForm, indent)})";
                 default:
-                    return "_unknown_";
+                    return "_UNKNOWN_";
             }
         }
 
@@ -132,26 +143,6 @@ namespace Parakeet
                 if (r1 is ZeroOrMore z && z.Rule.Equals(r2))
                     return z;
             }
-            // (A|A+B) => A+B?
-            {
-                if (r2 is Sequence seq && seq.Count == 2 && seq[0].Equals(r1))
-                    return new Sequence(r1, new Optional(seq[1]));
-            }
-            // (A+B|A) => A+B?
-            {
-                if (r1 is Sequence seq && seq.Count == 2 && seq[0].Equals(r2))
-                    return new Sequence(r2, new Optional(seq[1]));
-            }
-            // (B|A+B) => A?+B
-            {
-                if (r2 is Sequence seq && seq.Count == 2 && seq[1].Equals(r1))
-                    return new Sequence(new Optional(r1), seq[1]);
-            }
-            // (A+B|B) => A?+B
-            {
-                if (r1 is Sequence seq && seq.Count == 2 && seq[1].Equals(r2))
-                    return new Sequence(new Optional(seq[0]), r2);
-            }
             return null;
         }
 
@@ -203,7 +194,7 @@ namespace Parakeet
             return null;
         }
 
-        public static Rule Simplify(this Rule r)
+        public static Rule Optimize (this Rule r)
         {
             switch (r)
             {
@@ -214,11 +205,11 @@ namespace Parakeet
                     return nodeRule;
 
                 case NamedRule namedRule:
-                    return namedRule.Rule.Simplify();
+                    return namedRule.Rule.Optimize();
 
                 case At at:
                     {
-                        var inner = at.Rule.Simplify();
+                        var inner = at.Rule.Optimize();
                         if (inner is NamedRule nr)
                             return nr.Rule;
                         if (inner is At at2)
@@ -230,7 +221,7 @@ namespace Parakeet
 
                 case NotAt notAt:
                     {
-                        var inner = notAt.Rule.Simplify();
+                        var inner = notAt.Rule.Optimize();
                         if (inner is NamedRule nr)
                             return nr.Rule;
                         if (inner is At at)
@@ -247,7 +238,7 @@ namespace Parakeet
                         var tmp = seq.Rules.SelectMany(
                             r1 =>
                             {
-                                var tmp1 = r1.Simplify();
+                                var tmp1 = r1.Optimize();
                                 if (tmp1 is Sequence seq1)
                                     return seq1.Rules;
                                 return new[] { tmp1 };
@@ -259,46 +250,49 @@ namespace Parakeet
                         return new Sequence(tmp);
                     }
 
-                case Choice ch:
-                    {
-                        // (A | B) | C => A | B | C
-                        var tmp = ch.Rules.SelectMany(
-                            r1 =>
-                            {
-                                var tmp1 = r1.Simplify();
-                                if (tmp1 is Choice ch1)
-                                    return ch1.Rules;
-                                return new[] { tmp1 };
-                            }).ToArray();
-
-                        Debug.Assert(tmp.Length > 0);
-                        Debug.Assert(!tmp.Any(t => t is Choice));
-                        if (tmp.Length == 1)
-                            return tmp[0];
-
-                        var list = new List<Rule>();
-                        for (var i=0; i < tmp.Length - 1; ++i)
+            case Choice ch:
+                {
+                    // (A | B) | C => A | B | C
+                    var tmp = ch.Rules.SelectMany(
+                        r1 =>
                         {
-                            var r1 = tmp[i];
-                            var r2 = tmp[i+1];
-                            var r3 = MergeChoiceRule(r1, r2);
-                            if (r3 == null)
-                            {
-                                list.Add(r1);
-                            }
-                            else
-                            {
-                                list.Add(r3);
-                                i++;
-                            }
-                        }
+                            var tmp1 = r1.Optimize();
+                            if (tmp1 is Choice ch1)
+                                return ch1.Rules;
+                            return new[] { tmp1 };
+                        }).ToArray();
 
-                        return new Choice(list.ToArray());
+                    Debug.Assert(tmp.Length > 0);
+                    Debug.Assert(!tmp.Any(t => t is Choice));
+                    if (tmp.Length == 1)
+                        return tmp[0];
+                   
+                    return new Choice(tmp);
+                    /*
+                    var list = new List<Rule>();
+                    for (var i=0; i < tmp.Length - 1; ++i)
+                    {
+                        var r1 = tmp[i];
+                        var r2 = tmp[i+1];
+                        var r3 = MergeChoiceRule(r1, r2);
+                        if (r3 == null)
+                        {
+                            list.Add(r1);
+                        }
+                        else
+                        {
+                            list.Add(r3);
+                            i++;
+                        }
                     }
+
+                    return new Choice(list.ToArray());
+                   */
+                }                    
 
                 case Optional opt:
                     {
-                        var inner = opt.Rule.Simplify();
+                        var inner = opt.Rule.Optimize();
 
                         // A?? => A?
                         if (inner is Optional opt1)
@@ -329,7 +323,7 @@ namespace Parakeet
 
                 case ZeroOrMore z:
                     {
-                        var inner = z.Rule.Simplify();
+                        var inner = z.Rule.Optimize();
 
                         // A?* => A*
                         if (inner is Optional opt)

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Parakeet
 {
@@ -136,6 +134,7 @@ namespace Parakeet
         protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => state.AtEnd ? state : null;
         public static EndOfInputRule Default => new EndOfInputRule();
         public override bool Equals(object obj) => obj is EndOfInputRule;
+        public override int GetHashCode() => nameof(EndOfInputRule).GetHashCode();
     }
 
     public class CharMatchRule : Rule
@@ -193,7 +192,9 @@ namespace Parakeet
             */
         }
 
-        public override bool Equals(object obj) => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule) && Eat.Equals(nr.Eat);
+        public override bool Equals(object obj) => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule) 
+            && (Eat == null ? nr.Eat == null : Eat.Equals(nr.Eat));
+
         public override int GetHashCode() => Hash(Rule, Eat, Name);
     }
 
