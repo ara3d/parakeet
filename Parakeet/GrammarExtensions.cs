@@ -120,6 +120,41 @@ namespace Parakeet
             }
         }
 
+        public static Rule MergeChoiceRule(Rule r1, Rule r2)
+        {
+            // A|A* => A*
+            {
+                if (r2 is ZeroOrMore z && z.Rule.Equals(r1))
+                    return z;
+            }
+            // A*|A => A*
+            {
+                if (r1 is ZeroOrMore z && z.Rule.Equals(r2))
+                    return z;
+            }
+            // (A|A+B) => A+B?
+            {
+                if (r2 is Sequence seq && seq.Count == 2 && seq[0].Equals(r1))
+                    return new Sequence(r1, new Optional(seq[1]));
+            }
+            // (A+B|A) => A+B?
+            {
+                if (r1 is Sequence seq && seq.Count == 2 && seq[0].Equals(r2))
+                    return new Sequence(r2, new Optional(seq[1]));
+            }
+            // (B|A+B) => A?+B
+            {
+                if (r2 is Sequence seq && seq.Count == 2 && seq[1].Equals(r1))
+                    return new Sequence(new Optional(r1), seq[1]);
+            }
+            // (A+B|B) => A?+B
+            {
+                if (r1 is Sequence seq && seq.Count == 2 && seq[1].Equals(r2))
+                    return new Sequence(new Optional(seq[0]), r2);
+            }
+            return null;
+        }
+
         public static Rule OnlyNodes(this Rule r)
         {
             switch (r)
@@ -134,6 +169,7 @@ namespace Parakeet
                             return new Sequence(tmp.ToArray());
                         break;
                     }
+
                 case Choice ch:
                     {
                         var tmp = ch.Rules.Select(r1 => r1.OnlyNodes()).Where(x => x != null).ToList();
@@ -171,6 +207,39 @@ namespace Parakeet
         {
             switch (r)
             {
+                case RecursiveRule rr:
+                    return rr;
+
+                case NodeRule nodeRule:
+                    return nodeRule;
+
+                case NamedRule namedRule:
+                    return namedRule.Rule.Simplify();
+
+                case At at:
+                    {
+                        var inner = at.Rule.Simplify();
+                        if (inner is NamedRule nr)
+                            return nr.Rule;
+                        if (inner is At at2)
+                            return at.Rule;
+                        if (inner is At notAt)
+                            return notAt.Rule;
+                        return new At(inner);
+                    }
+
+                case NotAt notAt:
+                    {
+                        var inner = notAt.Rule.Simplify();
+                        if (inner is NamedRule nr)
+                            return nr.Rule;
+                        if (inner is At at)
+                            inner = at.Rule;
+                        if (inner is At notAt2)
+                            return new At(notAt2.Rule);
+                        return new NotAt(inner);
+                    }
+
                 case Sequence seq:
                     {
                         // (A + B) + C => A + B + C
@@ -207,75 +276,70 @@ namespace Parakeet
                         if (tmp.Length == 1)
                             return tmp[0];
 
-                        if (tmp.Length == 2)
+                        var list = new List<Rule>();
+                        for (var i=0; i < tmp.Length - 1; ++i)
                         {
-                            // A|A* => A*
+                            var r1 = tmp[i];
+                            var r2 = tmp[i+1];
+                            var r3 = MergeChoiceRule(r1, r2);
+                            if (r3 == null)
                             {
-                                if (tmp[1] is ZeroOrMore z && z.Rule.Equals(tmp[0]))
-                                    return z;
+                                list.Add(r1);
                             }
-                            // A*|A => A*
+                            else
                             {
-                                if (tmp[0] is ZeroOrMore z && z.Rule.Equals(tmp[1]))
-                                    return z;
-                            }
-                            // (A|A+B) => A+B?
-                            {
-                                if (tmp[1] is Sequence seq && seq.Count == 2 && seq[0].Equals(tmp[0]))
-                                    return new Sequence(tmp[0], new Optional(seq[1]));
-                            }
-                            // (A+B|A) => A+B?
-                            {
-                                if (tmp[0] is Sequence seq && seq.Count == 2 && seq[0].Equals(tmp[1]))
-                                    return new Sequence(tmp[1], new Optional(seq[1]));
-                            }
-                            // (B|A+B) => A?+B
-                            {
-                                if (tmp[1] is Sequence seq && seq.Count == 2 && seq[1].Equals(tmp[0]))
-                                    return new Sequence(new Optional(tmp[0]), seq[1]);
-                            }
-                            // (A+B|B) => A?+B
-                            {
-                                if (tmp[0] is Sequence seq && seq.Count == 2 && seq[1].Equals(tmp[1]))
-                                    return new Sequence(new Optional(seq[0]), tmp[1]);
+                                list.Add(r3);
+                                i++;
                             }
                         }
 
-                        return new Choice(tmp);
+                        return new Choice(list.ToArray());
                     }
 
                 case Optional opt:
                     {
-                        var tmp = new Optional(opt.Rule.Simplify());
+                        var inner = opt.Rule.Simplify();
+
+                        // A?? => A?
+                        if (inner is Optional opt1)
+                            return opt1.Rule;
 
                         // A*? => A*
-                        if (tmp.Rule is ZeroOrMore)
-                            return tmp.Rule;
+                        if (inner is ZeroOrMore)
+                            return inner;
 
-                        // Look for: (A+(A*))? and transform it to A*
-                        // This happens when we parse separated lists 
-
-                        if (!(tmp.Rule is Sequence seq))
-                            return tmp;
-
-                        if (seq.Count == 2)
+                        if (inner is Sequence seq)
                         {
-                            if (seq[1] is ZeroOrMore z1)
-                                if (seq[0].Equals(z1.Rule))
-                                    return z1;
+                            if (seq.Count == 2)
+                            {
+                                //  (A + A*)? => A*
+                                if (seq[1] is ZeroOrMore z1)
+                                    if (seq[0].Equals(z1.Rule))
+                                        return z1;
+
+                                //  (A* + A)? => A*
+                                if (seq[0] is ZeroOrMore z2)
+                                    if (seq[1].Equals(z2.Rule))
+                                        return z2;
+                            }
                         }
 
-                        return tmp;
+                        return new Optional(inner);
                     }
 
                 case ZeroOrMore z:
                     {
-                        var tmp = new ZeroOrMore(z.Rule.Simplify());
-                        if (tmp.Rule is Optional opt)
-                        {
+                        var inner = z.Rule.Simplify();
+
+                        // A?* => A*
+                        if (inner is Optional opt)
                             return new ZeroOrMore(opt.Rule);
-                        }
-                        return tmp;
+
+                        // A** => A*
+                        if (inner is ZeroOrMore z1)
+                            return z1;
+                        
+                        return new ZeroOrMore(inner);
                     }
             }
             return r;

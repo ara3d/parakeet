@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="CSharpAst.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Parakeet\Parakeet.csproj" />
   </ItemGroup>
 

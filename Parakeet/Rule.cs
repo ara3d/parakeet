@@ -11,32 +11,36 @@ namespace Parakeet
         protected abstract ParserState MatchImplementation(ParserState state, ParserCache cache);
 
         public ParserState Match(ParserState state, ParserCache cache)
-        {
-            // Set NO_CACHING to true to see performance of naive parser. 
-#if NO_CACHING
-        return MatchImplementation(state, cache);
-#else
-            // If we have already parsed this position and rule combination: return it. 
-            var prev = cache.PreviousMatch(state.Position);
-            if (prev?.Node?.Rule == this)
-                return prev;
+            => MatchImplementation(state, cache);
 
-            try
-            {
-                var result = MatchImplementation(state, cache);
-                cache.Update(result);
-                return result;
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine($"Uncaught exception {e}");
-                throw;
-            }
-#endif
+        public static Sequence operator +(Rule left, Rule right)
+        {
+            var list = new List<Rule>();
+            if (left is Sequence seq0)
+                list.AddRange(seq0.Rules);
+            else
+                list.Add(left);
+            if (right is Sequence seq1)
+                list.AddRange(seq1.Rules);
+            else
+                list.Add(right);
+            return new Sequence(list.ToArray());
         }
 
-        public static Sequence operator +(Rule left, Rule right) => new Sequence(left, right);
-        public static Choice operator |(Rule left, Rule right) => new Choice(left, right);
+        public static Choice operator |(Rule left, Rule right)
+        {
+            var list = new List<Rule>();
+            if (left is Choice ch0)
+                list.AddRange(ch0.Rules);
+            else
+                list.Add(left);
+            if (right is Choice ch1)
+                list.AddRange(ch1.Rules);
+            else
+                list.Add(right);
+            return new Choice(list.ToArray());
+        }
+
         public static NotAt operator !(Rule rule) => new NotAt(rule);
         public static implicit operator Rule(string s) => new StringMatchRule(s);
         public static implicit operator Rule(char c) => new CharMatchRule(c);
@@ -65,7 +69,8 @@ namespace Parakeet
 
     public class RecursiveRule : Rule
     {
-        public Rule Rule => CachedRule = CachedRule ?? (CachedRule = RuleFunc());
+        public Rule Rule => 
+            CachedRule = CachedRule ?? (CachedRule = RuleFunc());
         private Rule CachedRule { get; set; }
         private Func<Rule> RuleFunc { get; }
         public RecursiveRule(Func<Rule> ruleFunc) => RuleFunc = ruleFunc;
@@ -153,13 +158,39 @@ namespace Parakeet
         protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
         {
             var result = Rule.Match(state, cache);
-            if (result is null) return null;
+            if (result is null)
+                return null;
+            
             var node = new ParserNode(this, state.To(result), result.Node);
-            var r = new ParserState(result.Input, result.Position, node);
-            // Parse the data to eat 
-            var tmp = Eat?.Match(r, cache);
-            if (tmp != null) return tmp;
-            return r;
+            result = new ParserState(result.Input, result.Position, node);
+
+            // Eat whitespace 
+            var tmp = Eat?.Match(result, cache);
+            if (tmp != null) 
+                result = tmp;
+            
+            return result;
+
+            /*
+            // If we have already parsed this position and rule combination: return it. 
+            var prev = cache.PreviousMatch(state.Position);
+            if (prev?.Node?.Rule == this)
+                return prev;
+
+            var result = Rule.Match(state, cache);
+            if (result is null) 
+                return null;
+            var node = new ParserNode(this, state.To(result), result.Node);
+            result = new ParserState(result.Input, result.Position, node);
+                
+            // Eat whitespace 
+            var tmp = Eat?.Match(result, cache);
+            if (tmp != null) result = tmp;
+
+            // Cache the result and return it
+            cache.Update(result);
+            return result;
+            */
         }
 
         public override bool Equals(object obj) => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule) && Eat.Equals(nr.Eat);
