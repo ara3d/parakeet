@@ -20,7 +20,7 @@ namespace Parakeet
         public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Optional();
         public Rule Parenthesized(Rule r) => Symbol("(") + r + Symbol(")");
         public Rule ParenthesizedList(Rule r, Rule sep = null) => Parenthesized(List(r, sep));
-        public Rule Bracketed(Rule r) => Symbol("[") + Recovery + r + Symbol("]");
+        public Rule Bracketed(Rule r) => Symbol("[") + r + Symbol("]");
         public Rule BracketedList(Rule r, Rule sep = null) => Bracketed(List(r, sep));
         public Rule Keyword(string s) => s + IdentifierChar.NotAt() + WS;
         public Rule IntegerSuffix => Named(Strings("ul", "UL", "u", "U", "l", "L", "lu", "lU", "Lu", "LU"));
@@ -210,14 +210,14 @@ namespace Parakeet
         public Rule DefaultValue => Node((Symbol("=") + Expression).Optional());
         public Rule FunctionParameter => Node(AttributeList + FunctionParameterKeywords + TypeExpr + Identifier + DefaultValue);
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
-        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + Expression);
-        public Rule FunctionBody => Node(ExpressionBody | CompoundStatement);
+        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + ((Expression + EOS) | CompoundStatement));
+        public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
         public Rule BaseCall => Node(Keyword("base") + Recovery + ParenthesizedExpression);
         public Rule ThisCall => Node(Keyword("this") + Recovery + ParenthesizedExpression);
         public Rule BaseOrThisCall => Node((Symbol(":") + (BaseCall | ThisCall)).Optional());
-        public Rule ConstructorDeclaration => Node(Identifier + FunctionParameterList + BaseOrThisCall + FunctionBody);
-        public Rule MethodDeclaration => Node(TypeExpr + Identifier + FunctionParameterList + FunctionBody);
-        public Rule FieldDeclaration => Node(TypeExpr + Identifier + Initialization.Optional());
+        public Rule ConstructorDeclaration => Node(Identifier + FunctionParameterList + Recovery + BaseOrThisCall + FunctionBody);
+        public Rule MethodDeclaration => Node(TypeExpr + Identifier + FunctionParameterList + Recovery + FunctionBody);
+        public Rule FieldDeclaration => Node(TypeExpr + Identifier + Initialization.Optional() + EOS);
 
         public Rule Getter => Node(Keyword("get") + Recovery + FunctionBody);
         public Rule Setter => Node(Keyword("set") + Recovery + FunctionBody);
@@ -231,14 +231,15 @@ namespace Parakeet
         public Rule ConverterDeclaration => Node(TypeExpr + ImplicitOrExplicit + Keyword("operator") + TypeExpr + FunctionBody);
 
         public Rule MemberDeclaration => Node(DeclarationPreamble
-            + ConstructorDeclaration
+            + (ConstructorDeclaration
             | MethodDeclaration
+            | IndexerDeclaration 
+            | PropertyDeclaration
             | FieldDeclaration
             | OperatorDeclaration
             | ConverterDeclaration
             | TypeDeclaration
-            | IndexerDeclaration
-            | PropertyDeclaration);
+            ));
 
         public Rule NamespaceDeclaration => Node(Keyword("namespace") + QualifiedIdentifier + Braced(TopDeclaration.ZeroOrMore()));
         public Rule FileScopedNamespace => Node(Keyword("namespace") + QualifiedIdentifier + EOS);

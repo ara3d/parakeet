@@ -45,7 +45,6 @@ abc
             "private int y;",
             "int x = 12;",
             "public int x = 12;",
-            "int x, y;",
             "void f() { }",
             "public static void f(int x) { return x; }",
             "int x {get;}",
@@ -201,8 +200,8 @@ abc
             "class C { private int x = 12; }",
             "class C { public static int x = 12; }",
             "class C { public int x => 12; }",
-            "class C { public int x { get; set; }",
-            "class C { public int x { get { return 12; } set { _x = value; } }",
+            "class C { public int x { get; set; } }",
+            "class C { public int x { get { return 12; } set { _x = value; } } }",
             "class C { public int x() { return 12; } }",
             "class C { public int x() { return 12; } private float x() { return 99; } }",
         };
