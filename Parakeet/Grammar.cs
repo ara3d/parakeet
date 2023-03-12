@@ -32,10 +32,10 @@ namespace Parakeet
                 .Select(pi => pi.GetValue(this) as Rule);
 
         public static Rule Choice(IEnumerable<Rule> rules)
-            => new Choice(rules.ToArray());
+            => new ChoiceRule(rules.ToArray());
 
         public static Rule Sequence(IEnumerable<Rule> rules)
-            => new Sequence(rules.ToArray());
+            => new SequenceRule(rules.ToArray());
 
         public Rule Recursive(string inner, [CallerMemberName] string nodeName = "")
             => Node(new RecursiveRule(() => GetRuleFromName(inner)), nodeName);
@@ -46,14 +46,13 @@ namespace Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            r = r.Optimize();
             r = new NamedRule(r, name);
             Lookup.Add(name, r);
             return r;
         }
 
         public Rule Strings(params string[] values)
-            => new Choice(values.OrderByDescending(v => v.Length).Select(v => (Rule)v).ToArray());
+            => new ChoiceRule(values.OrderByDescending(v => v.Length).Select(v => (Rule)v).ToArray());
 
         public Rule Node(Rule r, [CallerMemberName] string name = "")
         {
@@ -61,7 +60,6 @@ namespace Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            r = r.Optimize();
             r = new NodeRule(r, WhitespaceRule, name);
             Lookup.Add(name, r);
             return r;
@@ -77,12 +75,9 @@ namespace Parakeet
 
         public Rule CharSet(string chars)
             => new CharSetRule(chars.ToCharArray());
-
-        public Rule After(Rule r)
-            => new LookBehind(r);
-
+        
         public Rule ZeroOrMore(Rule r)
-            => new ZeroOrMore(r);
+            => new ZeroOrMoreRule(r);
 
         public Rule OneOrMore(Rule r) 
             => r + r.ZeroOrMore();

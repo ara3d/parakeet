@@ -36,16 +36,16 @@ namespace Parakeet
             if (r is NodeRule nr)
                 return cb.WriteLine($"public {nr.Name} {fieldName} => Children[{child}] as {nr.Name};");
             
-            if (r is Sequence)
+            if (r is SequenceRule)
                 return cb.WriteLine($"public AstSequence {fieldName} => Children[{child}] as AstSequence;");
             
-            if (r is Choice)
+            if (r is ChoiceRule)
                 return cb.WriteLine($"public AstChoice {fieldName} => Children[{child}] as AstChoice;");
             
-            if (r is Optional opt)
+            if (r is OptionalRule opt)
                 return cb.WriteLine($"public AstOptional<{opt.Rule.AstTypeName()}> {fieldName} => Children[{child}] as AstOptional<{opt.Rule.AstTypeName()}>;");
             
-            if (r is ZeroOrMore z)
+            if (r is ZeroOrMoreRule z)
                 return cb.WriteLine($"public AstZeroOrMore<{z.Rule.AstTypeName()}> {fieldName} => Children[{child}] as AstZeroOrMore<{z.Rule.AstTypeName()}>;");
 
             if (r is RecursiveRule rr)
@@ -56,12 +56,12 @@ namespace Parakeet
 
         public static int NumAstChildren(Rule r)
         {
-            var body = r.Body()?.OnlyNodes()?.Optimize();
+            var body = r.Body()?.OnlyNodes();
             if (body == null)
                 return 0;
-            if (body is Sequence sequence)
+            if (body is SequenceRule sequence)
                 return sequence.Count;
-            if (body is Choice choice)
+            if (body is ChoiceRule choice)
                 return choice.Count;
             return 1;
         }
@@ -70,13 +70,13 @@ namespace Parakeet
         {
             if (r is NodeRule nr)
                 return nr.Name;
-            if (r is ZeroOrMore z)
-                return "ZeroOrMore" + z.Rule.AstFieldName();
-            if (r is Sequence s)
-                return "Sequence";
-            if (r is Choice c)
-                return "Choice";
-            if (r is Optional opt)
+            if (r is ZeroOrMoreRule z)
+                return "ZeroOrMoreRule" + z.Rule.AstFieldName();
+            if (r is SequenceRule s)
+                return "SequenceRule";
+            if (r is ChoiceRule c)
+                return "ChoiceRule";
+            if (r is OptionalRule opt)
                 return opt.Rule.AstFieldName();
             if (r is RecursiveRule rec)
                 return rec.Rule.AstFieldName();
@@ -89,17 +89,17 @@ namespace Parakeet
             if (!(r is NodeRule nr))
                 return cb;
 
-            var body = r.Body()?.OnlyNodes()?.Optimize();
+            var body = r.Body()?.OnlyNodes();
 
             cb = cb.WriteLine($"// Original Rule: {r.Body().ToDefinition()}");
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
             cb = cb.Write($"public class {nr.Name}");
            
-            if (body is Sequence)
+            if (body is SequenceRule)
             {
                 cb = cb.WriteLine($" : AstSequence");
             }
-            else if (body is Choice)
+            else if (body is ChoiceRule)
             {
                 cb = cb.WriteLine($" : AstChoice");
             }
@@ -117,13 +117,13 @@ namespace Parakeet
             {
                 cb = cb.WriteLine("// No children");
             }
-            else if (body is Sequence sequence)
+            else if (body is SequenceRule sequence)
             {
                 var names = sequence.Rules.Select(AstFieldName).ToList();
                 foreach (var child in sequence.Rules)
                     cb = OutputAstField(cb, names, child, index, index++);
             }
-            else if (body is Choice choice)
+            else if (body is ChoiceRule choice)
             {
                 var names = choice.Rules.Select(AstFieldName).ToList();
                 foreach (var child in choice.Rules)

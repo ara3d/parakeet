@@ -9,22 +9,21 @@
         public int Position { get; }
         public ParserNode Node { get; }
         public ParserError LastError { get; }
-        public bool Backwards { get; }
 
         public bool AtEnd => Position < 0 || Position >= Input.Length;
         public char Current => Input[Position];
 
-        public ParserState(ParserInput input, int position = 0, ParserNode node = null, bool backwards = false, ParserError error = null)
-            => (Input, Position, Node, Backwards, LastError) = (input, position, node, backwards, error);
+        public ParserState(ParserInput input, int position = 0, ParserNode node = null, ParserError error = null)
+            => (Input, Position, Node, LastError) = (input, position, node, error);
 
-        public ParserState Reverse()
-            => new ParserState(Input, Position, Node, !Backwards, LastError);
+        public ParserState Advance(int amount)
+            => new ParserState(Input, Position + amount, Node,  LastError);
 
         public ParserState Advance()
-            => AtEnd ? null : new ParserState(Input, Backwards ? Position - 1 : Position + 1, Node, Backwards, LastError);
+            => new ParserState(Input, Position + 1, Node, LastError);
 
         public ParserState JumpToEnd()
-            => new ParserState(Input, Input.Length, Node, Backwards, LastError);
+            => Advance(CharsLeft);
 
         public override string ToString()
             => $"Parse state: line {CurrentLineIndex} column {CurrentColumn} position {Position}/{Input.Length} node = {Node}";
@@ -48,6 +47,22 @@
             => new ParserRange(this, other);
 
         public ParserState WithError(ParserError error)
-            => new ParserState(Input, Position, Node, Backwards, error);
+            => new ParserState(Input, Position, Node, error);
+
+        public int CharsLeft
+            => Input.Length - Position;
+
+        public ParserState Match(string s)
+        {
+            var n = s.Length;
+            if (CharsLeft < n) 
+                return null;
+            for (int i = 0, j = Position; i < n; i++, j++)
+            {
+                if (s[i] != Input[j])
+                    return null;
+            }
+            return Advance(n);
+        }
     }
 }

@@ -20,17 +20,17 @@
         /*
         public Rule ContentLine => ;
         public Rule BlockQuotedParagraph => OneOrMore(">") + Paragraph;
-        public Rule Paragraph => ContentLine.OneOrMore() + BlankLine.At() | EndOfInput;
+        public Rule Paragraph => ContentLine.OneOrMore() + BlankLine.AtRule() | EndOfInput;
         public Rule BlankLine => WSToEndOfLine();
         public Rule Text;
-        public Rule WS => ZeroOrMore(Spaces);
-        public Rule WSToEndOfLine => ZeroOrMore(" \t\r".ToCharSetRule()) + NewLine; 
+        public Rule WS => ZeroOrMoreRule(Spaces);
+        public Rule WSToEndOfLine => ZeroOrMoreRule(" \t\r".ToCharSetRule()) + NewLine; 
         public Rule LineBegin => After(NewLine);
         public Rule Line => LineBegin;
-        public Rule Heading => LineBegin + OneOrMore('#') + Optional(' ') + HeadingContent + NewLine;
-        public Rule NonHeadingText => LineBegin + NotAt("-") + Text;
-        public Rule Heading1Underlined => NonHeadingText + NewLine + "==" + ZeroOrMore('=') + UntilNextLine;
-        public Rule Heading2Underlined => NonHeadingText + NewLine + "--" + ZeroOrMore('-') + UntilNextLine;
+        public Rule Heading => LineBegin + OneOrMore('#') + OptionalRule(' ') + HeadingContent + NewLine;
+        public Rule NonHeadingText => LineBegin + NotAtRule("-") + Text;
+        public Rule Heading1Underlined => NonHeadingText + NewLine + "==" + ZeroOrMoreRule('=') + UntilNextLine;
+        public Rule Heading2Underlined => NonHeadingText + NewLine + "--" + ZeroOrMoreRule('-') + UntilNextLine;
         public Rule Bold1 => "**" + Text + "**";
         public Rule Bold2 => "__" + Text + "__";
         public Rule Italic1 => "*" + Text + "*";
@@ -55,12 +55,12 @@
         public Rule EscapableChar => CharSet("\`*_{}[]<>()#+-.!");
         public Rule LinkedText => Text;
         public Rule URL => Text; // TODO:
-        public Rule UrlTitle => '"' + AnyChar.Except('"').ZeroOrMore() + '"';
+        public Rule UrlTitle => '"' + AnyChar.Except('"').ZeroOrMoreRule() + '"';
         public Rule InlineUrl => "<" + URL + ">";
-        public Rule ReferenceStyleLink => "[" + LinkedText + "]" + Optional(' ') + "[" + ReferenceLink + "]";
+        public Rule ReferenceStyleLink => "[" + LinkedText + "]" + OptionalRule(' ') + "[" + ReferenceLink + "]";
         public Rule Image => "!" + Link;
         public Rule LinkedImage => ? 
-        public Rule Link => "[" + LinkedText + "]" + WS + "(" + URL + WS + UrlTitle.Optional() + ")";
+        public Rule Link => "[" + LinkedText + "]" + WS + "(" + URL + WS + UrlTitle.OptionalRule() + ")";
         public Rule HorizontalLine => (LineBegin + ThreeOrMore("*") | ThreeOrMore("-") | ThreeOrMore("_") + WSToEndOfLine; 
     */
     }

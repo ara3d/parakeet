@@ -6,28 +6,28 @@
             => new CharSetRule(s.ToCharArray());
 
         public static Rule At(this Rule rule)
-            => new At(rule);
+            => new AtRule(rule);
 
         public static Rule Then(this Rule rule, Rule other)
-            => new Sequence(new[] { rule, other });
+            => new SequenceRule(new[] { rule, other });
 
         public static Rule ThenNot(this Rule rule, Rule other)
             => rule.Then(other.NotAt());
 
         public static Rule Optional(this Rule rule)
-            => new Optional(rule);
+            => new OptionalRule(rule);
 
         public static Rule Or(this Rule rule, Rule other)
-            => new Choice(new[] { rule, other });
+            => new ChoiceRule(new[] { rule, other });
 
         public static Rule NotAt(this Rule rule)
-            => new NotAt(rule);
+            => new NotAtRule(rule);
 
         public static Rule Except(this Rule rule, Rule except)
             => (except.NotAt() + rule);
 
         public static Rule ZeroOrMore(this Rule rule)
-            => new ZeroOrMore(rule);
+            => new ZeroOrMoreRule(rule);
 
         public static Rule OneOrMore(this Rule rule)
             => rule.Then(rule.ZeroOrMore());
