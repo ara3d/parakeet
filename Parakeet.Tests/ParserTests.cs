@@ -30,9 +30,9 @@ namespace Parakeet.Tests
                 Console.WriteLine($"Node {kv.Key} = {kv.Value}");
         }
 
-        public static void OutputParseErrors(ParserCache cache)
+        public static void OutputParseErrors(ParserState state)
         {
-            foreach (var e in cache.Errors)
+            for (var e = state.LastError; e != null; e = e.Previous)
             {
                 Console.WriteLine($"Parse error at {e.LastState} failed expected rule {e.Expected}, parent state is {e.ParentState}, message is {e.Message}");
                 Console.WriteLine(e.LastState.CurrentLine);
@@ -40,9 +40,8 @@ namespace Parakeet.Tests
             }
         }
 
-        public static int ParseTest(ParserInput input, Rule rule, ParserCache? cache = null, bool outputInput = true)
+        public static int ParseTest(ParserInput input, Rule rule, bool outputInput = true)
         {
-            cache ??= new ParserCache(input.Length);
             if (outputInput)
             {
                 Console.WriteLine($"Testing Rule {rule.GetName()} with input {input}");
@@ -55,14 +54,14 @@ namespace Parakeet.Tests
             ParserState ps = null;
             try
             {
-                ps = input.Parse(rule, cache);
+                ps = input.Parse(rule);
             }
             catch (ParserException pe)
             {
                 Console.WriteLine($"Parsing exception {pe.Message} occured at {pe.LastValidState} ");            
             }
-            OutputParseErrors(cache);
-            if (cache.Errors.Count > 0) 
+            OutputParseErrors(ps);
+            if (ps.LastError != null) 
             {
                 return 0;
             }

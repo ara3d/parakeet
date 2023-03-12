@@ -201,7 +201,7 @@ namespace Parakeet.Tests
             var file = Path.Combine(ParserTests.InputFilesFolder, fileName);
             //var input = System.IO.File.ReadAllText(file).Trim();
             var input = ParserInput.FromFile(file);
-            Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, null, false));
+            Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
         }
 
         [Test]

@@ -8,22 +8,23 @@
         public ParserInput Input { get; }
         public int Position { get; }
         public ParserNode Node { get; }
+        public ParserError LastError { get; }
         public bool Backwards { get; }
 
         public bool AtEnd => Position < 0 || Position >= Input.Length;
         public char Current => Input[Position];
 
-        public ParserState(ParserInput input, int position = 0, ParserNode node = null, bool backwards = false)
-            => (Input, Position, Node, Backwards) = (input, position, node, backwards);
+        public ParserState(ParserInput input, int position = 0, ParserNode node = null, bool backwards = false, ParserError error = null)
+            => (Input, Position, Node, Backwards, LastError) = (input, position, node, backwards, error);
 
         public ParserState Reverse()
-            => new ParserState(Input, Position, Node, !Backwards);
+            => new ParserState(Input, Position, Node, !Backwards, LastError);
 
         public ParserState Advance()
-            => AtEnd ? null : new ParserState(Input, Backwards ? Position - 1 : Position + 1, Node);
+            => AtEnd ? null : new ParserState(Input, Backwards ? Position - 1 : Position + 1, Node, Backwards, LastError);
 
         public ParserState JumpToEnd()
-            => new ParserState(Input, Input.Length, Node);
+            => new ParserState(Input, Input.Length, Node, Backwards, LastError);
 
         public override string ToString()
             => $"Parse state: line {CurrentLineIndex} column {CurrentColumn} position {Position}/{Input.Length} node = {Node}";
@@ -45,5 +46,8 @@
 
         public ParserRange To(ParserState other)
             => new ParserRange(this, other);
+
+        public ParserState WithError(ParserError error)
+            => new ParserState(Input, Position, Node, Backwards, error);
     }
 }

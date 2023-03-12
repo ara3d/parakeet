@@ -6,10 +6,10 @@ namespace Parakeet
 {
     public abstract class Rule
     {
-        protected abstract ParserState MatchImplementation(ParserState state, ParserCache cache);
+        protected abstract ParserState MatchImplementation(ParserState state);
 
-        public ParserState Match(ParserState state, ParserCache cache)
-            => MatchImplementation(state, cache);
+        public ParserState Match(ParserState state)
+            => MatchImplementation(state);
 
         public static Sequence operator +(Rule left, Rule right)
         {
@@ -60,7 +60,7 @@ namespace Parakeet
         public Rule Rule { get; }
         public string Name { get; }
         public NamedRule(Rule r, string name) => (Rule, Name) = (r, name);
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => Rule.Match(state, cache);
+        protected override ParserState MatchImplementation(ParserState state) => Rule.Match(state);
         public override bool Equals(object obj) => obj is NamedRule other && other.Rule.Equals(Rule) && Name == other.Name;
         public override int GetHashCode() => Hash(Rule);
     }
@@ -72,9 +72,9 @@ namespace Parakeet
         private Rule CachedRule { get; set; }
         private Func<Rule> RuleFunc { get; }
         public RecursiveRule(Func<Rule> ruleFunc) => RuleFunc = ruleFunc;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
-            return Rule.Match(state, cache);
+            return Rule.Match(state);
         }
         public override bool Equals(object obj) => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
         public override int GetHashCode() => Hash(RuleFunc());
@@ -84,7 +84,7 @@ namespace Parakeet
     {
         public string Pattern { get; }
         public StringMatchRule(string s) => Pattern = s;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
             for (var i = 0; i < Pattern.Length; ++i)
             {
@@ -102,7 +102,7 @@ namespace Parakeet
 
     public class AnyCharRule : Rule
     {
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
             => state.AtEnd ? null : state.Advance();
         public static AnyCharRule Default { get; } = new AnyCharRule();
         public override bool Equals(object obj) => obj is AnyCharRule;
@@ -114,7 +114,7 @@ namespace Parakeet
         public char Low { get; }
         public char High { get; }
         public CharRangeRule(char low, char high) => (Low, High) = (low, high);
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
             => state.AtEnd ? null : state.Current >= Low && state.Current <= High ? state.Advance() : null;
         public override bool Equals(object obj) => obj is CharRangeRule crr && crr.Low == Low && crr.High == High;
         public override int GetHashCode() => Hash(Low, High);
@@ -124,14 +124,14 @@ namespace Parakeet
     {
         public char[] Chars { get; }
         public CharSetRule(params char[] chars) => Chars = chars;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => state.AtEnd ? null : Chars.Contains(state.Current) ? state.Advance() : null;
+        protected override ParserState MatchImplementation(ParserState state) => state.AtEnd ? null : Chars.Contains(state.Current) ? state.Advance() : null;
         public override bool Equals(object obj) => obj is CharSetRule csr && new string(Chars) == new string(csr.Chars);
         public override int GetHashCode() => Hash(new string(Chars));
     }
 
     public class EndOfInputRule : Rule
     {
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => state.AtEnd ? state : null;
+        protected override ParserState MatchImplementation(ParserState state) => state.AtEnd ? state : null;
         public static EndOfInputRule Default => new EndOfInputRule();
         public override bool Equals(object obj) => obj is EndOfInputRule;
         public override int GetHashCode() => nameof(EndOfInputRule).GetHashCode();
@@ -141,7 +141,7 @@ namespace Parakeet
     {
         public char Ch { get; }
         public CharMatchRule(char ch) => Ch = ch;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
             => state.AtEnd ? null : state.Current == Ch ? state.Advance() : null;
         public override bool Equals(object obj) => obj is CharMatchRule cmr && cmr.Ch == Ch;
         public override int GetHashCode() => Hash(Ch);
@@ -154,9 +154,9 @@ namespace Parakeet
 
         public NodeRule(Rule rule, Rule eat, string name) : base(rule, name) => Eat = eat;
 
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
-            var result = Rule.Match(state, cache);
+            var result = Rule.Match(state);
             if (result is null)
                 return null;
             
@@ -164,7 +164,7 @@ namespace Parakeet
             result = new ParserState(result.Input, result.Position, node);
 
             // Eat whitespace 
-            var tmp = Eat?.Match(result, cache);
+            var tmp = Eat?.Match(result);
             if (tmp != null) 
                 result = tmp;
             
@@ -203,14 +203,14 @@ namespace Parakeet
         public Rule Rule { get; }
         public ZeroOrMore(Rule rule) => Rule = rule;
 
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
             var curr = state;
-            var next = Rule.Match(curr, cache);
+            var next = Rule.Match(curr);
             while (next != null)
             {
                 curr = next;
-                next = Rule.Match(curr, cache);
+                next = Rule.Match(curr);
                 if (next != null)
                 {
                     if (next.Position <= curr.Position)
@@ -230,8 +230,8 @@ namespace Parakeet
     {
         public Rule Rule { get; }
         public Optional(Rule rule) => Rule = rule;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
-            => Rule.Match(state, cache) ?? state;
+        protected override ParserState MatchImplementation(ParserState state)
+            => Rule.Match(state) ?? state;
         public override bool Equals(object obj) => obj is Optional opt && opt.Rule.Equals(Rule);
         public override int GetHashCode() => Hash(Rule);
     }
@@ -244,7 +244,7 @@ namespace Parakeet
         public Rule this[int index] => Rules[index];
         public Rule Head => this[0];
         public Rule Tail => new Sequence(Rules.Skip(1).ToArray());
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
             var newState = state;
             OnError onError = null;
@@ -258,15 +258,15 @@ namespace Parakeet
                 {
                     var prevState = newState;
                     var msg = string.Empty;
-                    newState = rule.Match(prevState, cache);
+                    newState = rule.Match(prevState);
                     if (newState == null)
                     {
                         if (onError != null)
                         {
-                            var error = new ParseError(rule, this, state, prevState, msg);
-                            cache.Errors.Add(error);
+                            var error = new ParserError(rule, this, state, prevState, msg, prevState.LastError);
+                            prevState = prevState.WithError(error);
                             var recovery = onError.RecoveryRule;
-                            return recovery.Match(prevState, cache);
+                            return recovery.Match(prevState);
                         }
                         return null;
                     }
@@ -286,11 +286,11 @@ namespace Parakeet
         public Choice(params Rule[] rules) => Rules = rules;
         public int Count => Rules.Count();
         public Rule this[int index] => Rules[index];
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
+        protected override ParserState MatchImplementation(ParserState state)
         {
             foreach (var rule in Rules)
             {
-                var newState = rule.Match(state, cache);
+                var newState = rule.Match(state);
                 if (newState != null) return newState;
             }
 
@@ -305,8 +305,8 @@ namespace Parakeet
     {
         public Rule Rule { get; }
         public At(Rule rule) => (Rule) = (rule);
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
-            => Rule.Match(state, cache) != null ? state : null;
+        protected override ParserState MatchImplementation(ParserState state)
+            => Rule.Match(state) != null ? state : null;
 
         public override bool Equals(object obj) => obj is At at && Rule.Equals(at.Rule);
         public override int GetHashCode() => Hash(Rule);
@@ -316,8 +316,8 @@ namespace Parakeet
     {
         public Rule Rule { get; }
         public NotAt(Rule rule) => (Rule) = (rule);
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache)
-            => Rule.Match(state, cache) == null ? state : null;
+        protected override ParserState MatchImplementation(ParserState state)
+            => Rule.Match(state) == null ? state : null;
         public override bool Equals(object obj) => obj is NotAt notAt && Rule.Equals(notAt.Rule);
         public override int GetHashCode() => Hash(Rule);
     }
@@ -326,7 +326,7 @@ namespace Parakeet
     {
         public Rule RecoveryRule { get; }
         public OnError(Rule rule) => RecoveryRule = rule;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => state;
+        protected override ParserState MatchImplementation(ParserState state) => state;
         public override bool Equals(object obj) => obj is OnError rec && RecoveryRule.Equals(rec.RecoveryRule);
         public override int GetHashCode() => Hash(RecoveryRule);
     }
@@ -335,7 +335,7 @@ namespace Parakeet
     {
         public Rule Rule { get; }
         public LookBehind(Rule rule) => Rule = rule;
-        protected override ParserState MatchImplementation(ParserState state, ParserCache cache) => Rule.Match(state.Reverse(), cache) != null ? state : null;
+        protected override ParserState MatchImplementation(ParserState state) => Rule.Match(state.Reverse()) != null ? state : null;
         public override bool Equals(object obj) => obj is LookBehind lb && Rule.Equals(lb.Rule);
         public override int GetHashCode() => Hash(Rule);
     }

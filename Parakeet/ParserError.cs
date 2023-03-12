@@ -6,15 +6,16 @@
     /// is expected to follow. For example, an "if" keyword indicate that a parenthesized
     /// expression must follow, and then another statement, with an optional else clause. 
     /// </summary>
-    public class ParseError
+    public class ParserError
     {
-        public ParseError(Rule expected, Rule parent, ParserState parentState, ParserState lastState, string message)
+        public ParserError(Rule expected, Rule parent, ParserState parentState, ParserState lastState, string message, ParserError previous)
         {
             Expected = expected;
             Parent = parent;
             ParentState = parentState;
             LastState = lastState;
             Message = message;
+            Previous = previous;
         }
 
         public Rule Expected { get; }
@@ -22,5 +23,6 @@
         public ParserState ParentState { get; }
         public ParserState LastState { get; }
         public string Message { get; }
+        public ParserError Previous { get; }
     }
 }

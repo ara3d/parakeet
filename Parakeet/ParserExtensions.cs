@@ -5,17 +5,11 @@ namespace Parakeet
 {
     public static class ParserExtensions
     {
-        public static ParserState Parse(this ParserInput input, Rule r, ParserCache results)
-            => r.Match(new ParserState(input), results);
-
         public static ParserState Parse(this ParserInput input, Rule r)
-            => r.Match(new ParserState(input), new ParserCache(input.Length));
-
-        public static ParserState Parse(this string s, Rule r, ParserCache results)
-            => r.Match(new ParserState(s), results);
+            => r.Match(new ParserState(input));
 
         public static ParserState Parse(this string s, Rule r)
-            => s.Parse(r, new ParserCache(s.Length));
+            => r.Match(new ParserState(s));
 
         public static ParseTree ToParseTree(this ParserNode node)
             => node.ToParseTreeAndNode().Item1;
@@ -26,14 +20,13 @@ namespace Parakeet
         public static IEnumerable<ParserRange> GetMatches(this ParserInput input, Rule rule)
         {
             var p = new ParserState(input);
-            var cache = new ParserCache(input.Length);
             while (!p.AtEnd)
             {
                 // Don't keep nodes between matches 
                 p = p.ClearNodes();
 
                 // Test to see if we can generate a result
-                var result = rule.Match(p, cache);
+                var result = rule.Match(p);
                 if (result != null)
                 {
                     yield return p.To(result);
