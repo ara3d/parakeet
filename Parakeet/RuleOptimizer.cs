@@ -157,103 +157,82 @@ namespace Parakeet
 
                 case SequenceRule seq:
                 {
-                    var tmp = seq.Rules.SelectMany(
+                    var list = seq.Rules.SelectMany(
                         r1 =>
                         {
                             var tmp1 = r1.Optimize();
                             if (tmp1 is SequenceRule seq1)
                                 return seq1.Rules;
                             return new[] { tmp1 };
-                        }).ToArray();
+                        }).ToList();
                     
-                    Debug.Assert(tmp.Length > 0);
-                    Debug.Assert(!tmp.Any(t => t is SequenceRule));
+                    Debug.Assert(list.Count > 0);
+                    Debug.Assert(!list.Any(t => t is SequenceRule));
 
-                    var list = new List<Rule>(tmp);
-                    while (true)
+                    for (var i = 0; i < list.Count - 1; )
                     {
-                        for (var i = 0; i < tmp.Length - 1; ++i)
+                        var r1 = list[i];
+                        var r2 = list[i + 1];
+                        var r3 = MergeSequenceRule(r1, r2);
+                        if (r3 == null)
                         {
-                            var r1 = tmp[i];
-                            var r2 = tmp[i + 1];
-                            var r3 = MergeSequenceRule(r1, r2);
-                            if (r3 == null)
-                            {
-                                list.Add(r1);
-                                list.Add(r2);
-                            }
-                            else
-                            {
-                                list.Add(r3.Optimize());
-                                i++;
-                            }
+                            i++;
                         }
-
-                        // No merging happened
-                        if (list.Count == tmp.Length)
-                            break;
-
-                        tmp = list.ToArray();
+                        else
+                        {
+                            list[i] = r3.Optimize();
+                            list.RemoveAt(i+1);
+                            if (i > 0) i--;
+                        }
                     }
 
-                    Debug.Assert(tmp.Length > 0);
-                    Debug.Assert(!tmp.Any(t => t is SequenceRule));
+                    Debug.Assert(list.Count > 0);
+                    Debug.Assert(!list.Any(t => t is SequenceRule));
 
-                    if (tmp.Length == 1)
-                        return Log(r, null, tmp[0], "(A+_) => A");
+                    if (list.Count == 1)
+                        return Log(r, null, list[0], "(A+_) => A");
 
-                    return Log(r, null, new SequenceRule(tmp), "");
+                    return Log(r, null, new SequenceRule(list.ToArray()), "");
                 }
 
                 case ChoiceRule ch:
                 {
-                    // (A | B) | C => A | B | C
-                    var tmp = ch.Rules.SelectMany(
+                    var list = ch.Rules.SelectMany(
                         r1 =>
                         {
                             var tmp1 = r1.Optimize();
-                            if (tmp1 is ChoiceRule ch1)
-                                return ch1.Rules;
+                            if (tmp1 is ChoiceRule seq1)
+                                return seq1.Rules;
                             return new[] { tmp1 };
-                        }).ToArray();
+                        }).ToList();
 
-                    Debug.Assert(tmp.Length > 0);
-                    Debug.Assert(!tmp.Any(t => t is ChoiceRule));
-                    
-                    var list = new List<Rule>(tmp);
-                    while (true)
+                    Debug.Assert(list.Count > 0);
+                    Debug.Assert(!list.Any(t => t is ChoiceRule));
+
+                    for (var i = 0; i < list.Count - 1;)
                     {
-                        for (var i = 0; i < tmp.Length - 1; ++i)
+                        var r1 = list[i];
+                        var r2 = list[i + 1];
+                        var r3 = MergeChoiceRule(r1, r2);
+                        if (r3 == null)
                         {
-                            var r1 = tmp[i];
-                            var r2 = tmp[i + 1];
-                            var r3 = MergeChoiceRule(r1, r2);
-                            if (r3 == null)
-                            {
-                                list.Add(r1);
-                                list.Add(r2);
-                            }
-                            else
-                            {
-                                list.Add(r3.Optimize());
-                                i++;
-                            }
+                            i++;
                         }
-
-                        // No merging happened
-                        if (list.Count == tmp.Length)
-                            break;
-
-                        tmp = list.ToArray();
+                        else
+                        {
+                            list[i] = r3.Optimize();
+                            list.RemoveAt(i + 1);
+                            if (i > 0) i--;
+                        }
                     }
 
-                    Debug.Assert(tmp.Length > 0);
-                    Debug.Assert(!tmp.Any(t => t is ChoiceRule));
+                    Debug.Assert(list.Count > 0);
+                    Debug.Assert(!list.Any(t => t is ChoiceRule));
 
-                    if (tmp.Length == 1)
-                        return Log(r, null, tmp[0], "(A|_) => A");
+                    if (list.Count == 1)
+                        return Log(r, null, list[0], "(A+_) => A");
 
-                    return Log(r, null, new ChoiceRule(tmp), "");
+                    return Log(r, null, new ChoiceRule(list.ToArray()), "");
                 }
 
                 case OptionalRule opt:

@@ -13,11 +13,21 @@ namespace Parakeet.Tests
         {
             foreach (var r in Grammar.GetRules())
             {
-                if (r != null)
-                {
-                    Console.WriteLine($"{r.GetName()} => ");
-                    Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
-                }
+                Console.WriteLine($"{r.GetName()} => ");
+                Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
+            }
+        }
+
+        [Test]
+        public static void OptimizerTest()
+        {
+            foreach (var r in Grammar.GetRules())
+            {
+                Console.WriteLine($"{r.GetName()} => ");
+                Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
+
+                var opt = r.Optimize();
+                Console.WriteLine($"{opt.Body().ToDefinition(false, "  ")}");
             }
         }
 

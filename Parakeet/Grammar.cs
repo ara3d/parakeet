@@ -29,7 +29,8 @@ namespace Parakeet
             => GetType()
                 .GetProperties()
                 .Where(pi => typeof(Rule).IsAssignableFrom(pi.PropertyType))
-                .Select(pi => pi.GetValue(this) as Rule);
+                .Select(pi => pi.GetValue(this) as Rule)
+                .Where(r => r != null);
 
         public static Rule Choice(IEnumerable<Rule> rules)
             => new ChoiceRule(rules.ToArray());
