@@ -43,6 +43,15 @@ namespace Parakeet
         public static string ToDefinition(this IEnumerable<Rule> rules, string sep, bool shortForm, string indent)
             => string.Join(sep, rules.Select(r => r.ToDefinition(shortForm, indent + "  ")));
 
+        public static string EscapeChar(this char c) =>
+            char.IsLetterOrDigit(c) || char.IsSymbol(c) ? c.ToString() : $"\\x{(int)c:X2}";
+
+        public static string EscapeChars(this string s) =>
+            s.ToCharArray().EscapeChars();
+
+        public static string EscapeChars(this char[] cs) =>
+            string.Join("", cs.Select(EscapeChar));
+
         public static string ToDefinition(this Rule r, bool shortForm = true, string indent = "")
         {
             var nextLine = shortForm ? "" : $"\n{indent}";
@@ -65,7 +74,7 @@ namespace Parakeet
                 case RecursiveRule rec:
                     return rec.Rule.ToDefinition(shortForm, indent);
                 case StringMatchRule sm:
-                    return $"\"{sm.Pattern}\"";
+                    return $"\"{sm.Pattern.EscapeChars()}\"";
                 case AnyCharRule _:
                     return $"_ANY_";
                 case NotAt not:
@@ -73,11 +82,11 @@ namespace Parakeet
                 case At at:
                     return $"&({at.Rule.ToDefinition(shortForm, indent)})";
                 case CharRangeRule range:
-                    return $"[{range.Low}..{range.High}]";
+                    return $"[{range.Low.EscapeChar()}..{range.High.EscapeChar()}]";
                 case CharSetRule set:
-                    return $"[{new string(set.Chars)}]";
+                    return $"[{set.Chars.EscapeChars()}]";
                 case CharMatchRule charMatch:
-                    return $"[{charMatch.Ch}]";
+                    return $"[{charMatch.Ch.EscapeChar()}]";
                 case OnError set:
                     return $"_RECOVER_";
                 case EndOfInputRule endOfInputRule:
