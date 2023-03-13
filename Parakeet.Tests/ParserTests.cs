@@ -60,10 +60,15 @@ namespace Parakeet.Tests
             {
                 Console.WriteLine($"Parsing exception {pe.Message} occured at {pe.LastValidState} ");            
             }
-            OutputParseErrors(ps);
-            if (ps.LastError != null) 
+
+            if (ps != null)
             {
-                return 0;
+                OutputParseErrors(ps);
+
+                if (ps.LastError != null)
+                {
+                    return 0;
+                }
             }
 
             if (ps == null)

@@ -64,5 +64,16 @@
             }
             return Advance(n);
         }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ParserState ps && Equals(ps);
+        }
+
+        public bool Equals(ParserState state)
+        {
+            if (state == null) return false;
+            return Position == state.Position;
+        }
     }
 }
