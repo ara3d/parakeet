@@ -98,19 +98,6 @@ namespace Parakeet.Tests
             
             Assert.AreEqual(ps.Position, ps2.Position);
 
-            // Check that compiled rules produce the same output 
-            {
-                var compiledRule = rule.Compile();
-                var state = new ParserState(input);
-                var compiledResult = compiledRule(state);
-                Assert.IsTrue(ps == null ? compiledResult == null : compiledResult != null);
-                
-                if (ps == null || compiledResult == null)
-                    return 0;
-
-                Assert.AreEqual(ps.Position, compiledResult.Position);
-            }
-
             if (ps == null)
                 return 0;
 

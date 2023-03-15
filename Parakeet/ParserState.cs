@@ -94,7 +94,7 @@ namespace Parakeet
         }
 
         public ParserState AddNode(string name, ParserState prev)
-            => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node));
+            => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node), LastError);
 
         public override int GetHashCode()
             => Position.GetHashCode();

@@ -12,8 +12,10 @@ namespace Parakeet
         public CSharpGrammar()
             => WhitespaceRule = WS;
 
-        // 
-        public Rule Recovery => OnError(TokenOrStructure.Except(EOS).ZeroOrMore() + (EOS | "}" | "]" | ")" | EndOfInput));
+        // Recovery on error 
+        public Rule Recovery => OnError(
+            TokenOrStructure.Except(EOS).ZeroOrMore() 
+            + (EOS | EndOfInput));
 
         // Helper functions 
         public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Optional();
@@ -33,7 +35,7 @@ namespace Parakeet
         public Rule AngledBracketList(Rule r, Rule sep = null) => Symbol("<") + List(r, sep) + Symbol(">");
 
         // Basic 
-        public Rule WS => Named((Spaces | CppStyleComment).ZeroOrMore());
+        public Rule WS => Named((SpaceChars | CppStyleComment).ZeroOrMore());
 
         // Literals 
         public Rule EscapedLiteralChar => Named('\\' + AnyChar); // TODO: handle special codes like \u codes and \x
@@ -88,7 +90,7 @@ namespace Parakeet
         // Expressions 
         public Rule Identifier => Node(IdentifierFirstChar + IdentifierChar.ZeroOrMore());
 
-        public Rule BinaryOperation => Node(Not("=>") + BinaryOperator + Recovery + Expression);
+        public Rule BinaryOperation => Node(Not("=>") + BinaryOperator + Expression);
         public Rule TernaryOperation => Node(Symbol("?") + Recovery + Expression + Symbol(":") + Expression);
         public Rule ParenthesizedExpression => Node(ParenthesizedList(Expression));       
 
@@ -256,6 +258,7 @@ namespace Parakeet
         public Rule Nullable => Node(Symbol("?").Optional());
         public Rule InnerTypeExpr => Named(QualifiedIdentifier + TypeArgList.Optional() + ArrayRankSpecifiers);
         public Rule TypeExpr => Recursive(nameof(InnerTypeExpr));
+
         // Tokenization pass 
         public Rule OperatorChar => "!%^&|*?+-=/><:@#~$".ToCharSetRule();
         public Rule OperatorToken => OperatorChar.OneOrMore();
@@ -263,7 +266,7 @@ namespace Parakeet
         public Rule Delimiter => "[]{}()".ToCharSetRule();
         public Rule TypeKeyword => Node(Keywords("class", "struct", "interface", "enum"));
         public Rule StatementKeyword => Node(Keywords("for", "if", "return", "break", "continue", "do", "foreach", "throw", "switch", "try", "catch", "finally", "using", "case", "default"));
-        public new Rule Token => Node(Separator | CppStyleComment | Spaces | OperatorToken | Identifier | Literal);
+        public Rule Token => Node(Separator | CppStyleComment | Spaces | OperatorToken | Identifier | Literal);
         public Rule TokenOrStructure => Named(Token | Structure);
         public Rule Tokenizer => Token.ZeroOrMore() + OnError(AdvanceToEnd) + EndOfInput;
 

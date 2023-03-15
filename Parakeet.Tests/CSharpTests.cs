@@ -181,11 +181,35 @@ abc
         {
             "return x x;",
             "if ;",
+            "f(;",
+            "f);",
+            "if (a b);",
+            "if (12 34);",
             "for ( ) }",
             "for { }",
             "continue 12;",
             "f() g();",
             "var var var var;",
+        };
+
+        public static string[] FailingExpressions =
+        {
+            "",
+            "+",
+            "<<",
+            "<< 1",
+            "1+",
+            "a b c",
+            "a[",
+            "f(",
+            "(",
+            "))",
+            "f())",
+            "a <<<< b",
+            "a << << b",
+            "a === b",
+            "a ^!= b",
+            "a!+",
         };
 
         public static string[] Classes = new[]
@@ -248,9 +272,12 @@ abc
         public static void TestFailingStatements(string input)
         {
             Assert.AreEqual(0, ParserTests.ParseTest(input, Grammar.Statement));
-            
-            // TODO: figure out how to get the ParserState from the parse test
-            //Assert.IsTrue(pc.Errors.Count > 0);
+        }
+
+        [Test, TestCaseSource(nameof(FailingExpressions))]
+        public static void TestFailingExpressions(string input)
+        {
+            Assert.AreEqual(0, ParserTests.ParseTest(input, Grammar.Expression));
         }
 
         [Test, TestCaseSource(nameof(Classes))] 

@@ -13,28 +13,6 @@ namespace Parakeet
     {
         protected abstract ParserState MatchImplementation(ParserState state);
 
-        public Func<ParserState, ParserState> Compile()
-        {
-            var expr = GetLambdaExpression();
-            
-            // The following produces a useless "..." version of the expression tree.
-            //Debug.WriteLine(expr);
-
-            //https://stackoverflow.com/questions/5999668/accessing-expression-debugview-from-code
-            //var propertyInfo = typeof(Expression).GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic);
-            //var output = propertyInfo.GetValue(expr) as string;
-            //Debug.WriteLine(output);
-
-            return expr.Compile();
-        }
-
-        public Expression<Func<ParserState, ParserState>> GetLambdaExpression()
-        {
-            var state = Parameter(typeof(ParserState), "state");
-            var expr = GetExpression(state);
-            return Lambda<Func<ParserState, ParserState>>(expr, state);
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Match(ParserState state)
         {
@@ -81,7 +59,8 @@ namespace Parakeet
         public static implicit operator Rule(char[] cs) 
             => cs.Length == 1 ? (Rule)cs[0] : new CharSetRule(cs);
         
-        public static implicit operator Rule(Func<Rule> f) => new RecursiveRule(f);
+        public static implicit operator Rule(Func<Rule> f) 
+            => new RecursiveRule(f);
         
         public static bool operator ==(Rule r1, Rule r2) 
             => ReferenceEquals(r1, r2) || (r1?.Equals(r2) ?? false);
@@ -104,8 +83,6 @@ namespace Parakeet
 
         public override int GetHashCode()
             => throw new NotImplementedException();
-
-        public abstract Expression GetExpression(ParameterExpression state);
 
         public virtual IReadOnlyList<Rule> Children 
             => Array.Empty<Rule>();
@@ -131,9 +108,6 @@ namespace Parakeet
         public override int GetHashCode() 
             => Hash(Rule, Name);
 
-        public override Expression GetExpression(ParameterExpression state)
-            => Rule.GetExpression(state);
-
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
@@ -156,12 +130,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(RuleFunc);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var method = typeof(Rule).GetMethod(nameof(Match));
-            return Call(Invoke(Constant(RuleFunc)), method, state);
-        }
     }
 
     public class StringRule : Rule
@@ -179,13 +147,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(Pattern);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var method = typeof(ParserState).GetMethod(nameof(ParserState.Match));
-            if (method == null) throw new NullReferenceException();
-            return Call(state, method, Constant(Pattern));
-        }
     }
 
     public class AnyCharRule : Rule
@@ -201,13 +162,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => nameof(AnyCharRule).GetHashCode();
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var method = typeof(ParserState).GetMethod(nameof(ParserState.AdvanceIfNotAtEnd));
-            if (method == null) throw new NullReferenceException();
-            return Call(state, method);
-        }
     }
 
     public class CharSetRule : Rule
@@ -244,26 +198,6 @@ namespace Parakeet
 
         public override int GetHashCode() 
             => Hash(nameof(CharSetRule));
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var table = Constant(Chars);
-            var atEndMethod = typeof(ParserState).GetMethod(nameof(ParserState.AtEnd));
-            var currentMethod = typeof(ParserState).GetMethod(nameof(ParserState.GetCurrent));
-            var advanceMethod = typeof(ParserState).GetMethod(nameof(ParserState.Advance), Array.Empty<Type>());
-            var current = Call(state, currentMethod);
-            var advance = Call(state, advanceMethod);
-            var atEnd = Call(state, atEndMethod);
-            return Condition(
-                atEnd,
-                Default(typeof(ParserState)),
-                Condition(
-                    And(
-                        LessThan(current, Constant((char)128)),
-                        ArrayIndex(table, Convert(current, typeof(int)))),
-                    advance,
-                    Default(typeof(ParserState))));
-        }
 
         public CharSetRule Union(CharSetRule other)
         {
@@ -338,13 +272,6 @@ namespace Parakeet
 
         public override int GetHashCode() 
             => Hash(Char);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var advanceMethod = typeof(ParserState).GetMethod(nameof(ParserState.AdvanceIf));
-            if (advanceMethod == null) throw new NullReferenceException();
-            return Call(state, advanceMethod, Constant(Char));
-        }
     }
 
     public class EndOfInputRule : Rule
@@ -360,14 +287,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => nameof(EndOfInputRule).GetHashCode();
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var atEndMethod = typeof(ParserState).GetMethod(nameof(ParserState.AtEnd));
-            if (atEndMethod == null) throw new NullReferenceException();
-            var atEnd = Call(state, atEndMethod);
-            return Condition(atEnd, state, Default(typeof(ParserState)));
-        }
     }
 
     public class NodeRule : NamedRule
@@ -384,20 +303,6 @@ namespace Parakeet
 
         public override int GetHashCode() 
             => Hash(Rule, Name);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var result = Parameter(typeof(ParserState), "result");
-            var method = typeof(ParserState).GetMethod(nameof(ParserState.AddNode));
-            return Block(
-                new[] { result },
-                Assign(result, Rule.GetExpression(state)),
-                Condition(
-                    Equal(result, Default(typeof(ParserState))),
-                    Default(typeof(ParserState)),
-                    Call(result, method, Constant(Name), state)));
-        }
-
     }
 
     public class ZeroOrMoreRule : Rule
@@ -430,30 +335,6 @@ namespace Parakeet
         public override bool Equals(object obj) => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
         public override int GetHashCode() => Hash (Rule);
 
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            // https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building
-            var cur = Parameter(typeof(ParserState), "cur");
-            var next = Parameter(typeof(ParserState), "next");
-            var label = Label(typeof(ParserState));
-            return Block(
-                new[]
-                {
-                    cur, next
-                },
-                Assign(cur, state),
-                Assign(next, Rule.GetExpression(cur)),
-                Loop(
-                    IfThenElse(
-                        NotEqual(next, Default(typeof(ParserState))),
-                        Block(
-                            Assign(cur, next),
-                            Assign(next, Rule.GetExpression(cur))
-                        ),
-                        Break(label, cur)),
-                    label));
-        }
-
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
@@ -472,9 +353,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(Rule);
-
-        public override Expression GetExpression(ParameterExpression state)
-            => Coalesce(Rule.GetExpression(state), state);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -514,7 +392,9 @@ namespace Parakeet
                             var error = new ParserError(rule, this, state, prevState, msg, prevState.LastError);
                             prevState = prevState.WithError(error);
                             var recovery = onError.RecoveryRule;
-                            return recovery.Match(prevState);
+                            var result = recovery.Match(prevState);
+                            Debug.Assert(result == null || result.LastError != null);
+                            return result;
                         }
                         return null;
                     }
@@ -526,22 +406,6 @@ namespace Parakeet
 
         public override bool Equals(object obj) => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
         public override int GetHashCode() => Hash(Rules);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var newState = Parameter(typeof(ParserState), "newState");
-            var statements = new List<Expression>
-            {
-                Assign(newState, state)
-            };
-            statements.AddRange(Rules.Select(r => 
-                Assign(newState,
-                    Condition(
-                        Equal(newState, Default(typeof(ParserState))),
-                        Default(typeof(ParserState)),
-                        r.GetExpression(newState)))));
-            return Block(new[] { newState }, statements);
-        }
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
@@ -576,26 +440,6 @@ namespace Parakeet
         public override int GetHashCode() 
             => Hash(Rules);
 
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            var newState = Parameter(typeof(ParserState), "newState");
-            var statements = new List<Expression>();
-            var labelTarget = Label(typeof(ParserState));
-            foreach (var r in Rules)
-            {
-                statements.Add(
-                    Assign(newState, r.GetExpression(state)));
-                statements.Add(
-                    IfThen(
-                        NotEqual(newState, Default(typeof(ParserState))), 
-                        Return(labelTarget, newState)));
-            }
-            statements.Add(Label(labelTarget, Default(typeof(ParserState))));
-            return Block(
-                new[] { newState }, 
-                statements);
-        }
-
         public override IReadOnlyList<Rule> Children => Rules;
     }
 
@@ -614,16 +458,6 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(Rule);
-
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            return Condition(
-                NotEqual(
-                    Rule.GetExpression(state), 
-                    Default(typeof(ParserState))), 
-                 state, 
-                Default(typeof(ParserState)));
-        }
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -644,16 +478,6 @@ namespace Parakeet
         public override int GetHashCode() 
             => Hash(Rule);
 
-        public override Expression GetExpression(ParameterExpression state)
-        {
-            return Condition(
-                NotEqual(
-                    Rule.GetExpression(state),
-                    Default(typeof(ParserState))),
-                Default(typeof(ParserState)),
-                state);
-        }
-
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
@@ -672,8 +496,5 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(RecoveryRule);
-
-        public override Expression GetExpression(ParameterExpression state)
-            => state;
     }
 }

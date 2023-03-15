@@ -219,18 +219,6 @@ namespace Parakeet.Tests
                 Assert.NotNull(ps);
                 Assert.IsTrue(ps.AtEnd());
             }
-
-            {
-                var f = Grammar.Json.Compile();
-                var input = new ParserState(text);
-                var sw = Stopwatch.StartNew();
-                var ps = f(input);
-                Console.WriteLine($"It took {sw.Elapsed} to parse using Parakeet Compiled");
-                var tree = ps.Node.ToParseTree();
-                Console.WriteLine($"Inner tree nodes = {CountInnerNodes(tree)}");
-                Assert.NotNull(ps);
-                Assert.IsTrue(ps.AtEnd());
-            }
         }
     }
 }
