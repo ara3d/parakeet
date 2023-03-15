@@ -1,4 +1,6 @@
-﻿namespace Parakeet
+﻿using System.Linq;
+
+namespace Parakeet
 {
     public static class RuleExtensions
     {
@@ -33,9 +35,12 @@
             => rule.Then(rule.ZeroOrMore());
 
         public static Rule To(this char c1, char c2)
-            => new CharRangeRule(c1, c2);
+            => new CharSetRule(Enumerable.Range(c1, c2 - c1 + 1).Select(i => (char)i).ToArray());
 
         public static string GetName(this Rule rule)
             => rule is NamedRule nr ? nr.Name : "_unknown_";
+
+        public static Rule Optimize(this Rule rule)
+            => new RuleOptimizer().Optimize(rule);
     }
 }

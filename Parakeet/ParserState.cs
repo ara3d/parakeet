@@ -1,4 +1,6 @@
-﻿namespace Parakeet
+﻿using System.Runtime.CompilerServices;
+
+namespace Parakeet
 {
     /// <summary>
     /// A class that represents the state of the parser, and the parse tree. 
@@ -10,17 +12,32 @@
         public ParserNode Node { get; }
         public ParserError LastError { get; }
 
-        public bool AtEnd => Position < 0 || Position >= Input.Length;
-        public char Current => Input[Position];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool AtEnd() 
+            => Position >= Input.Length;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public char GetCurrent() 
+            => Input[Position];
 
         public ParserState(ParserInput input, int position = 0, ParserNode node = null, ParserError error = null)
             => (Input, Position, Node, LastError) = (input, position, node, error);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance(int amount)
             => new ParserState(Input, Position + amount, Node,  LastError);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance()
             => new ParserState(Input, Position + 1, Node, LastError);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ParserState AdvanceIf(char c)
+            => AtEnd() ? null : GetCurrent() == c ? Advance() : null;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ParserState AdvanceIfNotAtEnd()
+            => AtEnd() ? null : new ParserState(Input, Position + 1, Node, LastError);
 
         public ParserState JumpToEnd()
             => Advance(CharsLeft);
@@ -75,5 +92,11 @@
             if (state == null) return false;
             return Position == state.Position;
         }
-    }
+
+        public ParserState AddNode(string name, ParserState prev)
+            => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node));
+
+        public override int GetHashCode()
+            => Position.GetHashCode();
+        }
 }

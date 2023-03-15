@@ -11,10 +11,9 @@ namespace Parakeet
     public class ParserNode
     {
         public ParserRange Range { get; }
-        public Rule Rule { get; }
         public int Start => Range.Begin.Position;
         public int End => Range.End.Position;
-        public string Name => Rule.GetName();
+        public string Name { get; }
         public ParserNode Previous { get; }
         public string Contents => Range.Text;
         
@@ -27,8 +26,8 @@ namespace Parakeet
             => Contents.Length < MaxLength            
             ? Contents : $"{Contents.Substring(0, MaxLength - 1)}...";
 
-        public ParserNode(Rule rule, ParserRange range, ParserNode previous = null)
-            => (Rule, Range, Previous) = (rule, range, previous);
+        public ParserNode(string name, ParserRange range, ParserNode previous = null)
+            => (Name, Range, Previous) = (name, range, previous);
 
         public ParseTree ToParseTree()
             => ToParseTreeAndNode().Item1;

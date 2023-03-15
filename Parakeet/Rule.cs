@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using System.Text;
 using static System.Linq.Expressions.Expression;
 
 namespace Parakeet
@@ -11,20 +13,33 @@ namespace Parakeet
     {
         protected abstract ParserState MatchImplementation(ParserState state);
 
-        public ParserState Match(ParserState state)
+        public Func<ParserState, ParserState> Compile()
         {
-            if (CompiledRule == null)
-            {
-                CompiledRule = Expression.Compile();
-            }
+            var expr = GetLambdaExpression();
+            
+            // The following produces a useless "..." version of the expression tree.
+            //Debug.WriteLine(expr);
 
-            var tmp = CompiledRule.Invoke(state);
-            //var tmp2 = MatchImplementation(state);
-            //Debug.Assert(ReferenceEquals(tmp, tmp2) || tmp2.Equals(tmp));
-            return tmp;
+            //https://stackoverflow.com/questions/5999668/accessing-expression-debugview-from-code
+            //var propertyInfo = typeof(Expression).GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic);
+            //var output = propertyInfo.GetValue(expr) as string;
+            //Debug.WriteLine(output);
+
+            return expr.Compile();
         }
 
-        public Func<ParserState, ParserState> CompiledRule { get; private set; } 
+        public Expression<Func<ParserState, ParserState>> GetLambdaExpression()
+        {
+            var state = Parameter(typeof(ParserState), "state");
+            var expr = GetExpression(state);
+            return Lambda<Func<ParserState, ParserState>>(expr, state);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ParserState Match(ParserState state)
+        {
+            return MatchImplementation(state);
+        }
 
         public static SequenceRule operator +(Rule left, Rule right)
         {
@@ -54,10 +69,18 @@ namespace Parakeet
             return new ChoiceRule(list.ToArray());
         }
 
-        public static NotAtRule operator !(Rule rule) => new NotAtRule(rule);
-        public static implicit operator Rule(string s) => new StringRule(s);
-        public static implicit operator Rule(char c) => new CharRule(c);
-        public static implicit operator Rule(char[] cs) => new CharSetRule(cs);
+        public static NotAtRule operator !(Rule rule) 
+            => new NotAtRule(rule);
+        
+        public static implicit operator Rule(string s) 
+            => s.Length == 1 ? (Rule)s[0] : new StringRule(s);
+        
+        public static implicit operator Rule(char c) 
+            => new CharRule(c);
+        
+        public static implicit operator Rule(char[] cs) 
+            => cs.Length == 1 ? (Rule)cs[0] : new CharSetRule(cs);
+        
         public static implicit operator Rule(Func<Rule> f) => new RecursiveRule(f);
         
         public static bool operator ==(Rule r1, Rule r2) 
@@ -82,139 +105,299 @@ namespace Parakeet
         public override int GetHashCode()
             => throw new NotImplementedException();
 
-        public abstract Expression<Func<ParserState, ParserState>> Expression { get; }
+        public abstract Expression GetExpression(ParameterExpression state);
+
+        public virtual IReadOnlyList<Rule> Children 
+            => Array.Empty<Rule>();
+
+        public override string ToString()
+            => $"{this.GetName()} ::= {this.Body().ToDefinition()}";
     }
 
     public class NamedRule : Rule
     {
         public Rule Rule { get; }
         public string Name { get; }
-        public NamedRule(Rule r, string name) => (Rule, Name) = (r, name);
-        protected override ParserState MatchImplementation(ParserState state) => Rule.Match(state);
-        public override bool Equals(object obj) => obj is NamedRule other && other.Rule.Equals(Rule) && Name == other.Name;
-        public override int GetHashCode() => Hash(Rule);
-        public override Expression<Func<ParserState, ParserState>> Expression 
-            => Rule.Expression;
+        
+        public NamedRule(Rule r, string name) 
+            => (Rule, Name) = (r, name);
+        
+        protected override ParserState MatchImplementation(ParserState state) 
+            => Rule.Match(state);
+        
+        public override bool Equals(object obj) 
+            => obj is NamedRule other && other.Rule.Equals(Rule) && Name == other.Name;
+        
+        public override int GetHashCode() 
+            => Hash(Rule, Name);
+
+        public override Expression GetExpression(ParameterExpression state)
+            => Rule.GetExpression(state);
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
     public class RecursiveRule : Rule
     {
-        public Rule Rule => 
-            CachedRule = CachedRule ?? (CachedRule = RuleFunc());
+        public Rule Rule 
+            => CachedRule = CachedRule ?? (CachedRule = RuleFunc());
+        
         private Rule CachedRule { get; set; }
         private Func<Rule> RuleFunc { get; }
-        public RecursiveRule(Func<Rule> ruleFunc) => RuleFunc = ruleFunc;
+        
+        public RecursiveRule(Func<Rule> ruleFunc) 
+            => RuleFunc = ruleFunc;
+        
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state);
-        public override bool Equals(object obj) => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
-        public override int GetHashCode() => Hash(RuleFunc());
-        public override Expression<Func<ParserState, ParserState>> Expression 
-            => Rule.Expression;
+        
+        public override bool Equals(object obj) 
+            => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
+        
+        public override int GetHashCode() 
+            => Hash(RuleFunc);
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var method = typeof(Rule).GetMethod(nameof(Match));
+            return Call(Invoke(Constant(RuleFunc)), method, state);
+        }
     }
 
     public class StringRule : Rule
     {
         public string Pattern { get; }
-        public StringRule(string s) => Pattern = s;
+        
+        public StringRule(string s) 
+            => Pattern = s;
+        
         protected override ParserState MatchImplementation(ParserState state)
             => state.Match(Pattern);
-        public override bool Equals(object obj) => obj is StringRule smr && smr.Pattern == Pattern;
-        public override int GetHashCode() => Hash(Pattern);
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.Match(Pattern);
+        
+        public override bool Equals(object obj) 
+            => obj is StringRule smr && smr.Pattern == Pattern;
+        
+        public override int GetHashCode() 
+            => Hash(Pattern);
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var method = typeof(ParserState).GetMethod(nameof(ParserState.Match));
+            if (method == null) throw new NullReferenceException();
+            return Call(state, method, Constant(Pattern));
+        }
     }
 
     public class AnyCharRule : Rule
     {
         protected override ParserState MatchImplementation(ParserState state)
-            => state.AtEnd ? null : state.Advance();
-        public static AnyCharRule Default { get; } = new AnyCharRule();
-        public override bool Equals(object obj) => obj is AnyCharRule;
-        public override int GetHashCode() => nameof(AnyCharRule).GetHashCode();
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.AtEnd ? null : state.Advance();
+            => state.AdvanceIfNotAtEnd();
+        
+        public static AnyCharRule Default { get; } 
+            = new AnyCharRule();
+        
+        public override bool Equals(object obj) 
+            => obj is AnyCharRule;
+        
+        public override int GetHashCode() 
+            => nameof(AnyCharRule).GetHashCode();
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var method = typeof(ParserState).GetMethod(nameof(ParserState.AdvanceIfNotAtEnd));
+            if (method == null) throw new NullReferenceException();
+            return Call(state, method);
+        }
     }
 
-    public class CharRangeRule : Rule
-    {
-        public char Low { get; }
-        public char High { get; }
-        public CharRangeRule(char low, char high) => (Low, High) = (low, high);
-        protected override ParserState MatchImplementation(ParserState state)
-            => state.AtEnd ? null : state.Current >= Low && state.Current <= High ? state.Advance() : null;
-        public override bool Equals(object obj) => obj is CharRangeRule crr && crr.Low == Low && crr.High == High;
-        public override int GetHashCode() => Hash(Low, High);
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.AtEnd ? null : state.Current >= Low && state.Current <= High ? state.Advance() : null;
-    }
-
-    // TODO: this could be much more efficient, by using a table. 
     public class CharSetRule : Rule
     {
-        public char[] Chars { get; }
-        public CharSetRule(params char[] chars) => Chars = chars.Distinct().ToArray();
-        protected override ParserState MatchImplementation(ParserState state) 
-            => state.AtEnd ? null : Chars.Contains(state.Current) ? state.Advance() : null;
-        public override bool Equals(object obj) => obj is CharSetRule csr && new string(Chars) == new string(csr.Chars);
-        public override int GetHashCode() => Hash(new string(Chars));
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.AtEnd ? null : Chars.Contains(state.Current) ? state.Advance() : null;
+        public static bool[] CharsToTable(IEnumerable<char> chars)
+        {
+            var r = new bool[128];
+            foreach (var c in chars)
+            {
+                if (c >= 128) throw new NotSupportedException();
+                r[c] = true;
+            }
+
+            return r;
+        }
+
+        public bool[] Chars { get; }
+
+        public CharSetRule(params char[] chars) 
+            : this(CharsToTable(chars)) 
+        { }
+
+        public CharSetRule(bool[] chars) 
+            => Chars = chars;
+
+        protected override ParserState MatchImplementation(ParserState state)
+            => state.AtEnd() ? null 
+                : state.GetCurrent() < 128 && Chars[state.GetCurrent()] 
+                    ? state.Advance() 
+                    : null;
+
+        public override bool Equals(object obj) 
+            => obj is CharSetRule csr && Chars.SequenceEqual(csr.Chars);
+
+        public override int GetHashCode() 
+            => Hash(nameof(CharSetRule));
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var table = Constant(Chars);
+            var atEndMethod = typeof(ParserState).GetMethod(nameof(ParserState.AtEnd));
+            var currentMethod = typeof(ParserState).GetMethod(nameof(ParserState.GetCurrent));
+            var advanceMethod = typeof(ParserState).GetMethod(nameof(ParserState.Advance), Array.Empty<Type>());
+            var current = Call(state, currentMethod);
+            var advance = Call(state, advanceMethod);
+            var atEnd = Call(state, atEndMethod);
+            return Condition(
+                atEnd,
+                Default(typeof(ParserState)),
+                Condition(
+                    And(
+                        LessThan(current, Constant((char)128)),
+                        ArrayIndex(table, Convert(current, typeof(int)))),
+                    advance,
+                    Default(typeof(ParserState))));
+        }
+
+        public CharSetRule Union(CharSetRule other)
+        {
+            var tmp = Chars.ToArray();
+            for (var i = 0; i < tmp.Length; i++)
+            {
+                if (other.Chars[i])
+                    tmp[i] = true;
+            }
+
+            return new CharSetRule(tmp);
+        }
+
+        public CharSetRule Append(char other)
+        {
+            var tmp = Chars.ToArray();
+            tmp[other] = true;
+            return new CharSetRule(tmp);
+        }
+
+        public override string ToString()
+        {
+            var rangeCount = 0;
+            var sb = new StringBuilder();
+
+            for (var i = 0; i < Chars.Length; ++i)
+            {
+                var c = (char)i;
+                if (Chars[i])
+                {
+                    rangeCount++;
+                    if (rangeCount == 1)
+                    {
+                        sb.Append(c.EscapeChar());
+                    }
+                }
+                else
+                {
+                    if (i > 0)
+                    {
+                        var prevChar = (char)(i - 1);
+                        if (rangeCount > 2)
+                        {
+                            sb.Append("-");
+                        }
+
+                        if (rangeCount > 1)
+                        {
+                            sb.Append(prevChar.EscapeChar());
+                        }
+                    }
+
+                    rangeCount = 0;
+                }
+            }
+            return sb.ToString();
+        }
     }
 
     public class CharRule : Rule
     {
         public char Char { get; }
-        public CharRule(char ch) => Char = ch;
+        
+        public CharRule(char ch) 
+            => Char = ch;
+
         protected override ParserState MatchImplementation(ParserState state)
-            => state.AtEnd ? null : state.Current == Char ? state.Advance() : null;
-        public override bool Equals(object obj) => obj is CharRule csr && Char == csr.Char;
-        public override int GetHashCode() => Hash(Char);
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.AtEnd ? null : state.Current == Char ? state.Advance() : null;
+            => state.AdvanceIf(Char);
+        
+        public override bool Equals(object obj) 
+            => obj is CharRule csr && Char == csr.Char;
+
+        public override int GetHashCode() 
+            => Hash(Char);
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var advanceMethod = typeof(ParserState).GetMethod(nameof(ParserState.AdvanceIf));
+            if (advanceMethod == null) throw new NullReferenceException();
+            return Call(state, advanceMethod, Constant(Char));
+        }
     }
 
     public class EndOfInputRule : Rule
     {
         protected override ParserState MatchImplementation(ParserState state) 
-            => state.AtEnd ? state : null;
-        public static EndOfInputRule Default => new EndOfInputRule();
-        public override bool Equals(object obj) => obj is EndOfInputRule;
-        public override int GetHashCode() => nameof(EndOfInputRule).GetHashCode();
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state.AtEnd ? state : null;
+            => state.AtEnd() ? state : null;
+
+        public static EndOfInputRule Default 
+            => new EndOfInputRule();
+        
+        public override bool Equals(object obj) 
+            => obj is EndOfInputRule;
+        
+        public override int GetHashCode() 
+            => nameof(EndOfInputRule).GetHashCode();
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var atEndMethod = typeof(ParserState).GetMethod(nameof(ParserState.AtEnd));
+            if (atEndMethod == null) throw new NullReferenceException();
+            var atEnd = Call(state, atEndMethod);
+            return Condition(atEnd, state, Default(typeof(ParserState)));
+        }
     }
 
     public class NodeRule : NamedRule
     {
-        // Can be null
-        public Rule Eat { get; }
-
-        public NodeRule(Rule rule, Rule eat, string name) : base(rule, name) => Eat = eat;
+        public NodeRule(Rule rule, string name) 
+            : base(rule, name)
+        { }
 
         protected override ParserState MatchImplementation(ParserState state)
-        {
-            var result = Rule.Match(state);
-            if (result is null)
-                return null;
-            
-            var node = new ParserNode(this, state.To(result), result.Node);
-            result = new ParserState(result.Input, result.Position, node);
+            => Rule.Match(state)?.AddNode(Name, state);
 
-            // Eat whitespace 
-            var tmp = Eat?.Match(result);
-            if (tmp != null) 
-                result = tmp;
-            
-            return result;
+        public override bool Equals(object obj) 
+            => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule);
+
+        public override int GetHashCode() 
+            => Hash(Rule, Name);
+
+        public override Expression GetExpression(ParameterExpression state)
+        {
+            var result = Parameter(typeof(ParserState), "result");
+            var method = typeof(ParserState).GetMethod(nameof(ParserState.AddNode));
+            return Block(
+                new[] { result },
+                Assign(result, Rule.GetExpression(state)),
+                Condition(
+                    Equal(result, Default(typeof(ParserState))),
+                    Default(typeof(ParserState)),
+                    Call(result, method, Constant(Name), state)));
         }
 
-        public override bool Equals(object obj) => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule) 
-            && (Eat == null ? nr.Eat == null : Eat.Equals(nr.Eat));
-
-        public override int GetHashCode() => Hash(Rule, Eat, Name);
-
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => MatchImplementation(state);
     }
 
     public class ZeroOrMoreRule : Rule
@@ -222,6 +405,7 @@ namespace Parakeet
         public Rule Rule { get; }
         public ZeroOrMoreRule(Rule rule) => Rule = rule;
 
+        
         protected override ParserState MatchImplementation(ParserState state)
         {
             var curr = state;
@@ -230,6 +414,7 @@ namespace Parakeet
             {
                 curr = next;
                 next = Rule.Match(curr);
+#if DEBUG
                 if (next != null)
                 {
                     if (next.Position <= curr.Position)
@@ -237,75 +422,76 @@ namespace Parakeet
                         throw new ParserException(curr, "Parser is no longer making progress");
                     }
                 }
+#endif
             }
             return curr;
         }
 
         public override bool Equals(object obj) => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
-        public override int GetHashCode() => Hash(Rule);
+        public override int GetHashCode() => Hash (Rule);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
+        public override Expression GetExpression(ParameterExpression state)
         {
-            get
-            {
-
-                // https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building
-                var state = Parameter(typeof(ParserState), "state");
-                var cur = Parameter(typeof(ParserState), "cur");
-                var next = Parameter(typeof(ParserState), "next");
-                var label = Label(typeof(ParserState));
-                var block = Block(
-                    new ParameterExpression[]
-                    {
-                        cur, next
-                    },
-                    new Expression[]
-                    {
-                        Assign(cur, state),
-                        Assign(next, Invoke(Rule.Expression, cur)),
-                        Loop(
-                            IfThenElse(
-                                NotEqual(next, Default(typeof(ParserState))),
-                                Block(
-                                    Assign(cur, next),
-                                    Assign(next, Invoke(Rule.Expression, cur))
-                                ),
-                                Return(label, cur)),
-                            label)
-                    });
-                return Lambda<Func<ParserState, ParserState>>(block, state);
-            }
+            // https://learn.microsoft.com/en-us/dotnet/csharp/advanced-topics/expression-trees/expression-trees-building
+            var cur = Parameter(typeof(ParserState), "cur");
+            var next = Parameter(typeof(ParserState), "next");
+            var label = Label(typeof(ParserState));
+            return Block(
+                new[]
+                {
+                    cur, next
+                },
+                Assign(cur, state),
+                Assign(next, Rule.GetExpression(cur)),
+                Loop(
+                    IfThenElse(
+                        NotEqual(next, Default(typeof(ParserState))),
+                        Block(
+                            Assign(cur, next),
+                            Assign(next, Rule.GetExpression(cur))
+                        ),
+                        Break(label, cur)),
+                    label));
         }
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
     public class OptionalRule : Rule
     {
         public Rule Rule { get; }
-        public OptionalRule(Rule rule) => Rule = rule;
+        
+        public OptionalRule(Rule rule) 
+            => Rule = rule;
 
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state) ?? state;
 
-        public override bool Equals(object obj) => obj is OptionalRule opt && opt.Rule.Equals(Rule);
-        public override int GetHashCode() => Hash(Rule);
+        public override bool Equals(object obj) 
+            => obj is OptionalRule opt && opt.Rule.Equals(Rule);
+        
+        public override int GetHashCode() 
+            => Hash(Rule);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
-        {
-            get
-            {
-                var state = Parameter(typeof(ParserState), "state");
-                var exprBody = Coalesce(Invoke(Rule.Expression, state), state);
-                return Lambda<Func<ParserState, ParserState>>(exprBody, state);
-            }
-        }
+        public override Expression GetExpression(ParameterExpression state)
+            => Coalesce(Rule.GetExpression(state), state);
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
     public class SequenceRule : Rule
     {
         public Rule[] Rules { get; }
-        public SequenceRule(params Rule[] rules) => Rules = rules;
-        public int Count => Rules.Length;
-        public Rule this[int index] => Rules[index];
+        
+        public SequenceRule(params Rule[] rules) 
+            => Rules = rules;
+        
+        public int Count 
+            => Rules.Length;
+        
+        public Rule this[int index] 
+            => Rules[index];
+        
         protected override ParserState MatchImplementation(ParserState state)
         {
             var newState = state;
@@ -341,29 +527,37 @@ namespace Parakeet
         public override bool Equals(object obj) => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
         public override int GetHashCode() => Hash(Rules);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
+        public override Expression GetExpression(ParameterExpression state)
         {
-            get
+            var newState = Parameter(typeof(ParserState), "newState");
+            var statements = new List<Expression>
             {
-                var state = Parameter(typeof(ParserState), "state");
-                var statements = Rules.Select(r => Assign(state,
+                Assign(newState, state)
+            };
+            statements.AddRange(Rules.Select(r => 
+                Assign(newState,
                     Condition(
-                        Equal(state, Default(typeof(ParserState))),
+                        Equal(newState, Default(typeof(ParserState))),
                         Default(typeof(ParserState)),
-                        Invoke(r.Expression, state)))).Cast<Expression>().ToList();
-                statements.Add(state);
-                var block = Block(typeof(ParserState), statements);
-                return Lambda<Func<ParserState, ParserState>>(block, state);
-            }
+                        r.GetExpression(newState)))));
+            return Block(new[] { newState }, statements);
         }
+
+        public override IReadOnlyList<Rule> Children => Rules;
     }
 
     public class ChoiceRule : Rule
     {
         public Rule[] Rules { get; }
-        public ChoiceRule(params Rule[] rules) => Rules = rules;
-        public int Count => Rules.Count();
-        public Rule this[int index] => Rules[index];
+        
+        public ChoiceRule(params Rule[] rules) 
+            => Rules = rules;
+        
+        public int Count 
+            => Rules.Count();
+        
+        public Rule this[int index] 
+            => Rules[index];
 
         protected override ParserState MatchImplementation(ParserState state)
         {
@@ -376,89 +570,110 @@ namespace Parakeet
             return null;
         }
 
-        public override bool Equals(object obj) => obj is ChoiceRule ch && Rules.SequenceEqual(ch.Rules);
-        public override int GetHashCode() => Hash(Rules);
+        public override bool Equals(object obj) 
+            => obj is ChoiceRule ch && Rules.SequenceEqual(ch.Rules);
+        
+        public override int GetHashCode() 
+            => Hash(Rules);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
+        public override Expression GetExpression(ParameterExpression state)
         {
-            get
+            var newState = Parameter(typeof(ParserState), "newState");
+            var statements = new List<Expression>();
+            var labelTarget = Label(typeof(ParserState));
+            foreach (var r in Rules)
             {
-                var state = Parameter(typeof(ParserState), "state");
-                var newState = Parameter(typeof(ParserState), "newState");
-                var statements = new List<Expression>();
-                var label = Label(typeof(ParserState));
-                foreach (var r in Rules)
-                {
-                    statements.Add(Assign(newState, Invoke(r.Expression, state)));
-                    statements.Add(IfThen(NotEqual(newState, Default(typeof(ParserState))), Return(label, newState)));
-                }
-                statements.Add(Label(label, Default(typeof(ParserState))));
-                var block = Block(typeof(ParserState), new[] { newState }, statements);
-                return Lambda<Func<ParserState, ParserState>>(block, state);
+                statements.Add(
+                    Assign(newState, r.GetExpression(state)));
+                statements.Add(
+                    IfThen(
+                        NotEqual(newState, Default(typeof(ParserState))), 
+                        Return(labelTarget, newState)));
             }
+            statements.Add(Label(labelTarget, Default(typeof(ParserState))));
+            return Block(
+                new[] { newState }, 
+                statements);
         }
+
+        public override IReadOnlyList<Rule> Children => Rules;
     }
 
     public class AtRule : Rule
     {
         public Rule Rule { get; }
-        public AtRule(Rule rule) => (Rule) = (rule);
+        
+        public AtRule(Rule rule) 
+            => Rule = rule;
+        
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state) != null ? state : null;
 
-        public override bool Equals(object obj) => obj is AtRule at && Rule.Equals(at.Rule);
-        public override int GetHashCode() => Hash(Rule);
+        public override bool Equals(object obj) 
+            => obj is AtRule at && Rule.Equals(at.Rule);
+        
+        public override int GetHashCode() 
+            => Hash(Rule);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
+        public override Expression GetExpression(ParameterExpression state)
         {
-            get
-            {
-                var state = Parameter(typeof(ParserState), "state");
-                var exprBody = Condition(
-                    NotEqual(
-                        Invoke(Rule.Expression, state), 
-                        Default(typeof(ParserState))), 
-                    state, 
-                    Default(typeof(ParserState)));
-                return Lambda<Func<ParserState, ParserState>>(exprBody, state);
-            }
+            return Condition(
+                NotEqual(
+                    Rule.GetExpression(state), 
+                    Default(typeof(ParserState))), 
+                 state, 
+                Default(typeof(ParserState)));
         }
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
     public class NotAtRule : Rule
     {
         public Rule Rule { get; }
-        public NotAtRule(Rule rule) => (Rule) = (rule);
+
+        public NotAtRule(Rule rule) 
+            => (Rule) = (rule);
+        
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state) == null ? state : null;
-        public override bool Equals(object obj) => obj is NotAtRule notAt && Rule.Equals(notAt.Rule);
-        public override int GetHashCode() => Hash(Rule);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
+        public override bool Equals(object obj) 
+            => obj is NotAtRule notAt && Rule.Equals(notAt.Rule);
+        
+        public override int GetHashCode() 
+            => Hash(Rule);
+
+        public override Expression GetExpression(ParameterExpression state)
         {
-            get
-            {
-                var state = Parameter(typeof(ParserState), "state");
-                var exprBody = Condition(
-                    NotEqual(
-                        Invoke(Rule.Expression, state),
-                        Default(typeof(ParserState))),
-                    Default(typeof(ParserState)),
-                    state);
-                return Lambda<Func<ParserState, ParserState>>(exprBody, state);
-            }
+            return Condition(
+                NotEqual(
+                    Rule.GetExpression(state),
+                    Default(typeof(ParserState))),
+                Default(typeof(ParserState)),
+                state);
         }
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
     public class OnError : Rule
     {
         public Rule RecoveryRule { get; }
-        public OnError(Rule rule) => RecoveryRule = rule;
-        protected override ParserState MatchImplementation(ParserState state) => state;
-        public override bool Equals(object obj) => obj is OnError rec && RecoveryRule.Equals(rec.RecoveryRule);
-        public override int GetHashCode() => Hash(RecoveryRule);
+        
+        public OnError(Rule rule) 
+            => RecoveryRule = rule;
+        
+        protected override ParserState MatchImplementation(ParserState state) 
+            => state;
+        
+        public override bool Equals(object obj) 
+            => obj is OnError rec && RecoveryRule.Equals(rec.RecoveryRule);
+        
+        public override int GetHashCode() 
+            => Hash(RecoveryRule);
 
-        public override Expression<Func<ParserState, ParserState>> Expression
-            => state => state;
+        public override Expression GetExpression(ParameterExpression state)
+            => state;
     }
 }

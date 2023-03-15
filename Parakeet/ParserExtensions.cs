@@ -20,7 +20,7 @@ namespace Parakeet
         public static IEnumerable<ParserRange> GetMatches(this ParserInput input, Rule rule)
         {
             var p = new ParserState(input);
-            while (!p.AtEnd)
+            while (!p.AtEnd())
             {
                 // Don't keep nodes between matches 
                 p = p.ClearNodes();

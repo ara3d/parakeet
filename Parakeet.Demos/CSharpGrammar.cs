@@ -177,6 +177,8 @@ namespace Parakeet
             | ForEachStatement
             | VarDeclStatement
             | TryStatement
+            | YieldStatement
+            | SwitchStatement
             | ExpressionStatement
         );
 
@@ -232,11 +234,11 @@ namespace Parakeet
         public Rule MemberDeclaration => Node(DeclarationPreamble
             + (ConstructorDeclaration
             | MethodDeclaration
-            | IndexerDeclaration 
+            | IndexerDeclaration
             | PropertyDeclaration
             | FieldDeclaration
-            | OperatorDeclaration
-            | ConverterDeclaration
+            | OperatorDeclaration 
+            | ConverterDeclaration 
             | TypeDeclaration
             ));
 

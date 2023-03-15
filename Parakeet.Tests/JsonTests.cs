@@ -1,35 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
 using Parakeet.Demos;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Parakeet.Tests
 {
     public static class JsonTests
     {
         public static JsonGrammar Grammar = new JsonGrammar();
-
-        [Test]
-        public static void GrammarDefinition()
-        {
-            foreach (var r in Grammar.GetRules())
-            {
-                Console.WriteLine($"{r.GetName()} => ");
-                Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
-            }
-        }
-
-        [Test]
-        public static void OptimizerTest()
-        {
-            foreach (var r in Grammar.GetRules())
-            {
-                Console.WriteLine($"{r.GetName()} => ");
-                Console.WriteLine($"{r.Body().ToDefinition(false, "  ")}");
-
-                var opt = r.Optimize();
-                Console.WriteLine($"{opt.Body().ToDefinition(false, "  ")}");
-            }
-        }
 
         public static string[] Numbers = new[]
         {
@@ -58,9 +36,9 @@ namespace Parakeet.Tests
         public static string[] Strings = new[]
         {
             "\"\"",
-            "\"a\"",
+            "\"A\"",
             "\"abc\"",
-            "\" a \"",
+            "\" A \"",
             "\"\\\n\"",
             "\"\\\n\"",
             "\"\\\\\"",
@@ -98,16 +76,16 @@ namespace Parakeet.Tests
 
         public static string[] Objects = new[] {
             "{}",
-            "{\"a\":1}",
-            "{ \"a\" : 1 }",
+            "{\"A\":1}",
+            "{ \"A\" : 1 }",
             "{ \"abc\" : \"\\n\" }",
             "{ \"abc\" : true}",
             "{ \"abc\" : false}",
             "{ \"abc\" : null}",
-            "{\"a\":[]}",
-            "{\"a\":[1]}",
-            "{\"a\":{}}",
-            "{\"a\":{\"b\":99}}",
+            "{\"A\":[]}",
+            "{\"A\":[1]}",
+            "{\"A\":{}}",
+            "{\"A\":{\"B\":99}}",
             "{\"Id\" :789 ,\"Name\":\"Albert\\tSimple\",\"Status\":\"Married\",\"Address\": \"Planet Earth\", \"Scores\":[1,2,3,4,5,6,7,8,9,10],\"Data\":null}"
         };
 
@@ -214,6 +192,11 @@ namespace Parakeet.Tests
             Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
         }
 
+        public static int CountInnerNodes(ParseTree tree)
+        {
+            return 1 + tree.Children.Sum(t => CountInnerNodes(t));
+        }
+
         [Test]
         public static void CompareToNewtonsoft()
         {
@@ -225,14 +208,29 @@ namespace Parakeet.Tests
                 JObject.Parse(text);
                 Console.WriteLine($"It took {sw.Elapsed} to parse using Newtonsoft");
             }
+
             {
                 var sw = Stopwatch.StartNew();
                 var ps = text.Parse(Grammar.Json);
-                Assert.NotNull(ps);
-                Assert.IsTrue(ps.AtEnd);
                 Console.WriteLine($"It took {sw.Elapsed} to parse using Parakeet");
+
+                var tree = ps.Node.ToParseTree();
+                Console.WriteLine($"Inner tree nodes = {CountInnerNodes(tree)}");
+                Assert.NotNull(ps);
+                Assert.IsTrue(ps.AtEnd());
             }
 
+            {
+                var f = Grammar.Json.Compile();
+                var input = new ParserState(text);
+                var sw = Stopwatch.StartNew();
+                var ps = f(input);
+                Console.WriteLine($"It took {sw.Elapsed} to parse using Parakeet Compiled");
+                var tree = ps.Node.ToParseTree();
+                Console.WriteLine($"Inner tree nodes = {CountInnerNodes(tree)}");
+                Assert.NotNull(ps);
+                Assert.IsTrue(ps.AtEnd());
+            }
         }
     }
 }

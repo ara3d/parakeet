@@ -72,15 +72,14 @@ namespace Parakeet
                     return $"!({not.Rule.ToDefinition(shortForm, indent)})";
                 case AtRule at:
                     return $"&({at.Rule.ToDefinition(shortForm, indent)})";
-                case CharRangeRule range:
-                    return $"[{range.Low.EscapeChar()}..{range.High.EscapeChar()}]";
                 case CharSetRule set:
-                    return $"[{set.Chars.EscapeChars()}]";
+                    return $"[{set.ToString()}]";
                 case OnError set:
                     return $"_RECOVER_";
                 case EndOfInputRule endOfInputRule:
                     return $"_END_";
-
+                case CharRule ch:
+                    return $"'{ch.Char}'";
                 default:
                     return "_UNKNOWN_";
             }
@@ -127,8 +126,6 @@ namespace Parakeet
                     return Enumerable.Empty<Rule>();
             }
         }
-
-  
 
         public static Rule OnlyNodes(this Rule r)
         {

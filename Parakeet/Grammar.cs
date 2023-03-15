@@ -61,7 +61,10 @@ namespace Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            r = new NodeRule(r, WhitespaceRule, name);
+            //r = r.Optimize();
+            r = new NodeRule(r, name);
+            if (WhitespaceRule != null)
+                r = r.Then(WhitespaceRule);
             Lookup.Add(name, r);
             return r;
         }
@@ -72,11 +75,11 @@ namespace Parakeet
         public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 
         public Rule CharSet(params char[] chars)
-            => new CharSetRule(chars);
+            => chars.Length == 1 ? (Rule)chars[0] : new CharSetRule(chars);
 
         public Rule CharSet(string chars)
-            => new CharSetRule(chars.ToCharArray());
-        
+            => CharSet(chars.ToCharArray());
+
         public Rule ZeroOrMore(Rule r)
             => new ZeroOrMoreRule(r);
 
