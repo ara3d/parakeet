@@ -38,7 +38,7 @@ namespace Parakeet
             => new CharSetRule(Enumerable.Range(c1, c2 - c1 + 1).Select(i => (char)i).ToArray());
 
         public static string GetName(this Rule rule)
-            => rule is NamedRule nr ? nr.Name : "_unknown_";
+            => rule is NamedRule nr ? nr.Name : "__";
 
         public static Rule Optimize(this Rule rule)
             => new RuleOptimizer().Optimize(rule);

@@ -36,7 +36,6 @@ abc
             "null",
         };
 
-
         public static string[] Members = new[]
         {
             "public static int x;",
@@ -51,7 +50,20 @@ abc
             "int y {get;set;}",
             "int x { get; set; }",
             "int x => 42;",
-            "public static int x => { return 42; }"
+            "readonly int[] x;",
+            "int x() => 12;",
+            "int x { get { return x; } set { y = value; } }",
+            "int x { get => x; set => y = value; }",
+            "public static int x => { return 42; }",
+            "public static string[] Literals = new[] { a, b, c };",
+            "[Attr] public int x;",
+            "[Attr] public static void f() {}",
+            "[Attr, Attr()] public int x;",
+            "[Attr] [Attr(nameof(something), t)] private int ffg(int x) { return x; }",
+            "public static IEnumerable<(Rule, string[], string[])> CoreTestData() { }",
+            "public static IEnumerable<ParserRange> BetweenMatches(this IEnumerable<ParserRange> ranges) {}",
+            "public abstract void Test();",
+            "int[] xs = { 1, 2, 3 };",
         };
 
         public static string[] Identifiers = new[]
@@ -83,10 +95,23 @@ abc
             "List<a,b,c>",
             "list<a, b<int, float>, c[]>",
             "list<system.int>",
+            "(int, float)", 
+            "List<(int, float)>",
+            "(int, (a, b))",
+            "(xs[], List<int>)",
+            "IEnumerable<(Rule, string[], string[])>",
+            "(Rule, string[], string[])[]",
         };
 
         public static string[] Expressions = new[]
         {
+            "\"abc\"",
+            "\"\"",
+            "\"\\n\"",
+            "\'a\'",
+            "\'\\n'",
+            @"@""ABC
+            DEF""",
             "x",
             "++x",
             "3 + 1",
@@ -141,6 +166,15 @@ abc
             "x += x + 2",
             "x = x += 3",
             "x=y=z",
+            "ps == null ? ps2 == null : ps2 != null",
+            "ps.AtEnd() ? 1 : 0",
+            "(float)x",
+            "(int)(int)(int)y",
+            "((float)x + (int)y)",
+            "(int)x * (y)",
+            "(float)((int)x)",
+            "new (Rule, string[], string[])[] { }",
+            "new int[] { 1, 2, 3, }",
         };
 
         public static string[] Statements = new[]
@@ -228,6 +262,9 @@ abc
             "class C { public int x { get { return 12; } set { _x = value; } } }",
             "class C { public int x() { return 12; } }",
             "class C { public int x() { return 12; } private float x() { return 99; } }",
+            "public static class CSharpTests\r\n    {\r\n\r\n        public static string[] Spaces = new[]\r\n{\r\n            \"\",\r\n            \" \",\r\n            \"\\t\",\r\n            \"\\n \\t\",\r\n            \"// abc\",\r\n            \"/* abc */\",\r\n            @\"/*\r\nabc\r\n*/\",\r\n            @\"// abc\r\n\",\r\n            \"/* */ /* */\",\r\n        }; }",
+            "public static class CSharpTests\r\n    {\r\n\r\n        public static string[] Spaces = new[]\r\n{}; }",
+            "public abstract class Rule\r\n    {\r\n        protected abstract ParserState MatchImplementation(ParserState state);\r\n\r\n        [MethodImpl(MethodImplOptions.AggressiveInlining)]\r\n        public ParserState Match(ParserState state)\r\n        {\r\n            return MatchImplementation(state);\r\n        } }",
         };
 
         public static string TestDigits = "0123456789";
@@ -281,7 +318,7 @@ abc
         }
 
         [Test, TestCaseSource(nameof(Classes))] 
-        public static void TestClasses(string input) => SingleParseTest(input, Grammar.TypeDeclaration);
+        public static void TestClasses(string input) => SingleParseTest(input, Grammar.TypeDeclarationWithPreamble);
 
         public static void SingleParseTest(string input, Rule r)
             => Assert.AreEqual(1, ParserTests.ParseTest(input, r));
@@ -341,6 +378,10 @@ abc
         [TestCase("a b c;", nameof(CSharpGrammar.Element))]
         [TestCase("a", nameof(CSharpGrammar.Element))]
         [TestCase("{ a }", nameof(CSharpGrammar.Element))]
+        [TestCase("namespace X.Y { }", nameof(CSharpGrammar.NamespaceDeclaration))]
+        [TestCase("namespace A { class B {} class C {} }", nameof(CSharpGrammar.NamespaceDeclaration))]
+        [TestCase("public static internal readonly ref", nameof(CSharpGrammar.DeclarationPreamble))]
+        [TestCase("= {1,2,3}", nameof(CSharpGrammar.Initialization))]
         public static void TargetedTest(string input, string name)
         {
             var rule = Grammar.GetRuleFromName(name);

@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 #pragma warning disable NUnit2005
 namespace Parakeet.Tests
 {
@@ -47,11 +45,11 @@ namespace Parakeet.Tests
         {
             if (outputInput)
             {
-                Console.WriteLine($"Testing Rule {rule.GetName()} with input {input}");
+                Console.WriteLine($"Testing Rule {rule} with input {input}");
             }
             else
             {
-                Console.WriteLine($"Testing Rule {rule.GetName()}");
+                Console.WriteLine($"Testing Rule {rule}");
             }
 
             ParserState ps = null;
