@@ -448,7 +448,7 @@ abc
         public static void OutputAstCode()
         {
             var cb = new CodeBuilder();
-            AstClassBuilder.OutputAstFile(cb, "Parakeet.Demos.CSharp", Grammar.GetRules());
+            TypedTreeBuilder.OutputAstFile(cb, "Parakeet.Demos.CSharp", Grammar.GetRules());
             var path = Path.Combine(ParserTests.DemosProjectFolder, "CSharpAst.cs");
             var text = cb.ToString();
             Console.WriteLine(text);

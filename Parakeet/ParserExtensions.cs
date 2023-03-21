@@ -11,7 +11,7 @@ namespace Parakeet
         public static ParserState Parse(this string s, Rule r)
             => r.Match(new ParserState(s));
 
-        public static ParseTree ToParseTree(this ParserNode node)
+        public static ParserTree ToParseTree(this ParserNode node)
             => node.ToParseTreeAndNode().Item1;
 
         public static IEnumerable<ParserRange> GetMatches(this string input, Rule rule)

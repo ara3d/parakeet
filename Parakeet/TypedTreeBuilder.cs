@@ -8,16 +8,16 @@ namespace Parakeet
     /// This class is used to generate AST classes, and a converter function to convert from 
     /// the typed AST. 
     /// </summary>
-    public static class AstClassBuilder
+    public static class TypedTreeBuilder
     {
-        public static string AstTypeName(this Rule r)
+        public static string TypedNodeName(this Rule r)
         {
             if (r is NodeRule nr)
                 return nr.Name;
-            return "AstNode";
+            return "TypedParseNode";
         }
 
-        public static CodeBuilder OutputAstField(CodeBuilder cb, List<string> fieldNames, Rule r, int index, int child)
+        public static CodeBuilder OutputNodeField(CodeBuilder cb, List<string> fieldNames, Rule r, int index, int child)
         {
             var fieldName = fieldNames[index];
             var cnt = 0;
@@ -37,24 +37,24 @@ namespace Parakeet
                 return cb.WriteLine($"public {nr.Name} {fieldName} => Children[{child}] as {nr.Name};");
             
             if (r is SequenceRule)
-                return cb.WriteLine($"public AstSequence {fieldName} => Children[{child}] as AstSequence;");
+                return cb.WriteLine($"public TypedParseSequence {fieldName} => Children[{child}] as TypedParseSequence;");
             
             if (r is ChoiceRule)
-                return cb.WriteLine($"public AstChoice {fieldName} => Children[{child}] as AstChoice;");
+                return cb.WriteLine($"public TypedParseChoice {fieldName} => Children[{child}] as TypedParseChoice;");
             
             if (r is OptionalRule opt)
-                return cb.WriteLine($"public AstOptional<{opt.Rule.AstTypeName()}> {fieldName} => Children[{child}] as AstOptional<{opt.Rule.AstTypeName()}>;");
+                return cb.WriteLine($"public TypedParseOptional<{opt.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as TypedParseOptional<{opt.Rule.TypedNodeName()}>;");
             
             if (r is ZeroOrMoreRule z)
-                return cb.WriteLine($"public AstZeroOrMore<{z.Rule.AstTypeName()}> {fieldName} => Children[{child}] as AstZeroOrMore<{z.Rule.AstTypeName()}>;");
+                return cb.WriteLine($"public TypedParseZeroOrMore<{z.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as TypedParseZeroOrMore<{z.Rule.TypedNodeName()}>;");
 
             if (r is RecursiveRule rr)
-                return OutputAstField(cb, fieldNames, rr.Rule, index, child);
+                return OutputNodeField(cb, fieldNames, rr.Rule, index, child);
 
             throw new NotImplementedException($"Unrecognized rule type {r}");
         }
 
-        public static int NumAstChildren(Rule r)
+        public static int ExpectedNumChildNodes(Rule r)
         {
             var body = r.Body()?.OnlyNodes();
             if (body == null)
@@ -66,30 +66,37 @@ namespace Parakeet
             return 1;
         }
         
-        public static string AstFieldName(this Rule r)
+        public static string ToNodeFieldName(this Rule r)
         {
             if (r is NodeRule nr)
                 return nr.Name;
             if (r is ZeroOrMoreRule z)
-                return "ZeroOrMoreRule" + z.Rule.AstFieldName();
+                return "ZeroOrMoreRule" + z.Rule.ToNodeFieldName();
             if (r is SequenceRule s)
                 return "SequenceRule";
             if (r is ChoiceRule c)
                 return "ChoiceRule";
             if (r is OptionalRule opt)
-                return opt.Rule.AstFieldName();
+                return opt.Rule.ToNodeFieldName();
             if (r is RecursiveRule rec)
-                return rec.Rule.AstFieldName();
+                return rec.Rule.ToNodeFieldName();
             return "Node";
 
         }
 
-        public static CodeBuilder OutputAstClass(CodeBuilder cb, Rule r)
+        public static CodeBuilder OutputNodeClass(CodeBuilder cb, Rule r)
         {
+            if (r is SequenceRule seq)
+            {
+                foreach (var child in seq.Rules)
+                    if (child is NodeRule nr2)
+                        OutputNodeClass(cb, nr2);
+            }
+
             if (!(r is NodeRule nr))
                 return cb;
 
-            var body = r.Body()?.OnlyNodes();
+            var body = r.Body()?.Optimize().OnlyNodes();
 
             cb = cb.WriteLine($"// Original Rule: {r.Body().ToDefinition()}");
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
@@ -97,21 +104,21 @@ namespace Parakeet
            
             if (body is SequenceRule)
             {
-                cb = cb.WriteLine($" : AstSequence");
+                cb = cb.WriteLine($" : TypedParseSequence");
             }
             else if (body is ChoiceRule)
             {
-                cb = cb.WriteLine($" : AstChoice");
+                cb = cb.WriteLine($" : TypedParseChoice");
             }
             else 
             {
-                cb = cb.WriteLine($" : AstNode");
+                cb = cb.WriteLine($" : TypedParseNode");
             }
 
             cb = cb.WriteLine("{").Indent();
 
-            cb = cb.WriteLine($"public {nr.Name}(params AstNode[] children) : base(children) {{ }}");
-            cb = cb.WriteLine($"public override AstNode Transform(Func<AstNode, AstNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
+            cb = cb.WriteLine($"public {nr.Name}(params TypedParseNode[] children) : base(children) {{ }}");
+            cb = cb.WriteLine($"public override TypedParseNode Transform(Func<TypedParseNode, TypedParseNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
             var index = 0;
             if (body == null)
             {
@@ -119,19 +126,19 @@ namespace Parakeet
             }
             else if (body is SequenceRule sequence)
             {
-                var names = sequence.Rules.Select(AstFieldName).ToList();
+                var names = sequence.Rules.Select(ToNodeFieldName).ToList();
                 foreach (var child in sequence.Rules)
-                    cb = OutputAstField(cb, names, child, index, index++);
+                    cb = OutputNodeField(cb, names, child, index, index++);
             }
             else if (body is ChoiceRule choice)
             {
-                var names = choice.Rules.Select(AstFieldName).ToList();
+                var names = choice.Rules.Select(ToNodeFieldName).ToList();
                 foreach (var child in choice.Rules)
-                    cb = OutputAstField(cb, names, child, index++, 0);
+                    cb = OutputNodeField(cb, names, child, index++, 0);
             }            
             else
             {
-                cb = OutputAstField(cb, new List<string>() { body.AstFieldName() }, body, index, index++);
+                cb = OutputNodeField(cb, new List<string>() { body.ToNodeFieldName() }, body, index, index++);
             }
             cb = cb.Dedent().WriteLine("}");            
             return cb.WriteLine();
@@ -141,15 +148,15 @@ namespace Parakeet
         {
             foreach (var r in rules)
             {
-                OutputAstClass(cb, r);
+                OutputNodeClass(cb, r);
             }
         }
 
-        public static void OutputFactory(CodeBuilder cb, IEnumerable<Rule> rules)
+        public static void OutputNodeClassFactory(CodeBuilder cb, IEnumerable<Rule> rules)
         {
-            cb.WriteLine("public static class AstNodeFactory");
-            cb.WriteLine("{").Indent();
-            cb.WriteLine("public static AstNode Create(ParseTree node)");
+            cb.WriteLine("public static class ParseNodeClassFactory");
+            cb.WriteLine("{").Indent(); 
+            cb.WriteLine("public static TypedParseNode Create(ParserTree node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
             cb.WriteLine("{").Indent();
@@ -157,7 +164,7 @@ namespace Parakeet
             {
                 if (r is NodeRule nr)
                 {
-                    if (NumAstChildren(nr) == 0)
+                    if (ExpectedNumChildNodes(nr) == 0)
                     {
                         cb.WriteLine($"case \"{nr.Name}\": return new {nr.Name}(node.Contents);");
                     }
@@ -182,7 +189,7 @@ namespace Parakeet
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();
             OutputAstClasses(cb, rules);
-            OutputFactory(cb, rules);
+            OutputNodeClassFactory(cb, rules);
             cb.Dedent().WriteLine("}");
         }
     }

@@ -3,7 +3,7 @@ namespace Parakeet.Tests
 {
     public static class Helpers
     {
-        public static void OutputTree(this ParseTree tree, string indent = "+-+")
+        public static void OutputTree(this ParserTree tree, string indent = "+-+")
         {
             Console.WriteLine($"{indent} {tree.Node.Descriptor()}");
             foreach (var child in tree.Children)

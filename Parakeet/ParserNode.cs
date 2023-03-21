@@ -29,23 +29,23 @@ namespace Parakeet
         public ParserNode(string name, ParserRange range, ParserNode previous = null)
             => (Name, Range, Previous) = (name, range, previous);
 
-        public ParseTree ToParseTree()
+        public ParserTree ToParseTree()
             => ToParseTreeAndNode().Item1;
 
-        public (ParseTree, ParserNode) ToParseTreeAndNode()
+        public (ParserTree, ParserNode) ToParseTreeAndNode()
         {
             var node = this;
             if (node == null) return (null, null);
             var prev = node.Previous;
-            var children = new List<ParseTree>();
+            var children = new List<ParserTree>();
             while (prev != null && node.IsParentOf(prev))
             {
-                ParseTree child;
+                ParserTree child;
                 (child, prev) = prev.ToParseTreeAndNode();
                 children.Add(child);
             }
             children.Reverse();
-            return (new ParseTree(node, children), prev);
+            return (new ParserTree(node, children), prev);
         }
 
         public IEnumerable<ParserNode> AllNodesReversed()
