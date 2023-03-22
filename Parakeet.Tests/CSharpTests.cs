@@ -1,4 +1,7 @@
-﻿namespace Parakeet.Tests
+﻿using Parakeet.Demos.CSharp;
+using File = System.IO.File;
+
+namespace Parakeet.Tests
 {
     public static class CSharpTests
     {
@@ -273,14 +276,6 @@ abc
         public static string MathEquation = "(1.23 + (4.56 / 7.9) - 0.8)";
         public static string SomeCode = "var x = 123; x += 23; f(1, a);";
 
-        public static CSharpGrammar Rules = new CSharpGrammar();
-
-        [Test]
-        public static void GrammarDefinition()
-        {
-            Grammar.OutputDefinitions(true);
-        }
-
         public static CSharpGrammar Grammar = new CSharpGrammar();
 
         [Test, TestCaseSource(nameof(Spaces))] 
@@ -442,17 +437,6 @@ abc
                     Console.WriteLine($"[{range.Node.EllidedContents}]");
                 }
             }
-        }
-
-        [Test]
-        public static void OutputAstCode()
-        {
-            var cb = new CodeBuilder();
-            TypedTreeBuilder.OutputAstFile(cb, "Parakeet.Demos.CSharp", Grammar.GetRules());
-            var path = Path.Combine(ParserTests.DemosProjectFolder, "CSharpAst.cs");
-            var text = cb.ToString();
-            Console.WriteLine(text);
-            File.WriteAllText(path, text);
         }
     }
 }

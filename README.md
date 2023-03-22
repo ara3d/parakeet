@@ -16,6 +16,32 @@ Parakeet combines both lexical analysis (aka tokenization) and syntactic analysi
 
 For an example of how to define grammars in Parakeet see the [C# Grammar](https://github.com/cdiggins/parakeet/blob/master/Parakeet.Demos/CSharpGrammar.cs).
 
+## More Details and Features
+
+Parakeet was designed primarily for the challenge of parsing programming languages. It can be used in different contexts of course. 
+
+Parakeet supports:
+
+* Parsing error recovery  
+* Run-time detection of stuck parsers 
+* Line number and column number reporting 
+* Immutable data structures 
+* Operator overloading
+* Fluent API syntax (aka method chaining)
+* Automated creation of untyped parse trees
+* Code generation for converting untyped parse trees into a strongly typed concrete syntax tree (CST). 
+
+## Steps 
+
+1. Define a grammar in code: a class with a set of properties that map to rules 
+1. Convert the input text into a parser input object 
+1. Choose the starting rule of the grammar 
+1. Call the match function of the starting rule 
+1. Examine the resulting `ParserState` object
+1. If the result is `null` the parser failed to match, and failed to recover 
+	* Consider adding `OnError` to your grammar
+1. Convert  
+
 ## Primary Classes
 
 * `ParserInput` - Wraps a string with convenience functions to retrieve row/column, and potentially the source file name. 
@@ -27,8 +53,8 @@ Can be implicitly converted from a string
 * `ParserCache` - Stores parser errors, and successful parse results to accelerated future lookups. 
 * `Rule` - Base class of a parser, provides a match function that accepts a ParserState and a ParserCache.
 * `Grammar` - Base class of a collection of parsing rules, usually defined as properties. 
-* `AstNode` - Base class of typed parse trees generated from `Grammar` objects. 
-* `AstClassBuilder` - Static class with functions for generating `AstNode` classes and factory functions from `ParserTree` objects. 
+* `CstNode` - Base class of typed parse trees generated from `Grammar` objects. 
+* `CstClassBuilder` - Static class with functions for generating `AstNode` classes and factory functions from `ParserTree` objects. 
 * `ParserError` - An error created when a `Sequence` fails to match a child rule after an `OnError` rule.
 * `ParserException` - This represents an internal parser error which usually results from a grammar mistake.  
 
@@ -124,7 +150,6 @@ Will always return the `ParserState` when matched. If a sequence encounters an `
 one of the subsequent child rules fails, the parser will then try to match the `OnError` recovery rule to advance 
 to a place where it is likely to be able to continue parsing successfully (e.g. the end of a statement).
 
-
 ## Parse Trees 
 
 Parse trees generated from Parakeet are untyped. A parse node is created whenever a `NodeRule` rule 
@@ -134,7 +159,6 @@ is converted into a tree structure.
 ## Typed Parse Tree 
 
 A set of classes representing a strongly typed parse tree can be created automatically from a Parakeet grammar. 
-For an example of the output see [the C# AST](https://github.com/cdiggins/parakeet/blob/master/Parakeet.Demos/CSharpAst.cs).
 
 ## History 
 
@@ -178,3 +202,36 @@ If you are interested it is apparently possible  to [Run roslyn in a web-page vi
 * https://en.wikipedia.org/wiki/Parser_combinator
 * https://en.wikipedia.org/wiki/Parsing_expression_grammar
 * https://pdos.csail.mit.edu/~baford/packrat/icfp02/packrat-icfp02.pdf
+
+## FAQ 
+
+Q: Isn't a parse tree and concrete syntax tree (CST) the same thing? 
+
+> Yes. Parakeet uses the term parse tree to refer to untyped parse tree, and CST to refer to the typed parse tree.  
+
+Q: What is the difference between a CST and an AST? 
+
+> The CST is generated from parsing the input text as is. 
+> An AST is the result of transforming the CST into a form that has the same semantic meaning but is presumably 
+> simpler and easier. 
+
+Q: Why isn't Parakeet a code generator from the beginning 
+
+> I find it easier to learn, understand, use, and debug libraries that aren't generated. 
+> Writing an extension to Parakeet that generates parser code would not be very hard.  
+
+Q: So why is the CST code generated? 
+
+> Having a strongly typed CST is very beneficial when writing analysis and transformation tools 
+> especially for non-trivial grammars like those of programming languages. 
+> I don't know of any other way in C# to generate strongly typed libraries other than generating code. 
+
+Q: Isn't parsing library X faster? 
+
+> Maybe. I designed Parakeet to be fast enough for my needs, but I prioritized making it robust and (hopefully) easy to use. 
+> See the related work section for other parsing libraries to consider. 
+
+Q: Can you provide some benchmarks? Or implement grammar X? 
+
+> I'm kind of busy getting work done. 
+> If you are willing to fund this project, then we should talk: email me at cdiggins@gmail.com.   

@@ -5,16 +5,16 @@ using System.Linq;
 namespace Parakeet
 {
     /// <summary>
-    /// This class is used to generate AST classes, and a converter function to convert from 
-    /// the typed AST. 
+    /// This class is used to generate typed classes for the Concrete syntax tree,
+    /// and a factory function to convert from parse tree.  
     /// </summary>
-    public static class TypedTreeBuilder
+    public static class CstCodeBuilder
     {
         public static string TypedNodeName(this Rule r)
         {
             if (r is NodeRule nr)
                 return nr.Name;
-            return "TypedParseNode";
+            return "CstNode";
         }
 
         public static CodeBuilder OutputNodeField(CodeBuilder cb, List<string> fieldNames, Rule r, int index, int child)
@@ -37,16 +37,16 @@ namespace Parakeet
                 return cb.WriteLine($"public {nr.Name} {fieldName} => Children[{child}] as {nr.Name};");
             
             if (r is SequenceRule)
-                return cb.WriteLine($"public TypedParseSequence {fieldName} => Children[{child}] as TypedParseSequence;");
+                return cb.WriteLine($"public CstSequence {fieldName} => Children[{child}] as CstSequence;");
             
             if (r is ChoiceRule)
-                return cb.WriteLine($"public TypedParseChoice {fieldName} => Children[{child}] as TypedParseChoice;");
+                return cb.WriteLine($"public CstChoice {fieldName} => Children[{child}] as CstChoice;");
             
             if (r is OptionalRule opt)
-                return cb.WriteLine($"public TypedParseOptional<{opt.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as TypedParseOptional<{opt.Rule.TypedNodeName()}>;");
+                return cb.WriteLine($"public CstOptional<{opt.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstOptional<{opt.Rule.TypedNodeName()}>;");
             
             if (r is ZeroOrMoreRule z)
-                return cb.WriteLine($"public TypedParseZeroOrMore<{z.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as TypedParseZeroOrMore<{z.Rule.TypedNodeName()}>;");
+                return cb.WriteLine($"public CstZeroOrMore<{z.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstZeroOrMore<{z.Rule.TypedNodeName()}>;");
 
             if (r is RecursiveRule rr)
                 return OutputNodeField(cb, fieldNames, rr.Rule, index, child);
@@ -81,7 +81,6 @@ namespace Parakeet
             if (r is RecursiveRule rec)
                 return rec.Rule.ToNodeFieldName();
             return "Node";
-
         }
 
         public static CodeBuilder OutputNodeClass(CodeBuilder cb, Rule r)
@@ -104,21 +103,21 @@ namespace Parakeet
            
             if (body is SequenceRule)
             {
-                cb = cb.WriteLine($" : TypedParseSequence");
+                cb = cb.WriteLine($" : CstSequence");
             }
             else if (body is ChoiceRule)
             {
-                cb = cb.WriteLine($" : TypedParseChoice");
+                cb = cb.WriteLine($" : CstChoice");
             }
             else 
             {
-                cb = cb.WriteLine($" : TypedParseNode");
+                cb = cb.WriteLine($" : CstNode");
             }
 
             cb = cb.WriteLine("{").Indent();
 
-            cb = cb.WriteLine($"public {nr.Name}(params TypedParseNode[] children) : base(children) {{ }}");
-            cb = cb.WriteLine($"public override TypedParseNode Transform(Func<TypedParseNode, TypedParseNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
+            cb = cb.WriteLine($"public {nr.Name}(params CstNode[] children) : base(children) {{ }}");
+            cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
             var index = 0;
             if (body == null)
             {
@@ -144,7 +143,7 @@ namespace Parakeet
             return cb.WriteLine();
         }
     
-        public static void OutputAstClasses(CodeBuilder cb, IEnumerable<Rule> rules)
+        public static void OutputCstClasses(CodeBuilder cb, IEnumerable<Rule> rules)
         {
             foreach (var r in rules)
             {
@@ -152,17 +151,21 @@ namespace Parakeet
             }
         }
 
-        public static void OutputNodeClassFactory(CodeBuilder cb, IEnumerable<Rule> rules)
+        public static void OutputCstClassFactory(CodeBuilder cb, IEnumerable<Rule> rules)
         {
-            cb.WriteLine("public static class ParseNodeClassFactory");
+            cb.WriteLine("public static class CstNodeFactory");
             cb.WriteLine("{").Indent(); 
-            cb.WriteLine("public static TypedParseNode Create(ParserTree node)");
+            cb.WriteLine("public static CstNode Create(ParserTree node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
             cb.WriteLine("{").Indent();
             foreach (var r in rules)
             {
-                if (r is NodeRule nr)
+                var r2 = r;
+                if (r2 is SequenceRule seq)
+                    r2 = seq[0];
+
+                if (r2 is NodeRule nr)
                 {
                     if (ExpectedNumChildNodes(nr) == 0)
                     {
@@ -180,7 +183,7 @@ namespace Parakeet
             cb.Dedent().WriteLine("}");
         }
 
-        public static void OutputAstFile(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
+        public static void OutputCstClassesFile(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
         {
             cb.WriteLine($"// DO NOT EDIT: Autogenerated file created on {DateTime.Now}. ");
             cb.WriteLine($"using System;");
@@ -188,8 +191,19 @@ namespace Parakeet
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();
-            OutputAstClasses(cb, rules);
-            OutputNodeClassFactory(cb, rules);
+            OutputCstClasses(cb, rules);
+            cb.Dedent().WriteLine("}");
+        }
+
+        public static void OutputCstFactoryFile(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
+        {
+            cb.WriteLine($"// DO NOT EDIT: Autogenerated file created on {DateTime.Now}. ");
+            cb.WriteLine($"using System;");
+            cb.WriteLine($"using System.Linq;");
+            cb.WriteLine();
+            cb.WriteLine($"namespace {namespaceName}");
+            cb.WriteLine("{").Indent();
+            OutputCstClassFactory(cb, rules);
             cb.Dedent().WriteLine("}");
         }
     }

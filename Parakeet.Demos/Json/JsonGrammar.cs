@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Demos
+﻿namespace Parakeet.Demos.Json
 {
     public class JsonGrammar : CommonGrammar
     {

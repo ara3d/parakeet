@@ -4,7 +4,7 @@
 
 public class AstFactory
 {
-    public static AstNode Node(TypedParseNode node)
+    public static AstNode Node(CstNode node)
     {
         throw new NotImplementedException();
     }

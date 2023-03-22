@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parakeet
+namespace Parakeet.Demos.CSharp
 {
     // This is currently a parser for a subset of the C# language 
     // See: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/lexical-structure
