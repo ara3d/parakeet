@@ -108,7 +108,7 @@ namespace Parakeet.Demos.CSharp
         public Rule InitializerClause => Node((Identifier + Symbol("=") + Recovery + Expression) | Expression);
         public Rule Initializer => Node(BracedList(InitializerClause));
         public Rule ArraySizeSpecifier => Node(Bracketed(Expression));
-        public Rule NewOperation => Node(Keyword("new") + Recovery + TypeExpr + FunctionArgs.Optional() + ArraySizeSpecifier.Optional() + Initializer.Optional());
+        public Rule NewOperation => Node(Keyword("new") + Recovery + TypeExpr.Optional() + FunctionArgs.Optional() + ArraySizeSpecifier.Optional() + Initializer.Optional());
         public Rule IsOperation => Node(Keyword("is") + Recovery + TypeExpr + Identifier.Optional());
         public Rule AsOperation => Node(Keyword("as") + Recovery + TypeExpr + Identifier.Optional());
         public Rule StringInterpolationContent => Node(Braced(Expression) | StringLiteralChar);
@@ -197,7 +197,7 @@ namespace Parakeet.Demos.CSharp
 
         public Rule QualifiedIdentifier => Node(List(Identifier, Symbol(".")));
         public Rule Static => Node(Keyword("static").Optional());
-        public Rule UsingDirective => Node(Keyword("global").Optional() + Keyword("using") + Recovery + Static + QualifiedIdentifier + EOS);
+        public Rule UsingDirective => Node(Keyword("global").Optional() + Keyword("using") + Recovery + Static + QualifiedIdentifier + Optional(Symbol("=") + QualifiedIdentifier) + EOS);
 
         public Rule Modifier => Node(Keywords("static", "sealed", "partial", "readonly", "const", "ref", "abstract", "virtual"));
         public Rule AccessSpecifier => Node(Keywords("public", "private", "protected", "internal"));
@@ -235,7 +235,9 @@ namespace Parakeet.Demos.CSharp
         public Rule Setter => Node(Keyword("set") + Recovery + FunctionBody);
         public Rule Initter => Node(Keyword("init") + Recovery + FunctionBody);
         public Rule PropertyClauses => Node((Getter | Setter | Initter).ZeroOrMore());
-        public Rule PropertyBody => Node(ExpressionBody | Braced(PropertyClauses));
+        public Rule PropertyWithClauses => Node(Braced(PropertyClauses) + Optional(Initialization));
+        public Rule PropertyExpression => Node(ExpressionBody);
+        public Rule PropertyBody => Node(PropertyExpression | PropertyWithClauses);
         public Rule PropertyDeclaration => Node(TypeExpr + Identifier + PropertyBody);
         public Rule IndexerDeclaration => Node(TypeExpr + Keyword("this") + Recovery + Bracketed(FunctionParameter) + PropertyBody);
         public Rule OperatorDeclaration => Node(TypeExpr + Keyword("operator") + Recovery + OverloadableOperator + FunctionParameterList + FunctionBody);
@@ -253,8 +255,9 @@ namespace Parakeet.Demos.CSharp
             | TypeDeclaration
             ));
 
-
-        public Rule NamespaceDeclaration => Node(Keyword("namespace") + Recovery + QualifiedIdentifier + Braced(TypeDeclarationWithPreamble.ZeroOrMore()));
+        public Rule TypesAndDirectives => Named((UsingDirective | TypeDeclarationWithPreamble).ZeroOrMore());
+        public Rule ImplicitlyOrExplicitlyScopedTypes => Named(EOS + TypesAndDirectives) | Braced(TypesAndDirectives);
+        public Rule NamespaceDeclaration => Node(Keyword("namespace") + QualifiedIdentifier + ImplicitlyOrExplicitlyScopedTypes);
         public Rule File => Node(WS + UsingDirective.ZeroOrMore() + NamespaceDeclaration.Optional());
 
         public Rule ArrayRankSpecifier => Node(Bracketed(Comma.ZeroOrMore()));
