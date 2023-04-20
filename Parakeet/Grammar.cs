@@ -84,13 +84,7 @@ namespace Parakeet
             => new ZeroOrMoreRule(r);
 
         public Rule OneOrMore(Rule r) 
-            => r + r.ZeroOrMore();
-        
-        public Rule TwoOrMore(Rule r) 
-            => r + r + r.ZeroOrMore();
-        
-        public Rule ThreeOrMore(Rule r) 
-            => r + r + r + r.ZeroOrMore();
+            => new OneOrMoreRule(r);
         
         public Rule Optional(Rule r) 
             => r.Optional();

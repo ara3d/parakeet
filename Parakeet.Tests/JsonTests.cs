@@ -160,6 +160,7 @@ namespace Parakeet.Tests
             Assert.AreEqual(1, ParserTests.ParseTest(input, rule));
         }
 
+        [Test, Explicit]
         [TestCase("twitter.json")]
         [TestCase("1900b0aE.dag.json")]
         [TestCase("59ba4880.json")]

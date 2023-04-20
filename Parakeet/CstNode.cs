@@ -25,6 +25,12 @@ namespace Parakeet
         public static implicit operator CstNode(string text) => new CstLeaf(text);
         public bool IsLeaf => this is CstLeaf;
         public override string ToString() => $"[{GetType().Name}: {string.Join(" ", Children)}]";
+
+        public string GetText()
+        {
+            if (this is CstLeaf leaf) return leaf.Text;
+            return string.Join(" ", Children.Select(x => x.GetText()));
+        }
     }
 
     public class CstSequence : CstNode

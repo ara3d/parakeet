@@ -47,6 +47,8 @@ abc
             "private int y;",
             "int x = 12;",
             "public int x = 12;",
+            "public int x { get; } = 12;",
+            "public Dictionary<string, IFunctionValue> Functions { get; } = new();",
             "void f() { }",
             "public static void f(int x) { return x; }",
             "int x {get;}",
@@ -261,6 +263,7 @@ abc
             "class C { private int x = 12; }",
             "class C { public static int x = 12; }",
             "class C { public int x => 12; }",
+            "class C { public int x { get; } = 12; }",
             "class C { public int x { get; set; } }",
             "class C { public int x { get { return 12; } set { _x = value; } } }",
             "class C { public int x() { return 12; } }",
@@ -279,26 +282,26 @@ abc
         public static CSharpGrammar Grammar = new CSharpGrammar();
 
         [Test, TestCaseSource(nameof(Spaces))] 
-        public static void TestSpaces(string input) => SingleParseTest(input, Grammar.WS);
+        public static void TestSpaces(string input) => ParserTests.SingleParseTest(input, Grammar.WS);
         
-        [Test, TestCaseSource(nameof(Literals))] public static void TestLiterals(string input) => SingleParseTest(input, Grammar.Literal);
+        [Test, TestCaseSource(nameof(Literals))] public static void TestLiterals(string input) => ParserTests.SingleParseTest(input, Grammar.Literal);
         
-        [Test, TestCaseSource(nameof(Literals))] public static void TestLiteralExpressions(string input) => SingleParseTest(input, Grammar.Expression);
+        [Test, TestCaseSource(nameof(Literals))] public static void TestLiteralExpressions(string input) => ParserTests.SingleParseTest(input, Grammar.Expression);
         
         [Test, TestCaseSource(nameof(Types))] 
-        public static void TestTypes(string input) => SingleParseTest(input, Grammar.TypeExpr);
+        public static void TestTypes(string input) => ParserTests.SingleParseTest(input, Grammar.TypeExpr);
         
         [Test, TestCaseSource(nameof(Statements))] 
-        public static void TestStatements(string input) => SingleParseTest(input, Grammar.Statement);
+        public static void TestStatements(string input) => ParserTests.SingleParseTest(input, Grammar.Statement);
         
         [Test, TestCaseSource(nameof(Expressions))] 
-        public static void TestExpressions(string input) => SingleParseTest(input, Grammar.Expression);
+        public static void TestExpressions(string input) => ParserTests.SingleParseTest(input, Grammar.Expression);
         
         [Test, TestCaseSource(nameof(Identifiers))] 
-        public static void TestIdentifiers(string input) => SingleParseTest(input, Grammar.QualifiedIdentifier);
+        public static void TestIdentifiers(string input) => ParserTests.SingleParseTest(input, Grammar.QualifiedIdentifier);
 
         [Test, TestCaseSource(nameof(Members))]
-        public static void TestMemberDeclarations(string input) => SingleParseTest(input, Grammar.MemberDeclaration);
+        public static void TestMemberDeclarations(string input) => ParserTests.SingleParseTest(input, Grammar.MemberDeclaration);
 
         [Test, TestCaseSource(nameof(FailingStatements))]
         public static void TestFailingStatements(string input)
@@ -313,10 +316,7 @@ abc
         }
 
         [Test, TestCaseSource(nameof(Classes))] 
-        public static void TestClasses(string input) => SingleParseTest(input, Grammar.TypeDeclarationWithPreamble);
-
-        public static void SingleParseTest(string input, Rule r)
-            => Assert.AreEqual(1, ParserTests.ParseTest(input, r));
+        public static void TestClasses(string input) => ParserTests.SingleParseTest(input, Grammar.TypeDeclarationWithPreamble);
         
         public static void TestInputsAndRule(string[] inputs, Rule r)
         {
@@ -377,6 +377,10 @@ abc
         [TestCase("namespace A { class B {} class C {} }", nameof(CSharpGrammar.NamespaceDeclaration))]
         [TestCase("public static internal readonly ref", nameof(CSharpGrammar.DeclarationPreamble))]
         [TestCase("= {1,2,3}", nameof(CSharpGrammar.Initialization))]
+        [TestCase("= new()", nameof(CSharpGrammar.Initialization))]
+        [TestCase("int x {get;}", nameof(CSharpGrammar.PropertyDeclaration))]
+        [TestCase("int x { get; set; }", nameof(CSharpGrammar.PropertyDeclaration))]
+        [TestCase("int x { get; } = 12;", nameof(CSharpGrammar.PropertyDeclaration))]
         public static void TargetedTest(string input, string name)
         {
             var rule = Grammar.GetRuleFromName(name);

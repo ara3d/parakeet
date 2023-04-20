@@ -1,69 +1,114 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Parakeet
 {
-    //[Mutable]
-    public class CodeBuilder
+    // TODO: put this in Ptarmigan (maybe)
+    public class CodeBuilder<T> where T: CodeBuilder<T>
     {
         public StringBuilder sb { get; } = new StringBuilder();
         public bool AtNewLine { get; private set; } 
         public int IndentLevel { get; private set; }
-        public CodeBuilder Indent()
+        
+        public T Indent()
         {
             IndentLevel++;
-            return this;
+            return this as T;
         }
-        public CodeBuilder Dedent()
+
+        public T Dedent()
         {
             IndentLevel--;
-            return this;
+            return this as T;
         }
+        
         public string Indentation()
         {
             return new string(' ', IndentLevel * 4);
         }
-        public CodeBuilder Write(string s)
+
+        public T Write(char c)
+        {
+            return Write(c.ToString());
+        }
+
+        public T Write(string s)
         {
             if (string.IsNullOrEmpty(s))
-                return this;
+                return this as T;
             if (AtNewLine)
             {
                 sb.Append(Indentation());
                 AtNewLine = false;
             }
             sb.Append(s);
-            return this;
+            return this as T;
         }
-        public CodeBuilder WriteLine()
+        
+        public T WriteLine()
         {
             AtNewLine = true;
             sb.AppendLine();
-            return this;
+            return this as T;
         }
-        public CodeBuilder WriteLine(string s)
+        
+        public T WriteLine(string s)
         {
             return Write(s).WriteLine();
         }
-        public CodeBuilder Keyword(string s)
+        
+        public T Parenthesize(Func<T, T> f) 
         {
-            return Write(s).Write(" ");
+            return f(Write("(") as T).Write(")");
         }
-        public CodeBuilder Parenthesize(Func<CodeBuilder, CodeBuilder> f)
+
+        public T WriteCommaList<TElement>(IEnumerable<TElement> elements, Func<T, TElement, T> fElement)
         {
-            return f(Write("(")).Write(")");
+            return WriteList(elements, fElement, w => w.WriteToken(","));
         }
-        public CodeBuilder Brace(Func<CodeBuilder, CodeBuilder> f)
+
+        public T WriteList<TElement>(IEnumerable<TElement> elements, Func<T, TElement, T> fElement, Func<T, T> fSeparator = null)
         {
-            return f(WriteLine("{").Indent().WriteLine()).Dedent().WriteLine("}");
+            var first = true;
+            var r = this as T;
+            foreach (var element in elements)
+            {
+                if (!first)
+                {
+                    r = fSeparator?.Invoke(r) ?? r;
+                }
+                else
+                {
+                    first = false;
+                }
+
+                r = fElement(r, element);
+            }
+            return r;
         }
-        public CodeBuilder WriteIf(bool condition, Func<CodeBuilder, CodeBuilder> f)
+
+        public T Brace(Func<T, T> f) 
         {
-            return condition ? f(this) : this;
+            return f(Write("{").Indent().WriteLine()).Dedent().WriteLine("}");
         }
+        
+        public T WriteIf(bool condition, Func<T, T> f) 
+        {
+            return condition ? f(this as T) : this as T;
+        }
+        
         public override string ToString()
         {
             return sb.ToString();
         }
+        
+        public T WriteToken(string s)
+        {
+            return Write(s).Write(" ");
+        }
     }
+
+    public class CodeBuilder : CodeBuilder<CodeBuilder>
+    { }
 }

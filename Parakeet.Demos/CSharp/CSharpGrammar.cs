@@ -42,7 +42,7 @@ namespace Parakeet.Demos.CSharp
         public Rule StringLiteralChar => Named(EscapedLiteralChar | "\"\"" | AnyChar.Except('"'));
         public Rule CharLiteralChar => Named(EscapedLiteralChar | AnyChar.Except('\''));
 
-        public Rule FloatLiteral => Node(Digits + FractionalPart.Optional() + ExponentPart.Optional() + FloatSuffix.Optional());
+        public Rule FloatLiteral => Node(Optional('-') + Digits + FractionalPart.Optional() + ExponentPart.Optional() + FloatSuffix.Optional());
         public Rule HexLiteral => Node(Strings("0x", "0X") + HexDigit.OneOrMore() + IntegerSuffix.Optional());
         public Rule BinaryLiteral => Node("0b" | "0B" + BinDigit.OneOrMore() + IntegerSuffix.Optional());
         public Rule IntegerLiteral => Node(Digits.ThenNot(".fFdDmM".ToCharSetRule()) + IntegerSuffix.Optional());
@@ -160,7 +160,7 @@ namespace Parakeet.Demos.CSharp
         public Rule SwitchStatement => Node(Keyword("switch") + Recovery + Braced(CaseClause.ZeroOrMore()));
         public Rule TryStatement => Node(Keyword("try") + Recovery + CompoundStatement + CatchClause.Optional() + FinallyClause.Optional());
         public Rule ForEachStatement => Node(Keyword("foreach") + Recovery + Symbol("(") + VarDecl + Keyword("in") + Expression + Symbol(")") + Statement);
-
+        public Rule FunctionDeclStatement => Node(Keyword("static").Optional() + MethodDeclaration);
         public Rule InitializationClause => Node((VarDecl + Initialization).Optional());
         public Rule InvariantClause => Node(Expression.Optional());
         public Rule VariantClause => Node(Expression.Optional());
@@ -182,6 +182,7 @@ namespace Parakeet.Demos.CSharp
             | ContinueStatement
             | ForStatement
             | ForEachStatement
+            | FunctionDeclStatement
             | VarDeclStatement
             | TryStatement
             | YieldStatement
@@ -234,8 +235,8 @@ namespace Parakeet.Demos.CSharp
         public Rule Getter => Node(Keyword("get") + Recovery + FunctionBody);
         public Rule Setter => Node(Keyword("set") + Recovery + FunctionBody);
         public Rule Initter => Node(Keyword("init") + Recovery + FunctionBody);
-        public Rule PropertyClauses => Node((Getter | Setter | Initter).ZeroOrMore());
-        public Rule PropertyWithClauses => Node(Braced(PropertyClauses) + Optional(Initialization));
+        public Rule PropertyClauses => Node((Getter | Setter | Initter).OneOrMore());
+        public Rule PropertyWithClauses => Node(Braced(PropertyClauses) + Optional(Initialization + EOS));
         public Rule PropertyExpression => Node(ExpressionBody);
         public Rule PropertyBody => Node(PropertyExpression | PropertyWithClauses);
         public Rule PropertyDeclaration => Node(TypeExpr + Identifier + PropertyBody);
@@ -291,6 +292,10 @@ namespace Parakeet.Demos.CSharp
         public Rule InnerStructure => Named(BracketedStructure | ParenthesizedStructure | BracedStructure);
         public Rule Structure => Recursive(nameof(InnerStructure));
         public Rule FileStructure => Node(Element.ZeroOrMore());
+
+        // Script rule
+        public Rule TypeDirectiveOrStatement => Node(UsingDirective | TypeDeclarationWithPreamble | Statement);
+        public Rule Script => Node(WS + TypeDirectiveOrStatement.ZeroOrMore());
 
         // Some C# features not supported:
         // goto

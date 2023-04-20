@@ -32,7 +32,7 @@ namespace Parakeet
             => new ZeroOrMoreRule(rule);
 
         public static Rule OneOrMore(this Rule rule)
-            => rule.Then(rule.ZeroOrMore());
+            => new OneOrMoreRule(rule);
 
         public static Rule To(this char c1, char c2)
             => new CharSetRule(Enumerable.Range(c1, c2 - c1 + 1).Select(i => (char)i).ToArray());

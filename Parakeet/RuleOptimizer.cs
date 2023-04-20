@@ -140,10 +140,18 @@ namespace Parakeet
                         return Log(r1, r2, r1, "A*+A* => A*");
 
                     if (z.Rule == r2)
-                        return Log(r1, r2, r1, "A*+A => A*");
+                        return Log(r1, r2, r2.OneOrMore(), "A*+A => A+");
                     
                     if (r2 is OptionalRule opt && z.Rule == opt.Rule)
-                        return Log(r1, r2, r1, "A*+A? => A");
+                        return Log(r1, r2, r1, "A*+A? => A*");
+                }
+            }
+
+            {
+                if (r2 is ZeroOrMoreRule z)
+                {
+                    if (r1 == z.Rule)
+                        return Log(r1, r2, r1.OneOrMore(), "A+A* => A+");
                 }
             }
             return null;
@@ -290,6 +298,9 @@ namespace Parakeet
 
                     if (inner is ZeroOrMoreRule)
                         return Log(r, null, inner, "A*? => A*");
+
+                    if (inner is OneOrMoreRule o)
+                        return Log(r, null, o.Rule.ZeroOrMore(), "A+? => A*");
 
                     if (inner is SequenceRule seq)
                     {

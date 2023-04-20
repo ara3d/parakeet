@@ -62,6 +62,8 @@ namespace Parakeet
                     return $"({opt.Rule.ToDefinition(shortForm, indent)})?";
                 case ZeroOrMoreRule z:
                     return $"({z.Rule.ToDefinition(shortForm, indent)})*";
+                case OneOrMoreRule o:
+                    return $"({o.Rule.ToDefinition(shortForm, indent)})+";
                 case RecursiveRule rec:
                     return rec.Rule.ToDefinition(shortForm, indent);
                 case StringRule sm:
@@ -99,6 +101,8 @@ namespace Parakeet
                     return opt.Rule.HasNode();
                 case ZeroOrMoreRule z:
                     return z.Rule.HasNode();
+                case OneOrMoreRule o:
+                    return o.Rule.HasNode();
                 case RecursiveRule rec:
                     return rec.Rule.HasNode();
                 default:
@@ -120,6 +124,8 @@ namespace Parakeet
                     return opt.Rule.ChildrenWithNodes();
                 case ZeroOrMoreRule z:
                     return z.Rule.ChildrenWithNodes();
+                case OneOrMoreRule o:
+                    return o.Rule.ChildrenWithNodes();
                 case RecursiveRule rec:
                     return rec.Rule.ChildrenWithNodes();
                 default:
@@ -137,15 +143,18 @@ namespace Parakeet
                 case SequenceRule seq:
                 {
                     var tmp = seq.Rules.Select(r1 => r1.OnlyNodes()).Where(x => x != null).ToList();
+                    if (tmp.Count == 1)
+                        return tmp[0];
                     if (tmp.Count > 0)
                         return new SequenceRule(tmp.ToArray());
                     break;
                 }
-
                 case ChoiceRule ch:
                 {
                     var tmp = ch.Rules.Select(r1 => r1.OnlyNodes()).Where(x => x != null).ToList();
 
+                    if (tmp.Count == 1)
+                        return tmp[0];
                     if (tmp.Count > 0)
                         return new ChoiceRule(tmp.ToArray());
                     break;
@@ -162,6 +171,13 @@ namespace Parakeet
                     var tmp = z.Rule.OnlyNodes();
                     if (tmp != null)
                         return new ZeroOrMoreRule(tmp);
+                    break;
+                }
+                case OneOrMoreRule o:
+                {
+                    var tmp = o.Rule.OnlyNodes();
+                    if (tmp != null)
+                        return new OneOrMoreRule(tmp);
                     break;
                 }
                 case RecursiveRule rec:

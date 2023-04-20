@@ -14,7 +14,7 @@ namespace Parakeet.Tests
 
         public static void OutputNodeCounts(ParserNode node)
         {
-            var d = new Dictionary<string,int>();
+            var d = new Dictionary<string, int>();
             var sum = 0;
             while (node != null)
             {
@@ -40,6 +40,9 @@ namespace Parakeet.Tests
                 Console.WriteLine(e.LastState.Indicator);
             }
         }
+
+        public static void SingleParseTest(string input, Rule r)
+            => Assert.AreEqual(1, ParseTest(input, r));
 
         public static int ParseTest(ParserInput input, Rule rule, bool outputInput = true)
         {
@@ -271,34 +274,6 @@ namespace Parakeet.Tests
         {
             foreach (var g in Grammars())
                 g.OutputDefinitions(false);
-        }
-
-
-        [Test]
-        public static void OutputCst()
-        {
-            OutputCstCode(CSharpTests.Grammar, "CSharp");
-            OutputCstCode(JsonTests.Grammar, "Json");
-        }
-
-        public static void OutputCstCode(Grammar g, string name)
-        {
-            {
-                var cb = new CodeBuilder();
-                CstCodeBuilder.OutputCstClassesFile(cb, $"Parakeet.Demos.{name}", g.GetRules());
-                var path = Path.Combine(DemosProjectFolder, name, $"{name}Cst.cs");
-                var text = cb.ToString();
-                Console.WriteLine(text);
-                File.WriteAllText(path, text);
-            }
-            {
-                var cb = new CodeBuilder();
-                CstCodeBuilder.OutputCstFactoryFile(cb, $"Parakeet.Demos.{name}", g.GetRules());
-                var path = Path.Combine(DemosProjectFolder, name, $"{name}CstFactory.cs");
-                var text = cb.ToString();
-                Console.WriteLine(text);
-                File.WriteAllText(path, text);
-            }
         }
     }
 }

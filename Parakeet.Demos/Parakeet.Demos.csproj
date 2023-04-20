@@ -8,4 +8,8 @@
     <ProjectReference Include="..\Parakeet\Parakeet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="_generated\" />
+  </ItemGroup>
+
 </Project>

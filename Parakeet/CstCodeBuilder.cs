@@ -13,7 +13,7 @@ namespace Parakeet
         public static string TypedNodeName(this Rule r)
         {
             if (r is NodeRule nr)
-                return nr.Name;
+                return "Cst" + nr.Name;
             return "CstNode";
         }
 
@@ -34,7 +34,7 @@ namespace Parakeet
                 fieldName = $"{fieldName}_{cnt}";
 
             if (r is NodeRule nr)
-                return cb.WriteLine($"public {nr.Name} {fieldName} => Children[{child}] as {nr.Name};");
+                return cb.WriteLine($"public Cst{nr.Name} {fieldName} => Children[{child}] as Cst{nr.Name};");
             
             if (r is SequenceRule)
                 return cb.WriteLine($"public CstSequence {fieldName} => Children[{child}] as CstSequence;");
@@ -47,6 +47,9 @@ namespace Parakeet
             
             if (r is ZeroOrMoreRule z)
                 return cb.WriteLine($"public CstZeroOrMore<{z.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstZeroOrMore<{z.Rule.TypedNodeName()}>;");
+
+            if (r is OneOrMoreRule o)
+                return cb.WriteLine($"public CstOneOrMore<{o.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstOneOrMore<{o.Rule.TypedNodeName()}>;");
 
             if (r is RecursiveRule rr)
                 return OutputNodeField(cb, fieldNames, rr.Rule, index, child);
@@ -71,7 +74,9 @@ namespace Parakeet
             if (r is NodeRule nr)
                 return nr.Name;
             if (r is ZeroOrMoreRule z)
-                return "ZeroOrMoreRule" + z.Rule.ToNodeFieldName();
+                return "ZeroOrMore" + z.Rule.ToNodeFieldName();
+            if (r is OneOrMoreRule o)
+                return "OneOrMore" + o.Rule.ToNodeFieldName();
             if (r is SequenceRule s)
                 return "SequenceRule";
             if (r is ChoiceRule c)
@@ -95,11 +100,22 @@ namespace Parakeet
             if (!(r is NodeRule nr))
                 return cb;
 
-            var body = r.Body()?.Optimize().OnlyNodes();
 
-            cb = cb.WriteLine($"// Original Rule: {r.Body().ToDefinition()}");
+            var isLeaf = ExpectedNumChildNodes(nr) == 0;
+
+            var body = r.Body();
+            cb = cb.WriteLine($"// Original Rule: {body.ToDefinition()}");
+
+            body = body.Optimize();
+            if (body == null)
+                throw new Exception("Failed to create node");
+            //cb = cb.WriteLine($"// Optimized: {body.ToDefinition()}");
+
+
+            body = body.OnlyNodes();
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
-            cb = cb.Write($"public class {nr.Name}");
+
+            cb = cb.Write($"public class Cst{nr.Name}");
            
             if (body is SequenceRule)
             {
@@ -109,15 +125,28 @@ namespace Parakeet
             {
                 cb = cb.WriteLine($" : CstChoice");
             }
-            else 
+            else if (isLeaf)
+            {
+                cb = cb.WriteLine($" : CstLeaf");
+            }
+            else
             {
                 cb = cb.WriteLine($" : CstNode");
             }
 
             cb = cb.WriteLine("{").Indent();
 
-            cb = cb.WriteLine($"public {nr.Name}(params CstNode[] children) : base(children) {{ }}");
-            cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new {nr.Name}(Children.Select(f).ToArray());");
+            if (isLeaf)
+            {
+                cb = cb.WriteLine($"public Cst{nr.Name}(string text) : base(text) {{ }}");
+                cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new Cst{nr.Name}(Text);");
+            }
+            else
+            {
+                cb = cb.WriteLine($"public Cst{nr.Name}(params CstNode[] children) : base(children) {{ }}");
+                cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new Cst{nr.Name}(Children.Select(f).ToArray());");
+            }
+
             var index = 0;
             if (body == null)
             {
@@ -169,11 +198,11 @@ namespace Parakeet
                 {
                     if (ExpectedNumChildNodes(nr) == 0)
                     {
-                        cb.WriteLine($"case \"{nr.Name}\": return new {nr.Name}(node.Contents);");
+                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node.Contents);");
                     }
                     else
                     {
-                        cb.WriteLine($"case \"{nr.Name}\": return new {nr.Name}(node.Children.Select(Create).ToArray());");
+                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node.Children.Select(Create).ToArray());");
                     }
                 }
             }
@@ -186,8 +215,9 @@ namespace Parakeet
         public static void OutputCstClassesFile(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
         {
             cb.WriteLine($"// DO NOT EDIT: Autogenerated file created on {DateTime.Now}. ");
-            cb.WriteLine($"using System;");
+            cb.WriteLine($"using System;"); 
             cb.WriteLine($"using System.Linq;");
+            cb.WriteLine($"using Parakeet;");
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();
@@ -200,6 +230,7 @@ namespace Parakeet
             cb.WriteLine($"// DO NOT EDIT: Autogenerated file created on {DateTime.Now}. ");
             cb.WriteLine($"using System;");
             cb.WriteLine($"using System.Linq;");
+            cb.WriteLine($"using Parakeet;");
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();

@@ -167,11 +167,4 @@ public class TypeValue : IType
             .ToArray();
     }
 }
-
-public class AstInterpreter
-{
-    public IValue Eval(AstNode node)
-    {
-        throw new NotImplementedException();
-    }
-}
+    

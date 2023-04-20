@@ -308,7 +308,6 @@ namespace Parakeet
         public Rule Rule { get; }
         public ZeroOrMoreRule(Rule rule) => Rule = rule;
 
-        
         protected override ParserState MatchImplementation(ParserState state)
         {
             var curr = state;
@@ -332,6 +331,42 @@ namespace Parakeet
 
         public override bool Equals(object obj) => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
         public override int GetHashCode() => Hash (Rule);
+
+        public override IReadOnlyList<Rule> Children => new[] { Rule };
+    }
+
+    public class OneOrMoreRule : Rule
+    {
+        public Rule Rule { get; }
+        public OneOrMoreRule(Rule rule) => Rule = rule;
+
+        protected override ParserState MatchImplementation(ParserState state)
+        {
+            var curr = state;
+            var next = Rule.Match(curr);
+            if (next == null)
+            {
+                return null;
+            }
+            while (next != null)
+            {
+                curr = next;
+                next = Rule.Match(curr);
+#if DEBUG
+                if (next != null)
+                {
+                    if (next.Position <= curr.Position)
+                    {
+                        throw new ParserException(curr, "Parser is no longer making progress");
+                    }
+                }
+#endif
+            }
+            return curr;
+        }
+
+        public override bool Equals(object obj) => obj is OneOrMoreRule o && o.Rule.Equals(Rule);
+        public override int GetHashCode() => Hash(Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
