@@ -74,13 +74,13 @@ namespace Parakeet
             if (r is NodeRule nr)
                 return nr.Name;
             if (r is ZeroOrMoreRule z)
-                return "ZeroOrMore" + z.Rule.ToNodeFieldName();
+                return z.Rule.ToNodeFieldName();
             if (r is OneOrMoreRule o)
-                return "OneOrMore" + o.Rule.ToNodeFieldName();
+                return o.Rule.ToNodeFieldName();
             if (r is SequenceRule s)
-                return "SequenceRule";
+                return "Sequence";
             if (r is ChoiceRule c)
-                return "ChoiceRule";
+                return "Choices";
             if (r is OptionalRule opt)
                 return opt.Rule.ToNodeFieldName();
             if (r is RecursiveRule rec)
@@ -109,11 +109,12 @@ namespace Parakeet
             body = body.Optimize();
             if (body == null)
                 throw new Exception("Failed to create node");
-            //cb = cb.WriteLine($"// Optimized: {body.ToDefinition()}");
-
 
             body = body.OnlyNodes();
             cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
+
+            body = body?.Optimize();
+            cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
 
             cb = cb.Write($"public class Cst{nr.Name}");
            
@@ -162,7 +163,7 @@ namespace Parakeet
             {
                 var names = choice.Rules.Select(ToNodeFieldName).ToList();
                 foreach (var child in choice.Rules)
-                    cb = OutputNodeField(cb, names, child, index++, 0);
+                    cb = OutputNodeField(cb, names.ToList(), child, index++, 0);
             }            
             else
             {

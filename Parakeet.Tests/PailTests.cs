@@ -1,4 +1,4 @@
-﻿using Parakeet.Demos.PAIL;
+﻿using Parakeet.Demos;
 
 namespace Parakeet.Tests
 {

@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Demos.Json
+﻿namespace Parakeet.Demos
 {
     public class JsonGrammar : CommonGrammar
     {
@@ -13,7 +13,7 @@
         public Rule Exponent => Named(CharSet('e', 'E') + Sign.Optional() + Digits);
         public Rule Fraction => Named("." + Digits);
         public Rule Integer => Named(Optional('-') + ("0" | Digits));
-        public Rule EscapedChar => Named('\\' + (CharSet("\"\\/bfnrt") | ('u' + (HexDigit + HexDigit + HexDigit + HexDigit))));
+        public Rule EscapedChar => Named('\\' + (CharSet("\"\\/bfnrt") | 'u' + (HexDigit + HexDigit + HexDigit + HexDigit)));
         public Rule StringChar => Named(EscapedChar | AnyChar.Except('\"'));
         public Rule Number => Node(Integer + Fraction.Optional() + Exponent.Optional());
         public Rule String => Node(DoubleQuoted(StringChar.ZeroOrMore()));

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parakeet.Demos.CSharp
+namespace Parakeet.Demos
 {
     // This is currently a parser for a subset of the C# language 
     // See: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/lexical-structure
@@ -9,44 +9,28 @@ namespace Parakeet.Demos.CSharp
 
     public class CSharpGrammar : CommonGrammar
     {
-        public CSharpGrammar()
-            => WhitespaceRule = WS;
-
         // Recovery on error 
-        public Rule Recovery => OnError((
-            TokenOrStructure.Except(EOS).ZeroOrMore() 
-            + (EOS | EndOfInput)) | AdvanceToEnd);
+        public Rule Recovery => OnError(
+            TokenOrStructure.Except(EOS).ZeroOrMore()
+            + (EOS | EndOfInput) | AdvanceToEnd);
 
         // Helper functions 
-        public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma)).Optional();
-        public Rule Parenthesized(Rule r) => Symbol("(") + r + Symbol(")");
-        public Rule ParenthesizedList(Rule r, Rule sep = null) => Parenthesized(List(r, sep));
-        public Rule Bracketed(Rule r) => Symbol("[") + r + Symbol("]");
-        public Rule BracketedList(Rule r, Rule sep = null) => Bracketed(List(r, sep));
-        public Rule Keyword(string s) => s + IdentifierChar.NotAt() + WS;
         public Rule IntegerSuffix => Named(Strings("ul", "UL", "u", "U", "l", "L", "lu", "lU", "Lu", "LU"));
         public Rule FloatSuffix => Named("fFdDmM".ToCharSetRule());
-        public Rule Comma => Named(Symbol(","));
-        public Rule Symbol(string s) => s + WS; 
-        public Rule Symbols(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Symbol).ToArray());
-        public Rule Keywords(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Keyword).ToArray());
-        public Rule Braced(Rule r) => Symbol("{") + Recovery + r + Symbol("}");
-        public Rule BracedList(Rule r, Rule sep = null) => Braced(List(r, sep));
-        public Rule AngledBracketList(Rule r, Rule sep = null) => Symbol("<") + List(r, sep) + Symbol(">");
 
         // Basic 
-        public Rule WS => Named((SpaceChars | CppStyleComment | Directive).ZeroOrMore());
+        public override  Rule WS => Named((SpaceChars | CppStyleComment | Directive).ZeroOrMore());
 
         // Literals 
         public Rule EscapedLiteralChar => Named('\\' + AnyChar); // TODO: handle special codes like \u codes and \x
         public Rule StringLiteralChar => Named(EscapedLiteralChar | "\"\"" | AnyChar.Except('"'));
         public Rule CharLiteralChar => Named(EscapedLiteralChar | AnyChar.Except('\''));
 
-        public Rule FloatLiteral => Node(Optional('-') + Digits + FractionalPart.Optional() + ExponentPart.Optional() + FloatSuffix.Optional());
+        public Rule FloatLiteral => Node(Float + FloatSuffix.Optional());
         public Rule HexLiteral => Node(Strings("0x", "0X") + HexDigit.OneOrMore() + IntegerSuffix.Optional());
         public Rule BinaryLiteral => Node("0b" | "0B" + BinDigit.OneOrMore() + IntegerSuffix.Optional());
         public Rule IntegerLiteral => Node(Digits.ThenNot(".fFdDmM".ToCharSetRule()) + IntegerSuffix.Optional());
-        public Rule StringLiteral => Node(Optional('@') + '"' +  StringLiteralChar.ZeroOrMore() + '"');
+        public Rule StringLiteral => Node(Optional('@') + '"' + StringLiteralChar.ZeroOrMore() + '"');
         public Rule CharLiteral => Node('\'' + CharLiteralChar + '\'');
         public Rule BooleanLiteral => Node(Keyword("true") | Keyword("false"));
         public Rule NullLiteral => Node(Keyword("null"));
@@ -75,9 +59,9 @@ namespace Parakeet.Demos.CSharp
         public Rule UnaryOperator => Node(Symbols("++", "--", "!", "-", "+", "~"));
         public Rule Indexer => Node(Bracketed(Expression));
         public Rule OverloadableOperator => Node(Symbols("+", "-", "!", "~", "++", "--", "*", "/", "%", "&", "|", "^", "<<", ">>", ">>>", "==", "!=", "<", ">", "<=", ">="));
-        
+
         public Rule PostfixOperator => Node(
-            Symbols("!", "++", "--")    
+            Symbols("!", "++", "--")
             | MemberAccess
             | ConditionalMemberAccess
             | FunctionArgs
@@ -93,10 +77,10 @@ namespace Parakeet.Demos.CSharp
 
         public Rule BinaryOperation => Node(Not("=>") + BinaryOperator + Recovery + Expression);
         public Rule TernaryOperation => Node(Symbol("?") + Recovery + Expression + Symbol(":") + Expression);
-        public Rule ParenthesizedExpression => Node(ParenthesizedList(Expression));       
+        public Rule ParenthesizedExpression => Node(ParenthesizedList(Expression));
 
         public Rule ThrowExpression => Node(Keyword("throw") + Recovery + Expression);
-        public Rule LambdaParameter => Node((TypeExpr + Identifier) | Identifier);
+        public Rule LambdaParameter => Node(TypeExpr + Identifier | Identifier);
         public Rule LambdaParameters => Node(LambdaParameter | ParenthesizedList(LambdaParameter));
         public Rule LambdaBody => Node(CompoundStatement | Expression);
         public Rule LambdaExpr => Node(LambdaParameters + Symbol("=>") + Recovery + LambdaBody);
@@ -105,7 +89,7 @@ namespace Parakeet.Demos.CSharp
         public Rule TypeOf => Node(Keyword("typeof") + Recovery + Parenthesized(TypeExpr));
         public Rule NameOf => Node(Keyword("nameof") + Recovery + Parenthesized(Expression));
         public Rule Default => Node(Keyword("default") + Recovery + Parenthesized(TypeExpr).Optional());
-        public Rule InitializerClause => Node((Identifier + Symbol("=") + Recovery + Expression) | Expression);
+        public Rule InitializerClause => Node(Identifier + Symbol("=") + Recovery + Expression | Expression);
         public Rule Initializer => Node(BracedList(InitializerClause));
         public Rule ArraySizeSpecifier => Node(Bracketed(Expression));
         public Rule NewOperation => Node(Keyword("new") + Recovery + TypeExpr.Optional() + FunctionArgs.Optional() + ArraySizeSpecifier.Optional() + Initializer.Optional());
@@ -117,7 +101,7 @@ namespace Parakeet.Demos.CSharp
         public Rule FunctionArg => Node(FunctionArgKeyword.ZeroOrMore() + Expression);
         public Rule FunctionArgs => Node(ParenthesizedList(FunctionArg));
 
-        public Rule LeafExpression => Node( 
+        public Rule LeafExpression => Node(
             LambdaExpr
             | CastExpression
             | ParenthesizedExpression
@@ -147,7 +131,7 @@ namespace Parakeet.Demos.CSharp
         public Rule DoWhileStatement => Node(Keyword("do") + Recovery + Statement + Keyword("while") + ParenthesizedExpression + EOS);
         public Rule ReturnStatement => Node(Keyword("return") + Recovery + Expression.Optional() + EOS);
         public Rule BreakStatement => Node(Keyword("break") + Recovery + EOS);
-        
+
         public Rule YieldStatement => Node(Keyword("yield") + Recovery + (YieldReturn | YieldBreak));
         public Rule YieldReturn => Node(Keyword("return") + Recovery + Expression + EOS);
         public Rule YieldBreak => Node(Keyword("break") + Recovery + EOS);
@@ -156,7 +140,7 @@ namespace Parakeet.Demos.CSharp
         public Rule CompoundStatement => Node(Braced(Statement.ZeroOrMore()));
         public Rule CatchClause => Node(Keyword("catch") + Recovery + Parenthesized(VarDecl) + CompoundStatement);
         public Rule FinallyClause => Node(Keyword("finally") + CompoundStatement);
-        public Rule CaseClause => Node((Keyword("default") | (Keyword("case") + Recovery + Expression)).Then(Statement));
+        public Rule CaseClause => Node((Keyword("default") | Keyword("case") + Recovery + Expression).Then(Statement));
         public Rule SwitchStatement => Node(Keyword("switch") + Recovery + Braced(CaseClause.ZeroOrMore()));
         public Rule TryStatement => Node(Keyword("try") + Recovery + CompoundStatement + CatchClause.Optional() + FinallyClause.Optional());
         public Rule ForEachStatement => Node(Keyword("foreach") + Recovery + Symbol("(") + VarDecl + Keyword("in") + Expression + Symbol(")") + Statement);
@@ -193,7 +177,7 @@ namespace Parakeet.Demos.CSharp
         public Rule Statement => Recursive(nameof(InnerStatement));
 
         public Rule Directive =>
-            ((Rule)"#region" | "#endregion" | "#error" | "#warning" | "#line" | "#pragma" | "#if" | "#else" | "#elif" | "#endif" | "#define" | "#nullable" | "#undef" ) 
+            ((Rule)"#region" | "#endregion" | "#error" | "#warning" | "#line" | "#pragma" | "#if" | "#else" | "#elif" | "#endif" | "#define" | "#nullable" | "#undef")
             + UntilNextLine;
 
         public Rule QualifiedIdentifier => Node(List(Identifier, Symbol(".")));
@@ -203,14 +187,15 @@ namespace Parakeet.Demos.CSharp
         public Rule Modifier => Node(Keywords("static", "sealed", "partial", "readonly", "const", "ref", "abstract", "virtual"));
         public Rule AccessSpecifier => Node(Keywords("public", "private", "protected", "internal"));
         public Rule ModifiersAndSpecifiers => (Modifier | AccessSpecifier).ZeroOrMore();
-        public Rule Attribute => Node(Bracketed(List(Identifier + FunctionArgs.Optional())));
-        public Rule AttributeList => Node(Attribute.ZeroOrMore());
+        public Rule Attribute => Node(Identifier + FunctionArgs.Optional());
+        public Rule AttributeGroup => Node(Bracketed(List(Attribute)));
+        public Rule AttributeList => Node(AttributeGroup.ZeroOrMore());
         public Rule DeclarationPreamble => Node(AttributeList + ModifiersAndSpecifiers);
         public Rule TypeVariance => Node(Keywords("in", "out").Optional());
         public Rule TypeParameter => Node(TypeVariance + Identifier);
         public Rule TypeParameterList => Node(AngledBracketList(TypeParameter).Optional());
         public Rule BaseClassList => Node((Symbol(":") + List(TypeExpr)).Optional());
-        public Rule Constraint => Node(Keyword("class") | Keyword("struct") | TypeExpr); 
+        public Rule Constraint => Node(Keyword("class") | Keyword("struct") | TypeExpr);
         public Rule ConstraintClause => Node(Keyword("where") + Identifier + Symbol(":") + TypeExpr);
         public Rule ConstraintList => Node(ConstraintClause.ZeroOrMore());
 
@@ -223,7 +208,7 @@ namespace Parakeet.Demos.CSharp
         public Rule DefaultValue => Node((Symbol("=") + Expression).Optional());
         public Rule FunctionParameter => Node(AttributeList + FunctionParameterKeywords + TypeExpr + Identifier + DefaultValue);
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
-        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + ((Expression + EOS) | CompoundStatement));
+        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + (Expression + EOS | CompoundStatement));
         public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
         public Rule BaseCall => Node(Keyword("base") + Recovery + ParenthesizedExpression);
         public Rule ThisCall => Node(Keyword("this") + Recovery + ParenthesizedExpression);
@@ -251,8 +236,8 @@ namespace Parakeet.Demos.CSharp
             | IndexerDeclaration
             | PropertyDeclaration
             | FieldDeclaration
-            | OperatorDeclaration 
-            | ConverterDeclaration 
+            | OperatorDeclaration
+            | ConverterDeclaration
             | TypeDeclaration
             ));
 

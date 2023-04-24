@@ -7,6 +7,8 @@ namespace Parakeet
 {
     public class RuleOptimizer
     {
+        public bool UnorderedChoice { get; }
+
         public Dictionary<Rule, Rule> OptimizedRules = new Dictionary<Rule, Rule>();
 
         public RuleOptimizer(Grammar g)
@@ -63,6 +65,10 @@ namespace Parakeet
             {
                 if (r1 is SequenceRule seq && seq.Count == 2 && seq[0] == r2)
                     return Log(r1, r2, seq[0].Then(r2.Optional()), "A+B|A => A+B?");
+            }
+            {
+                if (r1 is SequenceRule seq && seq.Count == 2 && seq[1] == r2)
+                    return Log(r1, r2, seq[0].Optional().Then(r2), "A+B|B => A?+B");
             }
             {
                 if (r2 is SequenceRule seq && seq.Rules.Length > 1 && seq[0] == r1)

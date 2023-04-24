@@ -55,12 +55,29 @@ namespace Parakeet
     {
         public new T this[int index] => (T)Children[index];
         public CstZeroOrMore(T node) : base(new[] { node }) { }
+        public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
     }
-   
+
+    public class CstOneOrMore<T> : CstNode where T : CstNode
+    {
+        public new T this[int index] => (T)Children[index];
+        public CstOneOrMore(T node) : base(new[] { node }) { }
+        public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
+    }
+
     public class CstOptional<T> : CstNode where T : CstNode
     {
         public T Node => (T)Children[0];
+        public bool Present => Node != null;
         public CstOptional(T node) : base(new[] { node }) { }
         public static implicit operator T(CstOptional<T> self) => self.Node;
+    }
+
+    public class CstChoice<T> : CstNode where T : CstNode
+    {
+        public T Node => (T)Children[0];
+        public bool Present => Node != null;
+        public CstChoice(T node) : base(new[] { node }) { }
+        public static implicit operator T(CstChoice<T> self) => self.Node;
     }
 }

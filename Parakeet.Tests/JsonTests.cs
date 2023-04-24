@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Parakeet.Demos;
 using System.Diagnostics;
-using Parakeet.Demos.Json;
 
 namespace Parakeet.Tests
 {

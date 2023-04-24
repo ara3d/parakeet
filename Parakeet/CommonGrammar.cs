@@ -1,7 +1,12 @@
-﻿namespace Parakeet
+﻿using System.Linq;
+
+namespace Parakeet
 {
     public class CommonGrammar : Grammar
     {
+        public override Rule WS => Spaces;
+        public override Rule Recovery => OnError(AdvanceToEnd);
+
         public Rule EndOfInput => EndOfInputRule.Default;
         public Rule AnyChar => Named(AnyCharRule.Default);
         public Rule AdvanceToEnd => AnyChar.ZeroOrMore();
@@ -28,5 +33,22 @@
 
         public Rule UntilPast(Rule r) => RepeatUntilPast(AnyChar, r);
         public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(delimiter);
+
+        public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma)).Optional();
+        public Rule Parenthesized(Rule r) => Symbol("(") + r + Symbol(")");
+        public Rule ParenthesizedList(Rule r, Rule sep = null) => Parenthesized(List(r, sep));
+        public Rule Bracketed(Rule r) => Symbol("[") + r + Symbol("]");
+        public Rule BracketedList(Rule r, Rule sep = null) => Bracketed(List(r, sep));
+        public Rule Keyword(string s) => s + IdentifierChar.NotAt() + WS;
+        public Rule Comma => Named(Symbol(","));
+        public Rule Symbol(string s) => s + WS;
+        public Rule Symbols(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Symbol).ToArray());
+        public Rule Keywords(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Keyword).ToArray());
+        public Rule Braced(Rule r) => Symbol("{") + Recovery + r + Symbol("}");
+        public Rule BracedList(Rule r, Rule sep = null) => Braced(List(r, sep));
+        public Rule AngledBracketList(Rule r, Rule sep = null) => Symbol("<") + List(r, sep) + Symbol(">");
+
+        public Rule Float => Integer + FractionalPart + ExponentPart.Optional();
+        public Rule Integer => Optional('-') + Digits;
     }
 }

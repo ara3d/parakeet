@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Demos
+﻿namespace Parakeet.Demos.WIP
 {
     public class CGrammar : CommonGrammar
     {
@@ -71,20 +71,6 @@
     // https://en.wikipedia.org/wiki/Lisp_(programming_language)
     // https://en.wikipedia.org/wiki/Scheme_(programming_language)
     // https://gist.github.com/Idorobots/3378676
-    public class LispGrammar
-    {
-        public Rule Expr { get; }
-        public Rule Atom { get; }
-        public Rule List { get; }
-        public Rule Symbol { get; }
-        public Rule Pair { get; }
-        public Rule IntegerNumber { get; }
-        public Rule FloatingNumber { get; }
-        public Rule Comment { get; }
-        public Rule WS { get; }
-        public Rule String { get; }
-        public Rule Number { get; }
-    }
 
     public class CsvGrammar : CommonGrammar
     {

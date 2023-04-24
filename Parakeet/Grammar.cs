@@ -15,7 +15,8 @@ namespace Parakeet
     // [Mutable]
     public class Grammar
     {
-        public Rule WhitespaceRule { get; protected set; }
+        public virtual Rule WS { get; } 
+        public virtual Rule Recovery { get; }
 
         public Rule GetRuleFromName(string name)
         {
@@ -63,8 +64,8 @@ namespace Parakeet
                 return Lookup[name];
             //r = r.Optimize();
             r = new NodeRule(r, name);
-            if (WhitespaceRule != null)
-                r = r.Then(WhitespaceRule);
+            if (WS != null)
+                r = r.Then(WS);
             Lookup.Add(name, r);
             return r;
         }

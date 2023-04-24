@@ -1,4 +1,4 @@
-﻿using Parakeet.Demos.CSharp;
+﻿using Parakeet.Demos;
 using File = System.IO.File;
 
 namespace Parakeet.Tests
