@@ -17,46 +17,6 @@ namespace Parakeet
             return "CstNode";
         }
 
-        public static CodeBuilder OutputNodeField(CodeBuilder cb, List<string> fieldNames, Rule r, int index, int child)
-        {
-            var fieldName = fieldNames[index];
-            var cnt = 0;
-            for (var i=0; i < index; ++i)
-            {
-                if (fieldNames[i] == fieldName)
-                {
-                    cnt++;
-                }
-            }
-
-            // In case a field name is used multiple times. 
-            if (cnt > 0)
-                fieldName = $"{fieldName}_{cnt}";
-
-            if (r is NodeRule nr)
-                return cb.WriteLine($"public Cst{nr.Name} {fieldName} => Children[{child}] as Cst{nr.Name};");
-            
-            if (r is SequenceRule)
-                return cb.WriteLine($"public CstSequence {fieldName} => Children[{child}] as CstSequence;");
-            
-            if (r is ChoiceRule)
-                return cb.WriteLine($"public CstChoice {fieldName} => Children[{child}] as CstChoice;");
-            
-            if (r is OptionalRule opt)
-                return cb.WriteLine($"public CstOptional<{opt.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstOptional<{opt.Rule.TypedNodeName()}>;");
-            
-            if (r is ZeroOrMoreRule z)
-                return cb.WriteLine($"public CstZeroOrMore<{z.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstZeroOrMore<{z.Rule.TypedNodeName()}>;");
-
-            if (r is OneOrMoreRule o)
-                return cb.WriteLine($"public CstOneOrMore<{o.Rule.TypedNodeName()}> {fieldName} => Children[{child}] as CstOneOrMore<{o.Rule.TypedNodeName()}>;");
-
-            if (r is RecursiveRule rr)
-                return OutputNodeField(cb, fieldNames, rr.Rule, index, child);
-
-            throw new NotImplementedException($"Unrecognized rule type {r}");
-        }
-
         public static int ExpectedNumChildNodes(Rule r)
         {
             var body = r.Body()?.OnlyNodes();
@@ -88,6 +48,47 @@ namespace Parakeet
             return "Node";
         }
 
+        public static CodeBuilder OutputFields(CodeBuilder cb, Rule r, HashSet<string> fields)
+        {
+            fields = fields ?? new HashSet<string>();
+
+            if (r is NodeRule nr)
+            {
+                if (fields.Contains(nr.Name))
+                    return cb;
+                fields.Add(nr.Name);
+                return cb.WriteLine($"public CstFilter<Cst{nr.Name}> {nr.Name} => new CstFilter<Cst{nr.Name}> (Children);");
+            }
+
+            if (r is SequenceRule seq)
+            {
+                foreach (var child in seq.Rules)
+                    cb = OutputFields(cb, child, fields);
+                return cb;
+            }
+
+            if (r is ChoiceRule ch)
+            {
+                foreach (var child in ch.Rules)
+                    cb = OutputFields(cb, child, fields);
+                return cb;
+            }
+
+            if (r is ZeroOrMoreRule z)
+                return OutputFields(cb, z.Rule, fields);
+
+            if (r is OneOrMoreRule o)
+                return OutputFields(cb, o.Rule, fields);
+
+            if (r is OptionalRule opt)
+                return OutputFields(cb, opt.Rule, fields);
+
+            if (r is RecursiveRule rec)
+                return OutputFields(cb, rec.Rule, fields);
+
+            throw new NotImplementedException($"Unhandled type {r}");
+        }
+
         public static CodeBuilder OutputNodeClass(CodeBuilder cb, Rule r)
         {
             if (r is SequenceRule seq)
@@ -100,21 +101,24 @@ namespace Parakeet
             if (!(r is NodeRule nr))
                 return cb;
 
-
             var isLeaf = ExpectedNumChildNodes(nr) == 0;
 
             var body = r.Body();
-            cb = cb.WriteLine($"// Original Rule: {body.ToDefinition()}");
+            //cb = cb.WriteLine($"// Original Rule: {body.ToDefinition()}");
 
             body = body.Optimize();
             if (body == null)
                 throw new Exception("Failed to create node");
 
             body = body.OnlyNodes();
-            cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
+            //cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
 
             body = body?.Optimize();
-            cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
+            //cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
+
+            cb = cb.WriteLine($"/// <summary>");
+            cb = cb.WriteLine($"/// Nodes = {body?.ToDefinition()}");
+            cb = cb.WriteLine($"/// </summary>");
 
             cb = cb.Write($"public class Cst{nr.Name}");
            
@@ -140,34 +144,19 @@ namespace Parakeet
             if (isLeaf)
             {
                 cb = cb.WriteLine($"public Cst{nr.Name}(string text) : base(text) {{ }}");
-                cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new Cst{nr.Name}(Text);");
             }
             else
             {
                 cb = cb.WriteLine($"public Cst{nr.Name}(params CstNode[] children) : base(children) {{ }}");
-                cb = cb.WriteLine($"public override CstNode Transform(Func<CstNode, CstNode> f) => new Cst{nr.Name}(Children.Select(f).ToArray());");
             }
 
-            var index = 0;
             if (body == null)
             {
                 cb = cb.WriteLine("// No children");
             }
-            else if (body is SequenceRule sequence)
+            else 
             {
-                var names = sequence.Rules.Select(ToNodeFieldName).ToList();
-                foreach (var child in sequence.Rules)
-                    cb = OutputNodeField(cb, names, child, index, index++);
-            }
-            else if (body is ChoiceRule choice)
-            {
-                var names = choice.Rules.Select(ToNodeFieldName).ToList();
-                foreach (var child in choice.Rules)
-                    cb = OutputNodeField(cb, names.ToList(), child, index++, 0);
-            }            
-            else
-            {
-                cb = OutputNodeField(cb, new List<string>() { body.ToNodeFieldName() }, body, index, index++);
+                OutputFields(cb, body, null);
             }
             cb = cb.Dedent().WriteLine("}");            
             return cb.WriteLine();

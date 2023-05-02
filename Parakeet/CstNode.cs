@@ -21,7 +21,6 @@ namespace Parakeet
         public CstNode this[int index] => Children[index];
         public CstNode(IReadOnlyList<CstNode> children) => Children = children;
         public IReadOnlyList<CstNode> Children { get; }
-        public virtual CstNode Transform(Func<CstNode, CstNode> f) => throw new NotImplementedException();
         public static implicit operator CstNode(string text) => new CstLeaf(text);
         public bool IsLeaf => this is CstLeaf;
         public override string ToString() => $"[{GetType().Name}: {string.Join(" ", Children)}]";
@@ -51,33 +50,35 @@ namespace Parakeet
         public override string ToString() => Text;
     }
 
-    public class CstZeroOrMore<T> : CstNode where T : CstNode
+    public class CstFilter<T> : CstNode where T : CstNode
     {
-        public new T this[int index] => (T)Children[index];
-        public CstZeroOrMore(T node) : base(new[] { node }) { }
         public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
-    }
-
-    public class CstOneOrMore<T> : CstNode where T : CstNode
-    {
-        public new T this[int index] => (T)Children[index];
-        public CstOneOrMore(T node) : base(new[] { node }) { }
-        public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
-    }
-
-    public class CstOptional<T> : CstNode where T : CstNode
-    {
-        public T Node => (T)Children[0];
+        public CstFilter(IReadOnlyList<CstNode> children) : base(children) { }
+        public T Node => Nodes.FirstOrDefault();
         public bool Present => Node != null;
-        public CstOptional(T node) : base(new[] { node }) { }
+    }
+
+    public class CstZeroOrMore<T> : CstFilter<T> where T : CstNode
+    {
+        public new T this[int index] => (T)Children[index];
+        public CstZeroOrMore(IReadOnlyList<CstNode> children) : base(children) { }
+    }
+
+    public class CstOneOrMore<T> : CstFilter<T> where T : CstNode
+    {
+        public CstOneOrMore(IReadOnlyList<T> children) : base(children)
+        { if (Nodes.Count < 1) throw new Exception($"Expected at least one child of type {typeof(T)}"); }
+    }
+
+    public class CstOptional<T> : CstFilter<T> where T : CstNode
+    {
+        public CstOptional(IReadOnlyList<CstNode> children) : base(children) { }
         public static implicit operator T(CstOptional<T> self) => self.Node;
     }
 
-    public class CstChoice<T> : CstNode where T : CstNode
+    public class CstChoice<T> : CstFilter<T> where T : CstNode
     {
-        public T Node => (T)Children[0];
-        public bool Present => Node != null;
-        public CstChoice(T node) : base(new[] { node }) { }
+        public CstChoice(IReadOnlyList<CstNode> children) : base(children) { }
         public static implicit operator T(CstChoice<T> self) => self.Node;
     }
 }
