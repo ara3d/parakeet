@@ -35,7 +35,6 @@ namespace Parakeet
         public (ParserTree, ParserNode) ToParseTreeAndNode()
         {
             var node = this;
-            if (node == null) return (null, null);
             var prev = node.Previous;
             var children = new List<ParserTree>();
             while (prev != null && node.IsParentOf(prev))
@@ -73,10 +72,12 @@ namespace Parakeet
 
         public bool IsParentOf(ParserNode other)
         {
+            return Start <= other.Start && End >= other.End;
+            /*
             var node = this;
             if (node == null || other == null) return false;
-            if (other.Start >= node.End) return false;
-            if (other.End <= node.Start) return false;
+            if (other.Start > node.End) return false;
+            if (other.End < node.Start) return false;
 
             // In this case it was a child
             if (other.Start >= node.Start)
@@ -88,6 +89,7 @@ namespace Parakeet
             // Otherwise it was a sibling
             Debug.Assert(other.End <= node.Start);
             return false;
+            */
         }
     }
 }

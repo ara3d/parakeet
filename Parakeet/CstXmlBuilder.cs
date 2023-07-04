@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 
 namespace Parakeet
 {
@@ -12,7 +9,7 @@ namespace Parakeet
             var type = node.GetType().Name;
             if (node.IsLeaf)
             {
-                return WriteLine($"<{type}>{node.GetText()}</{type}>");
+                return WriteLine($"<{type}>{node.Text}</{type}>");
             }
             var r = WriteLine($"<{type}>").Indent();
             r = node.Children.Aggregate(r, (current, c) => current.Write(c));

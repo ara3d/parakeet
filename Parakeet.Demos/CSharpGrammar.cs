@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Parakeet.Demos
+﻿namespace Parakeet.Demos
 {
     // This is currently a parser for a subset of the C# language 
     // See: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/lexical-structure
@@ -29,12 +27,11 @@ namespace Parakeet.Demos
         public Rule FloatLiteral => Node(Float + FloatSuffix.Optional());
         public Rule HexLiteral => Node(Strings("0x", "0X") + HexDigit.OneOrMore() + IntegerSuffix.Optional());
         public Rule BinaryLiteral => Node("0b" | "0B" + BinDigit.OneOrMore() + IntegerSuffix.Optional());
-        public Rule IntegerLiteral => Node(Digits.ThenNot(".fFdDmM".ToCharSetRule()) + IntegerSuffix.Optional());
+        public Rule IntegerLiteral => Node(Digits.ThenNot("fFdDmM".ToCharSetRule()) + IntegerSuffix.Optional());
         public Rule StringLiteral => Node(Optional('@') + '"' + StringLiteralChar.ZeroOrMore() + '"');
         public Rule CharLiteral => Node('\'' + CharLiteralChar + '\'');
         public Rule BooleanLiteral => Node(Keyword("true") | Keyword("false"));
         public Rule NullLiteral => Node(Keyword("null"));
-        public Rule ValueLiteral => Node(Keyword("value"));
 
         public Rule Literal => Node(
             HexLiteral
@@ -44,8 +41,7 @@ namespace Parakeet.Demos
             | StringLiteral
             | CharLiteral
             | BooleanLiteral
-            | NullLiteral
-            | ValueLiteral);
+            | NullLiteral);
 
         // Operators 
         public Rule BinaryOperator => Node(Symbols(
@@ -143,17 +139,18 @@ namespace Parakeet.Demos
         public Rule CaseClause => Node((Keyword("default") | Keyword("case") + Recovery + Expression).Then(Statement));
         public Rule SwitchStatement => Node(Keyword("switch") + Recovery + Braced(CaseClause.ZeroOrMore()));
         public Rule TryStatement => Node(Keyword("try") + Recovery + CompoundStatement + CatchClause.Optional() + FinallyClause.Optional());
-        public Rule ForEachStatement => Node(Keyword("foreach") + Recovery + Symbol("(") + VarDecl + Keyword("in") + Expression + Symbol(")") + Statement);
+        public Rule ForEachStatement => Node(Keyword("foreach") + Recovery + Symbol("(") + TypeExpr + Identifier + Keyword("in") + Expression + Symbol(")") + Statement);
         public Rule FunctionDeclStatement => Node(Keyword("static").Optional() + MethodDeclaration);
-        public Rule ForLoopInit => Node((VarDecl + Initialization).Optional());
+        public Rule ForLoopInit => Node(VarDecl.Optional());
         public Rule ForLoopInvariant => Node(Expression.Optional());
-        public Rule ForLoopVariant => Node(Expression.Optional());
+        public Rule ForLoopVariant => Node(List(Expression));
         public Rule ForStatement => Node(Keyword("for") + Recovery + Symbol("(") + ForLoopInit + EOS + ForLoopInvariant + EOS + ForLoopVariant + Symbol(")") + Statement);
         public Rule ArrayInitializationValue => Node(BracedList(Expression));
         public Rule InitializationValue => Node(ArrayInitializationValue | Expression);
         public Rule Initialization => Node((Symbol("=") + Recovery + InitializationValue).Optional());
-        public Rule VarDecl => Node(TypeExpr + Identifier);
-        public Rule VarDeclStatement => Node(VarDecl + Initialization + EOS);
+        public Rule VarWithInitialization => Node(Identifier + Initialization);
+        public Rule VarDecl => Node(TypeExpr + ListOfAtLeastOne(VarWithInitialization));
+        public Rule VarDeclStatement => Node(VarDecl + EOS);
 
         public Rule InnerStatement => Named(
             EOS
@@ -208,14 +205,14 @@ namespace Parakeet.Demos
         public Rule FunctionParameterDefaultValue => Node((Symbol("=") + Expression).Optional());
         public Rule FunctionParameter => Node(AttributeList + FunctionParameterKeywords + TypeExpr + Identifier + FunctionParameterDefaultValue);
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
-        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + (Expression + EOS | CompoundStatement));
+        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + ((Expression + EOS) | CompoundStatement));
         public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
         public Rule BaseCall => Node(Keyword("base") + Recovery + ParenthesizedExpression);
         public Rule ThisCall => Node(Keyword("this") + Recovery + ParenthesizedExpression);
         public Rule BaseOrThisCall => Node((Symbol(":") + (BaseCall | ThisCall)).Optional());
         public Rule ConstructorDeclaration => Node(Identifier + FunctionParameterList + Recovery + BaseOrThisCall + FunctionBody);
         public Rule MethodDeclaration => Node(TypeExpr + Identifier + FunctionParameterList + Recovery + FunctionBody);
-        public Rule FieldDeclaration => Node(TypeExpr + Identifier + Initialization.Optional() + EOS);
+        public Rule FieldDeclaration => Node(VarDeclStatement);
 
         public Rule Getter => Node(Keyword("get") + Recovery + FunctionBody);
         public Rule Setter => Node(Keyword("set") + Recovery + FunctionBody);
@@ -244,13 +241,13 @@ namespace Parakeet.Demos
         public Rule TypesAndDirectives => Named((UsingDirective | TypeDeclarationWithPreamble).ZeroOrMore());
         public Rule ImplicitlyOrExplicitlyScopedTypes => Named(EOS + TypesAndDirectives) | Braced(TypesAndDirectives);
         public Rule NamespaceDeclaration => Node(Keyword("namespace") + QualifiedIdentifier + ImplicitlyOrExplicitlyScopedTypes);
-        public Rule File => Node(WS + UsingDirective.ZeroOrMore() + NamespaceDeclaration.Optional());
+        public Rule File => Node(WS + (EndOfInput.NotAt() + UsingDirective.ZeroOrMore() + NamespaceDeclaration.Optional()).ZeroOrMore());
 
         public Rule ArrayRankSpecifier => Node(Bracketed(Comma.ZeroOrMore()));
         public Rule ArrayRankSpecifiers => Node(ArrayRankSpecifier.ZeroOrMore());
         public Rule TypeArgList => Node(AngledBracketList(TypeExpr));
         public Rule Nullable => Node(Symbol("?").Optional());
-        public Rule SimpleTypExpr => Named(QualifiedIdentifier);
+        public Rule SimpleTypExpr => Node(QualifiedIdentifier);
         public Rule CompoundTypeExpr => Node(ParenthesizedList(TypeExpr));
         public Rule CompoundOrSimpleTypeExpr => Node(CompoundTypeExpr | SimpleTypExpr);
         public Rule InnerTypeExpr => Node(CompoundOrSimpleTypeExpr + TypeArgList.Optional() + ArrayRankSpecifiers);

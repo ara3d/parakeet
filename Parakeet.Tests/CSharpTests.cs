@@ -1,5 +1,4 @@
 ﻿using Parakeet.Demos;
-using File = System.IO.File;
 
 namespace Parakeet.Tests
 {
@@ -165,6 +164,7 @@ abc
             "new T() { a=1, b = 3 }",
             "nameof(x)",
             "nameof(abc.def)",
+            "1.seconds()",
             "x?.a",
             "x ?. a",
             "x += x = 2",
@@ -180,6 +180,8 @@ abc
             "(float)((int)x)",
             "new (Rule, string[], string[])[] { }",
             "new int[] { 1, 2, 3, }",
+            "x * 1e-24",
+            "1e-24",
         };
 
         public static string[] Statements = new[]
@@ -214,6 +216,9 @@ abc
             "try{}catch(var e){}",
             "try{}finally{}",
             "try{}catch(Exception e){}finally{}",
+            "int x = 12, y = 13;",
+            "for(int x=12,y=13; b < 12; ++i, ++j);",
+            "for(int x=12,y=13; b < 12; ++i, ++j);",
         };
 
         public static string[] FailingStatements = new[]
@@ -267,6 +272,7 @@ abc
             "class C { public int x { get; set; } }",
             "class C { public int x { get { return 12; } set { _x = value; } } }",
             "class C { public int x() { return 12; } }",
+            "class C { public int x() => 12; }",
             "class C { public int x() { return 12; } private float x() { return 99; } }",
             "public static class CSharpTests\r\n    {\r\n\r\n        public static string[] Spaces = new[]\r\n{\r\n            \"\",\r\n            \" \",\r\n            \"\\t\",\r\n            \"\\n \\t\",\r\n            \"// abc\",\r\n            \"/* abc */\",\r\n            @\"/*\r\nabc\r\n*/\",\r\n            @\"// abc\r\n\",\r\n            \"/* */ /* */\",\r\n        }; }",
             "public static class CSharpTests\r\n    {\r\n\r\n        public static string[] Spaces = new[]\r\n{}; }",
@@ -381,6 +387,12 @@ abc
         [TestCase("int x {get;}", nameof(CSharpGrammar.PropertyDeclaration))]
         [TestCase("int x { get; set; }", nameof(CSharpGrammar.PropertyDeclaration))]
         [TestCase("int x { get; } = 12;", nameof(CSharpGrammar.PropertyDeclaration))]
+        [TestCase("= new()", nameof(CSharpGrammar.Initialization))]
+        [TestCase("Velocity PerSecond(Length l) => l / 1.Seconds();", nameof(CSharpGrammar.MethodDeclaration))]
+        [TestCase("=> l / 1.Seconds();", nameof(CSharpGrammar.ExpressionBody))]
+        [TestCase("l / 1.Seconds()", nameof(CSharpGrammar.Expression))]
+        [TestCase("1.Seconds()", nameof(CSharpGrammar.Expression))]
+        [TestCase("=> { }", nameof(CSharpGrammar.ExpressionBody))]
         public static void TargetedTest(string input, string name)
         {
             var rule = Grammar.GetRuleFromName(name);

@@ -4,7 +4,7 @@ namespace Parakeet
 {
     public class CommonGrammar : Grammar
     {
-        public override Rule WS => Spaces;
+        public override Rule WS => Spaces.Optional();
         public override Rule Recovery => OnError(AdvanceToEnd);
 
         public Rule EndOfInput => EndOfInputRule.Default;
@@ -17,7 +17,7 @@ namespace Parakeet
         public Rule DigitOrLetter => Named(Letter | Digit);
         public Rule IdentifierFirstChar => Named('_' | Letter);
         public Rule IdentifierChar => Named(IdentifierFirstChar | Digit);
-        public Rule FractionalPart => Named("." + Digits.Optional());
+        public Rule FractionalPart => Named("." + Digits);
         public Rule HexDigit => Named(Digit | 'a'.To('f') | 'A'.To('F'));
         public Rule BinDigit => Named('0'.To('1'));
         public Rule Sign => Named("+-".ToCharSetRule());
@@ -34,7 +34,8 @@ namespace Parakeet
         public Rule UntilPast(Rule r) => RepeatUntilPast(AnyChar, r);
         public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(delimiter);
 
-        public Rule List(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma)).Optional();
+        public Rule ListOfAtLeastOne(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma));
+        public Rule List(Rule r, Rule sep = null) => ListOfAtLeastOne(r, sep).Optional();
         public Rule Parenthesized(Rule r) => Symbol("(") + r + Symbol(")");
         public Rule ParenthesizedList(Rule r, Rule sep = null) => Parenthesized(List(r, sep));
         public Rule Bracketed(Rule r) => Symbol("[") + r + Symbol("]");
@@ -48,7 +49,7 @@ namespace Parakeet
         public Rule BracedList(Rule r, Rule sep = null) => Braced(List(r, sep));
         public Rule AngledBracketList(Rule r, Rule sep = null) => Symbol("<") + List(r, sep) + Symbol(">");
 
-        public Rule Float => Integer + FractionalPart + ExponentPart.Optional();
+        public Rule Float => Integer + ((FractionalPart + ExponentPart.Optional()) | ExponentPart);
         public Rule Integer => Optional('-') + Digits;
     }
 }

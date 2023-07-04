@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Parakeet
 {
-    public interface ITree<T> where T:ITree<T>
+    public interface ITree<T> where T : ITree<T>
     {
-        IReadOnlyList<T> Children { get; } 
+        IReadOnlyList<T> Children { get; }
     }
 
     public static class TreeHelpers
     {
-        public static TAcc Aggregate<T, TAcc>(this ITree<T> tree, TAcc init, Func<TAcc, T, TAcc> func) where T:ITree<T>
-            => tree.Children.Aggregate(init, (acc, curr) => curr.Aggregate(acc, func)); 
+        public static TAcc Aggregate<T, TAcc>(this ITree<T> tree, TAcc init, Func<TAcc, T, TAcc> func)
+            where T : ITree<T>
+            => tree.Children.Aggregate(init, (acc, curr) => curr.Aggregate(acc, func));
     }
 
     public class CstNode : ITree<CstNode>
@@ -25,21 +27,29 @@ namespace Parakeet
         public bool IsLeaf => this is CstLeaf;
         public override string ToString() => $"[{GetType().Name}: {string.Join(" ", Children)}]";
 
-        public string GetText()
+        public string Text
         {
-            if (this is CstLeaf leaf) return leaf.Text;
-            return string.Join(" ", Children.Select(x => x.GetText()));
+            get
+            {
+                if (this is CstLeaf leaf) return leaf.Text;
+                return string.Join(" ", Children.Select(x => x.Text));
+            }
         }
     }
 
     public class CstSequence : CstNode
     {
-        public CstSequence(params CstNode[] children) : base(children) { }
+        public CstSequence(params CstNode[] children) : base(children)
+        {
+        }
     }
 
-    public class CstChoice: CstNode
+    public class CstChoice : CstNode
     {
-        public CstChoice(params CstNode[] children) : base(children) { }
+        public CstChoice(params CstNode[] children) : base(children)
+        {
+        }
+
         public CstNode Node => Children[0];
     }
 
@@ -50,35 +60,48 @@ namespace Parakeet
         public override string ToString() => Text;
     }
 
-    public class CstFilter<T> : CstNode where T : CstNode
+
+    public class CstFilter : CstNode
+    {
+        public CstFilter(IReadOnlyList<CstNode> children) : base(children)
+        {
+        }
+    }
+
+    public class CstFilter<T> : CstFilter
     {
         public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
-        public CstFilter(IReadOnlyList<CstNode> children) : base(children) { }
+
+        public CstFilter(IReadOnlyList<CstNode> children) : base(children)
+        {
+        }
+
         public T Node => Nodes.FirstOrDefault();
         public bool Present => Node != null;
     }
+    
 
-    public class CstZeroOrMore<T> : CstFilter<T> where T : CstNode
+    public static class CstExtensions
     {
-        public new T this[int index] => (T)Children[index];
-        public CstZeroOrMore(IReadOnlyList<CstNode> children) : base(children) { }
+        public static StringBuilder ToXml(this CstNode node, StringBuilder sb = null, string indent = "")
+        {
+            sb = sb ?? new StringBuilder();
+            var xs = node.GetType().Name;
+            if (node.IsLeaf)
+            {
+                sb.AppendLine($"{indent}<{xs}>{node.Text}</{xs}>");
+            }
+            else
+            {
+                sb.AppendLine($"{indent}<{xs}>");
+                foreach (var child in node.Children)
+                    ToXml(child, sb, indent + "  ");
+                sb.AppendLine($"{indent}</{xs}>");
+            }
+
+            return sb;
+        }
     }
 
-    public class CstOneOrMore<T> : CstFilter<T> where T : CstNode
-    {
-        public CstOneOrMore(IReadOnlyList<T> children) : base(children)
-        { if (Nodes.Count < 1) throw new Exception($"Expected at least one child of type {typeof(T)}"); }
-    }
 
-    public class CstOptional<T> : CstFilter<T> where T : CstNode
-    {
-        public CstOptional(IReadOnlyList<CstNode> children) : base(children) { }
-        public static implicit operator T(CstOptional<T> self) => self.Node;
-    }
-
-    public class CstChoice<T> : CstFilter<T> where T : CstNode
-    {
-        public CstChoice(IReadOnlyList<CstNode> children) : base(children) { }
-        public static implicit operator T(CstChoice<T> self) => self.Node;
-    }
 }

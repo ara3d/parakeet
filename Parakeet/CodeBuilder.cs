@@ -65,7 +65,7 @@ namespace Parakeet
 
         public T WriteCommaList<TElement>(IEnumerable<TElement> elements, Func<T, TElement, T> fElement)
         {
-            return WriteList(elements, fElement, w => w.WriteToken(","));
+            return WriteList(elements, fElement, w => w.Write(", "));
         }
 
         public T WriteList<TElement>(IEnumerable<TElement> elements, Func<T, TElement, T> fElement, Func<T, T> fSeparator = null)
@@ -101,11 +101,6 @@ namespace Parakeet
         public override string ToString()
         {
             return sb.ToString();
-        }
-        
-        public T WriteToken(string s)
-        {
-            return Write(s).Write(" ");
         }
     }
 

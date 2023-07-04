@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Parakeet
 {
@@ -10,9 +11,6 @@ namespace Parakeet
 
         public static ParserState Parse(this string s, Rule r)
             => r.Match(new ParserState(s));
-
-        public static ParserTree ToParseTree(this ParserNode node)
-            => node.ToParseTreeAndNode().Item1;
 
         public static IEnumerable<ParserRange> GetMatches(this string input, Rule rule)
             => GetMatches((ParserInput)input, rule);
@@ -51,5 +49,25 @@ namespace Parakeet
 
         public static IEnumerable<IGrouping<string, ParserNode>> GroupNodes(this IEnumerable<ParserNode> nodes)
             => nodes.GroupBy(n => n.Name).OrderBy(g => g.Key);
+
+        public static StringBuilder BuildXmlString(this ParserTree tree, string indent = "", StringBuilder sb = null)
+        {
+            sb = sb ?? new StringBuilder();
+            if (tree.Children.Count == 0)
+                return sb.AppendLine($"{indent}<{tree.Type}>{tree.Contents}</{tree.Type}>");
+            sb.AppendLine($"{indent}<{tree.Type}>");
+            foreach (var child in tree.Children)
+            {
+                BuildXmlString(child, indent + "  ", sb);
+            }
+            sb.AppendLine($"{indent}</{tree.Type}>");
+            return sb;
+        }
+
+        public static string ToXml(this ParserTree tree)
+            => tree.BuildXmlString().ToString();
+
+        public static IEnumerable<ParserNode> AllNodes(this ParserNode node)
+            => node.AllNodesReversed().Reverse();
     }
 }
