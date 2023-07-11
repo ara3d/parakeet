@@ -147,6 +147,6 @@ void
 volatile
 while
 with
-yield".Split('\n'); // TODO: remove empyy entires and trim them 
+yield".Split('\n'); // TODO: remove empty entries and trim them 
     }
 }

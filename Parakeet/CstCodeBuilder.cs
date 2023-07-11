@@ -140,6 +140,8 @@ namespace Parakeet
 
             cb = cb.WriteLine("{").Indent();
 
+            cb = cb.WriteLine($"public static Rule Rule = CstNodeFactory.Grammar.{nr.Name};");
+
             if (isLeaf)
             {
                 cb = cb.WriteLine($"public Cst{nr.Name}(string text) : base(text) {{ }}");
@@ -169,10 +171,11 @@ namespace Parakeet
             }
         }
 
-        public static void OutputCstClassFactory(CodeBuilder cb, IEnumerable<Rule> rules)
+        public static void OutputCstClassFactory(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
         {
             cb.WriteLine("public static class CstNodeFactory");
-            cb.WriteLine("{").Indent(); 
+            cb.WriteLine("{").Indent();
+            cb.WriteLine($"public static {namespaceName}Grammar Grammar = new {namespaceName}Grammar();");
             cb.WriteLine("public static CstNode Create(ParserTree node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
@@ -223,7 +226,7 @@ namespace Parakeet
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();
-            OutputCstClassFactory(cb, rules);
+            OutputCstClassFactory(cb, namespaceName, rules);
             cb.Dedent().WriteLine("}");
         }
     }

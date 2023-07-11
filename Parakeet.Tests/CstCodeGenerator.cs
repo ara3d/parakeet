@@ -9,7 +9,7 @@ public static class CstCodeGenerator
     {
         OutputCstCode(CSharpTests.Grammar, "CSharp");
         OutputCstCode(JsonTests.Grammar, "Json");
-        OutputCstCode(new PailGrammar(), "Pail");
+        OutputCstCode(PlatoTests.Grammar, "Plato");
     }
 
     public static void OutputCstCode(Grammar g, string name)

@@ -2,6 +2,8 @@
 {
     public class JsonGrammar : CommonGrammar
     {
+        public static CSharpGrammar Instance = new CSharpGrammar();
+
         public Rule DoubleQuoted(Rule r) => '\"' + OnError(AdvanceToEnd) + r + '\"';
 
         public static readonly char CarriageReturn = '\r';

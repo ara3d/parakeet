@@ -4,6 +4,8 @@ namespace Parakeet
 {
     public class CommonGrammar : Grammar
     {
+        public static CommonGrammar Instance = new CommonGrammar();
+
         public override Rule WS => Spaces.Optional();
         public override Rule Recovery => OnError(AdvanceToEnd);
 
