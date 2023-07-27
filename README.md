@@ -156,25 +156,17 @@ Parse trees generated from Parakeet are untyped. A parse node is created wheneve
 successfully matches its child rule against the input. After parsing the list of parse nodes 
 is converted into a tree structure. 
 
-## Typed Parse Tree 
+## Typed Parse Tree (CST)
 
-A set of classes representing a strongly typed parse tree can be created automatically from a Parakeet grammar. 
+A set of classes representing a strongly typed parse tree can be created automatically from a Parakeet grammar. This is called the 
+Concrete Syntax Tree. 
 
 ## History 
 
 Parakeet evolved from the [Jigsaw parser](https://www.codeproject.com/Articles/272494/Implementing-Programming-Languages-using-Csharp) 
 and applies lessons learned when writing the [Myna parsing library in TypeScript](https://cdiggins.github.io/myna-parser/) 
-as well as my first parsing library [](https://www.codeproject.com/Articles/9121/Parsing-XML-in-C-using-the-YARD-Parser
+as well as my first parsing library [YARD](https://www.codeproject.com/Articles/9121/Parsing-XML-in-C-using-the-YARD-Parser
 Parakeet is designed to be as fast as possible while retaining a clean and elegant grammar description. 
-
-## Why not Roslyn?
-
-Roslyn was indeed my first choice for parsing C# and Plato (which is a syntactic subset of C#), however I could not easily extract the different 
-modules into stand-alone libraries. Parakeet is being designed so that I can bootstrap Plato. Parakeet will be used to convert itself into Plato, 
-and then to convert Plato into JavaScript. The goal is to have the whole Plato tool-chain written in Plato, and running on all platforms 
-that Plato targets. 
-
-If you are interested it is apparently possible  to [Run roslyn in a web-page via Blazor](https://github.com/Suchiman/Runny/tree/master/Runny). 
 
 ## Related Work
 
