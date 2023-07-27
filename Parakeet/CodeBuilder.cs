@@ -102,6 +102,11 @@ namespace Parakeet
         {
             return sb.ToString();
         }
+
+        public T Space()
+        {
+            return Write(" ");
+        }
     }
 
     public class CodeBuilder : CodeBuilder<CodeBuilder>

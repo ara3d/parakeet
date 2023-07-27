@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Parakeet.Demos
+﻿namespace Parakeet.Demos
 {
     public class PlatoGrammar : CommonGrammar
     {
@@ -197,18 +195,18 @@ namespace Parakeet.Demos
         public Rule InheritsList => Node(Optional(Keyword("inherits") + Recovery + List(TypeExpr)));
 
         public Rule Type => Node(Keyword("type") + Recovery + Identifier + TypeParameterList + ImplementsList + Braced(FieldDeclaration.ZeroOrMore()));
-        public Rule Concept => Node(Keyword("concept") + Recovery + Identifier + TypeParameterList + InheritsList + Braced(MemberDeclaration.ZeroOrMore()));
-        public Rule Module => Node(Keyword("module") + Recovery + Identifier + Braced(MethodDeclaration.ZeroOrMore()));
+        public Rule Concept => Node(Keyword("concept") + Recovery + Identifier + TypeParameterList + InheritsList + Braced(MethodDeclaration.ZeroOrMore()));
+        public Rule Library => Node(Keyword("library") + Recovery + Identifier + Braced(MethodDeclaration.ZeroOrMore()));
         
-        public Rule TopLevelDeclaration => Node(Module | Concept | Type);
+        public Rule TopLevelDeclaration => Node(Library | Concept | Type);
 
         public Rule FunctionParameter => Node(Identifier + TypeAnnotation);
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
-        public Rule ExpressionBody => Node(Symbol("=") + Recovery + Expression + EOS);
+        public Rule ExpressionBody => Node(Symbol("=>") + Recovery + Expression + EOS);
         public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
         public Rule TypeAnnotation => Node(Optional(Symbol(":") + Recovery + TypeExpr));
-        public Rule MethodDeclaration => Node(Keyword("function") + Recovery + Identifier + FunctionParameterList + TypeAnnotation + FunctionBody);
-        public Rule FieldDeclaration => Node(Keyword("field") + Recovery + Identifier + Symbol(":") + TypeExpr + EOS);
+        public Rule MethodDeclaration => Node(Identifier + FunctionParameterList + Recovery + TypeAnnotation + FunctionBody);
+        public Rule FieldDeclaration => Node(Identifier + Symbol(":") + TypeExpr + EOS);
         public Rule MemberDeclaration => Node(MethodDeclaration | FieldDeclaration);
 
         public Rule ArrayRankSpecifier => Node(Bracketed(Comma.ZeroOrMore()));
@@ -225,10 +223,9 @@ namespace Parakeet.Demos
         // Tokenization pass 
         public Rule OperatorChar => "!%^&|*?+-=/><:@#~$".ToCharSetRule();
         public Rule OperatorToken => OperatorChar.OneOrMore();
-        public Rule Separator => Node(";,.".ToCharSetRule() | TypeKeyword | MemberKeyword | StatementKeyword);
+        public Rule Separator => Node(";,.".ToCharSetRule() | TypeKeyword | StatementKeyword);
         public Rule Delimiter => "[]{}()".ToCharSetRule();
-        public Rule MemberKeyword => Node(Keywords("field", "function"));
-        public Rule TypeKeyword => Node(Keywords("concept", "module", "type"));
+        public Rule TypeKeyword => Node(Keywords("concept", "library", "type"));
         public Rule StatementKeyword => Node(Keywords("for", "if", "return", "break", "continue", "do", "foreach", "throw", "switch", "try", "catch", "finally", "using", "case", "default"));
         public Rule Token => Node(Separator | CppStyleComment | Spaces | OperatorToken | Identifier | Literal);
         public Rule TokenOrStructure => Named(Token | Structure);

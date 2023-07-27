@@ -1,5 +1,3 @@
-using Parakeet.Demos;
-
 namespace Parakeet.Tests;
 
 public static class CstCodeGenerator
