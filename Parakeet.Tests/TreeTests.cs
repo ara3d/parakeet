@@ -11,7 +11,7 @@
             var ps = pi.Parse(rule);
             Assert.IsTrue(ps.AtEnd());
             Console.WriteLine("Nodes:");
-            foreach (var node in ps.Node.AllNodes())   
+            foreach (var node in ps.AllNodes())   
             {
                 Console.WriteLine(node);
             }

@@ -35,9 +35,9 @@ namespace Parakeet.Tests
         {
             for (var e = state.LastError; e != null; e = e.Previous)
             {
-                Console.WriteLine($"Parse error at {e.LastState} failed expected rule {e.Expected}, parent state is {e.ParentState}, message is {e.Message}");
-                Console.WriteLine(e.LastState.CurrentLine);
-                Console.WriteLine(e.LastState.Indicator);
+                Console.WriteLine($"Parse error at {e.State} failed expected rule {e.Expected}, parent state is {e.ParentState}, message is {e.Message}");
+                Console.WriteLine(e.State.CurrentLine);
+                Console.WriteLine(e.State.Indicator);
             }
         }
 

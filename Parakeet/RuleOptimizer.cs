@@ -7,8 +7,6 @@ namespace Parakeet
 {
     public class RuleOptimizer
     {
-        public bool UnorderedChoice { get; }
-
         public Dictionary<Rule, Rule> OptimizedRules = new Dictionary<Rule, Rule>();
 
         public RuleOptimizer(Grammar g)

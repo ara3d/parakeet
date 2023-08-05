@@ -12,6 +12,7 @@ namespace Parakeet
         public ParserRange Range { get; }
         public int Start => Range.Begin.Position;
         public int End => Range.End.Position;
+        public int Length => Range.Length;
         public string Name { get; }
         public ParserNode Previous { get; }
         public string Contents => Range.Text;
@@ -70,25 +71,6 @@ namespace Parakeet
             => parent.IsParentOf(this);
 
         public bool IsParentOf(ParserNode other)
-        {
-            return Start <= other.Start && End >= other.End;
-            /*
-            var node = this;
-            if (node == null || other == null) return false;
-            if (other.Start > node.End) return false;
-            if (other.End < node.Start) return false;
-
-            // In this case it was a child
-            if (other.Start >= node.Start)
-            {
-                Debug.Assert(node.End >= node.End);
-                return true;
-            }
-
-            // Otherwise it was a sibling
-            Debug.Assert(other.End <= node.Start);
-            return false;
-            */
-        }
+            => Start <= other.Start && End >= other.End;
     }
 }

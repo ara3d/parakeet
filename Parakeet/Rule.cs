@@ -53,7 +53,10 @@ namespace Parakeet
         
         public static implicit operator Rule(char c) 
             => new CharRule(c);
-        
+
+        public static implicit operator Rule(bool b)
+            => new BooleanRule(b);
+
         public static implicit operator Rule(char[] cs) 
             => cs.Length == 1 ? (Rule)cs[0] : new CharSetRule(cs);
         
@@ -393,10 +396,14 @@ namespace Parakeet
     public class SequenceRule : Rule
     {
         public Rule[] Rules { get; }
-        
-        public SequenceRule(params Rule[] rules) 
-            => Rules = rules;
-        
+
+        public SequenceRule(params Rule[] rules)
+        {
+            Rules = rules;
+            if (Rules.Any(r => r == null))
+                throw new Exception("One of the rules is null");
+        }
+
         public int Count 
             => Rules.Length;
         
@@ -529,5 +536,22 @@ namespace Parakeet
         
         public override int GetHashCode() 
             => Hash(RecoveryRule);
+    }
+
+    public class BooleanRule : Rule
+    {
+        public bool Value {get;}
+
+        public BooleanRule(bool b)
+            => Value = b;
+
+        protected override ParserState MatchImplementation(ParserState state)
+            => Value ? state : null;
+
+        public override bool Equals(object obj)
+            => obj is BooleanRule br && br.Value == Value;
+
+        public override int GetHashCode()
+            => Hash(Value);
     }
 }

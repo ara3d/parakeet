@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace Parakeet
@@ -67,7 +68,19 @@ namespace Parakeet
         public static string ToXml(this ParserTree tree)
             => tree.BuildXmlString().ToString();
 
-        public static IEnumerable<ParserNode> AllNodes(this ParserNode node)
-            => node.AllNodesReversed().Reverse();
+        public static IEnumerable<ParserNode> AllNodes(this ParserState state)
+            => state.Node.AllNodesReversed().Reverse();
+
+        public static IEnumerable<ParserError> AllErrorsReversed(this ParserError error)
+        {
+            while (error != null)
+            {
+                yield return error;
+                error = error.Previous;
+            }
+        }
+        
+        public static IEnumerable<ParserError> AllErrors(this ParserState state)
+            => state.LastError.AllErrorsReversed().Reverse();
     }
 }

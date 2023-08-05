@@ -156,8 +156,8 @@
         public Rule TypeInput { get; }
         public Rule TypeOutput { get; }
         public Rule TypeArray { get; }
-        public Rule Integer { get; }
-        public Rule Float { get; }
+        public new Rule Integer { get; }
+        public new Rule Float { get; }
         public Rule String { get; }
         public Rule Boolean { get; }
         public Rule Number { get; }

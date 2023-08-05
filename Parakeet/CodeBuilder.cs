@@ -107,6 +107,12 @@ namespace Parakeet
         {
             return Write(" ");
         }
+
+        public T WriteStartBlock()
+            => WriteLine("{").Indent();
+
+        public T WriteEndBlock()
+            => Dedent().WriteLine("}");
     }
 
     public class CodeBuilder : CodeBuilder<CodeBuilder>

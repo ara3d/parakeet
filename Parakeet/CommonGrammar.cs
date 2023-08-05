@@ -34,7 +34,7 @@ namespace Parakeet
         public Rule CppStyleComment => Named(CppStyleSingleLineComment | CStyleBlockComment);
 
         public Rule UntilPast(Rule r) => RepeatUntilPast(AnyChar, r);
-        public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(delimiter);
+        public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(EndOfInput | delimiter);
 
         public Rule ListOfAtLeastOne(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma));
         public Rule List(Rule r, Rule sep = null) => ListOfAtLeastOne(r, sep).Optional();

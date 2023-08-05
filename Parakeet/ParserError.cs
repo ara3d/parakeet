@@ -8,12 +8,12 @@
     /// </summary>
     public class ParserError
     {
-        public ParserError(Rule expected, Rule parent, ParserState parentState, ParserState lastState, string message, ParserError previous)
+        public ParserError(Rule expected, Rule parent, ParserState parentState, ParserState state, string message, ParserError previous)
         {
             Expected = expected;
             Parent = parent;
             ParentState = parentState;
-            LastState = lastState;
+            State = state;
             Message = message;
             Previous = previous;
         }
@@ -21,7 +21,7 @@
         public Rule Expected { get; }
         public Rule Parent { get; }
         public ParserState ParentState { get; }
-        public ParserState LastState { get; }
+        public ParserState State { get; }
         public string Message { get; }
         public ParserError Previous { get; }
     }

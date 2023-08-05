@@ -7,10 +7,10 @@
 
     public class CSharpGrammar : CommonGrammar
     {
-        public static CSharpGrammar Instance = new CSharpGrammar();
+        public new static CSharpGrammar Instance = new CSharpGrammar();
 
         // Recovery on error 
-        public Rule Recovery => OnError(
+        public override Rule Recovery => OnError(
             TokenOrStructure.Except(EOS).ZeroOrMore()
             + (EOS | EndOfInput) | AdvanceToEnd);
 
