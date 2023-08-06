@@ -51,22 +51,22 @@ namespace Parakeet
         public static IEnumerable<IGrouping<string, ParserNode>> GroupNodes(this IEnumerable<ParserNode> nodes)
             => nodes.GroupBy(n => n.Name).OrderBy(g => g.Key);
 
-        public static StringBuilder BuildXmlString(this ParserTree tree, string indent = "", StringBuilder sb = null)
+        public static StringBuilder BuildXmlString(this ParserTreeNode treeNode, string indent = "", StringBuilder sb = null)
         {
             sb = sb ?? new StringBuilder();
-            if (tree.Children.Count == 0)
-                return sb.AppendLine($"{indent}<{tree.Type}>{tree.Contents}</{tree.Type}>");
-            sb.AppendLine($"{indent}<{tree.Type}>");
-            foreach (var child in tree.Children)
+            if (treeNode.Children.Count == 0)
+                return sb.AppendLine($"{indent}<{treeNode.Type}>{treeNode.Contents}</{treeNode.Type}>");
+            sb.AppendLine($"{indent}<{treeNode.Type}>");
+            foreach (var child in treeNode.Children)
             {
                 BuildXmlString(child, indent + "  ", sb);
             }
-            sb.AppendLine($"{indent}</{tree.Type}>");
+            sb.AppendLine($"{indent}</{treeNode.Type}>");
             return sb;
         }
 
-        public static string ToXml(this ParserTree tree)
-            => tree.BuildXmlString().ToString();
+        public static string ToXml(this ParserTreeNode treeNode)
+            => treeNode.BuildXmlString().ToString();
 
         public static IEnumerable<ParserNode> AllNodes(this ParserState state)
             => state.Node.AllNodesReversed().Reverse();

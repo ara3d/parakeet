@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 
 namespace Parakeet
 {
@@ -173,10 +174,20 @@ namespace Parakeet
 
         public static void OutputCstClassFactory(CodeBuilder cb, string namespaceName, IEnumerable<Rule> rules)
         {
-            cb.WriteLine("public static class CstNodeFactory");
+            cb.WriteLine("public class CstNodeFactory");
             cb.WriteLine("{").Indent();
             cb.WriteLine($"public static {namespaceName}Grammar Grammar = new {namespaceName}Grammar();");
-            cb.WriteLine("public static CstNode Create(ParserTree node)");
+            cb.WriteLine(
+                "public Dictionary<ParserTreeNode, CstNode> Lookup { get;} = new Dictionary<ParserTreeNode, CstNode>();");
+            
+            cb.WriteLine("public CstNode Create(ParserTreeNode node)");
+            cb.WriteLine("{").Indent();
+            cb.WriteLine("var r = InternalCreate(node);");
+            cb.WriteLine("Lookup.Add(node, r);");
+            cb.WriteLine("return r;");
+            cb.Dedent().WriteLine("}");
+
+            cb.WriteLine("public CstNode InternalCreate(ParserTreeNode node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
             cb.WriteLine("{").Indent();
@@ -223,6 +234,7 @@ namespace Parakeet
             cb.WriteLine($"using System;");
             cb.WriteLine($"using System.Linq;");
             cb.WriteLine($"using Parakeet;");
+            cb.WriteLine($"using System.Collections.Generic;");
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();

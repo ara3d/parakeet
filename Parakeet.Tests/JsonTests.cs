@@ -192,9 +192,9 @@ namespace Parakeet.Tests
             Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
         }
 
-        public static int CountInnerNodes(ParserTree tree)
+        public static int CountInnerNodes(ParserTreeNode treeNode)
         {
-            return 1 + tree.Children.Sum(t => CountInnerNodes(t));
+            return 1 + treeNode.Children.Sum(t => CountInnerNodes(t));
         }
 
         [Test]
