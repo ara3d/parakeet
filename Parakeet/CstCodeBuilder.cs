@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 
 namespace Parakeet
 {
@@ -178,12 +177,12 @@ namespace Parakeet
             cb.WriteLine("{").Indent();
             cb.WriteLine($"public static {namespaceName}Grammar Grammar = new {namespaceName}Grammar();");
             cb.WriteLine(
-                "public Dictionary<ParserTreeNode, CstNode> Lookup { get;} = new Dictionary<ParserTreeNode, CstNode>();");
+                "public Dictionary<CstNode, ParserTreeNode> Lookup { get;} = new Dictionary<CstNode, ParserTreeNode>();");
             
             cb.WriteLine("public CstNode Create(ParserTreeNode node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("var r = InternalCreate(node);");
-            cb.WriteLine("Lookup.Add(node, r);");
+            cb.WriteLine("Lookup.Add(r, node);");
             cb.WriteLine("return r;");
             cb.Dedent().WriteLine("}");
 

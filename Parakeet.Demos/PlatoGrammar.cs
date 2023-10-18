@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-
-namespace Parakeet.Demos
+﻿    namespace Parakeet.Demos
 {
     public class PlatoGrammar : PlatoTokenGrammar
     {
@@ -37,7 +35,7 @@ namespace Parakeet.Demos
         public Rule ParenthesizedExpression => Node(ParenthesizedList(Expression));
 
         public Rule ThrowExpression => Node(Keyword("throw") + Recovery + Expression);
-        public Rule LambdaParameter => Node(Identifier + TypeAnnotation);
+        public Rule LambdaParameter => Node(Identifier);
         public Rule LambdaParameters => Node(LambdaParameter | ParenthesizedList(LambdaParameter));
         public Rule LambdaBody => Node(CompoundStatement | Expression);
         public Rule LambdaExpr => Node(LambdaParameters + Symbol("=>") + Recovery + LambdaBody);
