@@ -1,6 +1,4 @@
-﻿using Parakeet.Demos;
-
-namespace Parakeet.Tests
+﻿namespace Parakeet.Tests
 {
     public static class CSharpTests
     {

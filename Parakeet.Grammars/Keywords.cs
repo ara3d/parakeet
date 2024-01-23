@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Demos
+﻿namespace Parakeet.Grammars
 {
     public class Keywords
     {

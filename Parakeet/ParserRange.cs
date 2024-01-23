@@ -7,7 +7,7 @@ namespace Parakeet
     /// <summary>
     /// Used to identify ranges of text such as found in a node or a match.
     /// </summary>
-    public class ParserRange
+    public class ParserRange : ILocation
     {
         public ParserState Begin { get; }
         public ParserState End { get; }

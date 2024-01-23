@@ -1,8 +1,7 @@
-﻿namespace Parakeet.Demos
+﻿namespace Parakeet.Grammars
 {
     // This is currently a parser for a subset of the C# language 
     // See: https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/lexical-structure
-    // The goal is to separate this into a C# and A Plato grammar.
     // First step though is to test this on my own source code. 
 
     public class CSharpGrammar : CommonGrammar

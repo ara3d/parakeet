@@ -5,7 +5,7 @@ namespace Parakeet
     /// <summary>
     /// A class that represents the state of the parser, and the parse tree. 
     /// </summary>
-    public class ParserState
+    public class ParserState : ILocation
     {
         public ParserInput Input { get; }
         public int Position { get; }
@@ -13,11 +13,11 @@ namespace Parakeet
         public ParserError LastError { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AtEnd() 
+        public bool AtEnd()
             => Position >= Input.Length;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char GetCurrent() 
+        public char GetCurrent()
             => Input[Position];
 
         public ParserState(ParserInput input, int position = 0, ParserNode node = null, ParserError error = null)
@@ -25,7 +25,7 @@ namespace Parakeet
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance(int amount)
-            => new ParserState(Input, Position + amount, Node,  LastError);
+            => new ParserState(Input, Position + amount, Node, LastError);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance()
@@ -72,13 +72,14 @@ namespace Parakeet
         public ParserState Match(string s)
         {
             var n = s.Length;
-            if (CharsLeft < n) 
+            if (CharsLeft < n)
                 return null;
             for (int i = 0, j = Position; i < n; i++, j++)
             {
                 if (s[i] != Input[j])
                     return null;
             }
+
             return Advance(n);
         }
 
@@ -98,5 +99,5 @@ namespace Parakeet
 
         public override int GetHashCode()
             => Position.GetHashCode();
-        }
+    }
 }

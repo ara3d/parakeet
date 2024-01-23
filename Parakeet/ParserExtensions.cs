@@ -9,9 +9,6 @@ namespace Parakeet
         public static ParserState Parse(this ParserInput input, Rule r)
             => r.Match(new ParserState(input));
 
-        public static ParserState Parse(this string s, Rule r)
-            => r.Match(new ParserState(s));
-
         public static IEnumerable<ParserRange> GetMatches(this string input, Rule rule)
             => GetMatches((ParserInput)input, rule);
 

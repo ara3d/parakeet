@@ -5,21 +5,10 @@ using System.Text;
 
 namespace Parakeet
 {
-    public interface ITree<T> where T : ITree<T>
-    {
-        IReadOnlyList<T> Children { get; }
-    }
-
-    public static class TreeHelpers
-    {
-        public static TAcc Aggregate<T, TAcc>(this ITree<T> tree, TAcc init, Func<TAcc, T, TAcc> func)
-            where T : ITree<T>
-            => tree.Children.Aggregate(init, (acc, curr) => curr.Aggregate(acc, func));
-    }
-
-    public class CstNode : ITree<CstNode>
+    public class CstNode : ILocation
     {
         public int Count => Children.Count;
+        public ILocation Location { get; set; }
         public CstNode this[int index] => Children[index];
         public CstNode(IReadOnlyList<CstNode> children) => Children = children;
         public IReadOnlyList<CstNode> Children { get; }
@@ -60,7 +49,6 @@ namespace Parakeet
         public override string ToString() => Text;
     }
 
-
     public class CstFilter : CstNode
     {
         public CstFilter(IReadOnlyList<CstNode> children) : base(children)
@@ -80,7 +68,6 @@ namespace Parakeet
         public bool Present => Node != null;
     }
     
-
     public static class CstExtensions
     {
         public static StringBuilder ToXml(this CstNode node, StringBuilder sb = null, string indent = "")

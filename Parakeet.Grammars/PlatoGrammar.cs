@@ -1,4 +1,4 @@
-﻿    namespace Parakeet.Demos
+﻿    namespace Parakeet.Grammars
 {
     public class PlatoGrammar : PlatoTokenGrammar
     {
@@ -16,7 +16,7 @@
         public Rule Indexer => Node(Bracketed(Expression));
 
         public Rule PostfixOperator => Node(
-            Symbols("!", "++", "--")
+            Symbols("++", "--")
             | MemberAccess
             | ConditionalMemberAccess
             | FunctionArgs
@@ -150,16 +150,18 @@
         public Rule Statement => Recursive(nameof(InnerStatement));
 
         public Rule QualifiedIdentifier => Node(List(Identifier, Symbol(".")));
-        public new Rule TypeParameter => Node(Identifier + TypeAnnotation);
+        public Rule TypeParameter => Node(Identifier);
         public Rule TypeParameterList => Node(AngledBracketList(TypeParameter).Optional());
 
         public Rule ImplementsList => Node(Optional(Keyword("implements") + Recovery + List(TypeExpr)));
         public Rule InheritsList => Node(Optional(Keyword("inherits") + Recovery + List(TypeExpr)));
+        public Rule Constraint => Node(Identifier + TypeAnnotation);
+        public Rule ConstraintList => Node(Optional(Keyword("where") + Recovery + List(Constraint)));
 
         public Rule Type => Node(Keyword("type") + Recovery + Identifier + TypeParameterList + ImplementsList +
                                  Braced(FieldDeclaration.ZeroOrMore()));
 
-        public Rule Concept => Node(Keyword("concept") + Recovery + Identifier + TypeParameterList + InheritsList +
+        public Rule Concept => Node(Keyword("concept") + Recovery + Identifier + TypeParameterList + ConstraintList + InheritsList +
                                     Braced(MethodDeclaration.ZeroOrMore()));
 
         public Rule Library =>
@@ -171,7 +173,7 @@
         public Rule FunctionParameterList => Node(ParenthesizedList(FunctionParameter));
         public Rule ExpressionBody => Node(Symbol("=>") + Recovery + Expression + EOS);
         public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
-        public new Rule TypeAnnotation => Node(Symbol(":") + Recovery + TypeExpr);
+        public Rule TypeAnnotation => Node(Symbol(":") + Recovery + TypeExpr);
 
         public Rule MethodDeclaration =>
             Node(Identifier + FunctionParameterList + Recovery + TypeAnnotation + FunctionBody);
@@ -182,9 +184,10 @@
         public Rule ArrayRankSpecifier => Node(Bracketed(Comma.ZeroOrMore()));
         public Rule ArrayRankSpecifiers => Node(ArrayRankSpecifier.ZeroOrMore());
         public Rule TypeArgList => Node(AngledBracketList(TypeExpr));
-        public Rule SimpleTypExpr => Node(QualifiedIdentifier);
+        public Rule TypeVar => Node('$' + Identifier);
+        public Rule SimpleTypeExpr => Node(Identifier);
         public Rule CompoundTypeExpr => Node(ParenthesizedList(TypeExpr));
-        public Rule CompoundOrSimpleTypeExpr => Node(CompoundTypeExpr | SimpleTypExpr);
+        public Rule CompoundOrSimpleTypeExpr => Node(CompoundTypeExpr | SimpleTypeExpr | TypeVar);
         public Rule InnerTypeExpr => Node(CompoundOrSimpleTypeExpr + TypeArgList.Optional() + ArrayRankSpecifiers);
         public Rule TypeExpr => Recursive(nameof(InnerTypeExpr));
 

@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Parakeet.Demos\Parakeet.Demos.csproj" />
-    <ProjectReference Include="..\Parakeet\Parakeet.csproj" />
+    <ProjectReference Include="..\..\src\Ara3D.Parsing\Ara3D.Parsing.csproj" />
+    <ProjectReference Include="..\..\src\Ara3D.Parsing.Grammars\Ara3D.Parsing.Grammars.csproj" />
   </ItemGroup>
 
 </Project>

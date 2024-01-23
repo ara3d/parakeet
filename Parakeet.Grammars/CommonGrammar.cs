@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parakeet
+namespace Parakeet.Grammars
 {
     public class CommonGrammar : Grammar
     {
@@ -19,6 +19,7 @@ namespace Parakeet
         public Rule DigitOrLetter => Named(Letter | Digit);
         public Rule IdentifierFirstChar => Named('_' | Letter);
         public Rule IdentifierChar => Named(IdentifierFirstChar | Digit);
+        public Rule Identifier => Node(IdentifierFirstChar + Identifier.ZeroOrMore());
         public Rule FractionalPart => Named("." + Digits);
         public Rule HexDigit => Named(Digit | 'a'.To('f') | 'A'.To('F'));
         public Rule BinDigit => Named('0'.To('1'));
@@ -30,8 +31,9 @@ namespace Parakeet
         public Rule NewLine => Named(Strings("\r\n", "\n"));
         public Rule UntilNextLine => Named(AnyChar.Except(NewLine).ZeroOrMore().Then(NewLine.Optional()));
         public Rule CppStyleSingleLineComment => Named("//" + UntilNextLine);
-        public Rule CStyleBlockComment => Named("/*" + UntilPast("*/"));
+        public Rule CStyleBlockComment => Named("/*" + Recovery + UntilPast("*/"));
         public Rule CppStyleComment => Named(CppStyleSingleLineComment | CStyleBlockComment);
+        public Rule XmlStyleComment => Named("<!--" + Recovery + UntilPast("-->"));
 
         public Rule UntilPast(Rule r) => RepeatUntilPast(AnyChar, r);
         public Rule RepeatUntilPast(Rule repeat, Rule delimiter) => delimiter.NotAt().Then(repeat).ZeroOrMore().Then(EndOfInput | delimiter);
@@ -50,7 +52,7 @@ namespace Parakeet
         public Rule Braced(Rule r) => Symbol("{") + Recovery + r + Symbol("}");
         public Rule BracedList(Rule r, Rule sep = null) => Braced(List(r, sep));
         public Rule AngledBracketList(Rule r, Rule sep = null) => Symbol("<") + List(r, sep) + Symbol(">");
-
+        public Rule String => '"' + ("\\\"" | AnyChar.Except('"')).ZeroOrMore() + '"';
         public Rule Float => Integer + ((FractionalPart + ExponentPart.Optional()) | ExponentPart);
         public Rule Integer => Optional('-') + Digits;
     }

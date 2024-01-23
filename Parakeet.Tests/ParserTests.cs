@@ -1,14 +1,13 @@
 #pragma warning disable NUnit2005
 namespace Parakeet.Tests
 {
-
     public static class ParserTests
     {
         public static string ParserTestsDllPath => typeof(ParserTests).Assembly.Location;
         public static string TestsProjectFolder => Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
-        public static string DemosProjectFolder => Path.Combine(SolutionFolder, "Parakeet.Demos");
+        public static string DemosProjectFolder => Path.Combine(SolutionFolder, "src", "Ara3D.Parsing.Grammars");
         public static string MainProjectFolder => Path.Combine(SolutionFolder, "Parakeet");
-        public static string SolutionFolder => Path.Combine(TestsProjectFolder, "..");
+        public static string SolutionFolder => Path.Combine(TestsProjectFolder, "..", "..");
         public static string ThisFile => Path.Combine(TestsProjectFolder, "ParserTests.cs");
         public static string InputFilesFolder => Path.Combine(ParserTests.TestsProjectFolder, "input");
 
@@ -121,21 +120,6 @@ namespace Parakeet.Tests
                     return 0;
                 }
                 Console.WriteLine($"Tree {tree}");
-                //Console.WriteLine($"Contents {tree.Contents}");
-
-                //var ast = tree.ToNode();
-                //Console.WriteLine($"Ast = {ast}");
-
-                    /*
-                if (expNodes != null)
-                {
-                    Console.WriteLine("Expected parse tree is null");
-                }
-                else
-                {
-                    Console.WriteLine($"Expected parse tree = {expNodes.ToDefinition()}");
-                }
-                */
             }
             return ps.AtEnd() ? 1 : 0;
         }

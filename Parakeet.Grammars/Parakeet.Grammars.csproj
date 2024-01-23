@@ -5,11 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Parakeet\Parakeet.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="_generated\" />
+    <ProjectReference Include="..\Ara3D.Parsing\Ara3D.Parsing.csproj" />
   </ItemGroup>
 
 </Project>

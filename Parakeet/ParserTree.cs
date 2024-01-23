@@ -5,7 +5,7 @@ namespace Parakeet
     /// <summary>
     /// Created from parse nodes. 
     /// </summary>
-    public class ParserTreeNode
+    public class ParserTreeNode : ILocation
     {
         public ParserNode Node { get; }
         public string Type => Node.Name;

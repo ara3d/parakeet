@@ -42,5 +42,8 @@ namespace Parakeet
 
         public static Rule Optimize(this Rule rule)
             => new RuleOptimizer().Optimize(rule);
+
+        public static ParserState Parse(this Rule rule, string input)
+            => new ParserInput(input).Parse(rule);
     }
 }
