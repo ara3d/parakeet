@@ -195,5 +195,8 @@ namespace Parakeet
 
             return null;
         }
+
+        public static ParserState Parse(this Grammar g, string input)
+            => g.StartRule.Parse(input);
     }
 }

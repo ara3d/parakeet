@@ -46,12 +46,25 @@ namespace Parakeet.Grammars
         public Rule EmailLink => Node("<" + Email + ">");
         // TODO: support HTML but that is another grammar. 
         public Rule Img => Node("!" + AltText + Parenthesized(Url + WS + UrlTitle.Optional()));
-        public Rule FormattedText => Node(Link | Bold | Italic | Code | EmailLink | UrlLink | Img | Break | Comment | EscapedChar);
+        public Rule FormattedText => Node(
+            Link | 
+            Bold | 
+            Italic | 
+            Code | 
+            EmailLink | 
+            UrlLink | 
+            Img | 
+            Break | 
+            Comment | 
+            EscapedChar);
+
         public Rule PlainText => Node(AnyCharExcept(NewLine | FormattedText).ZeroOrMore());
         public Rule InnerText => Node(FormattedText | PlainText);
         public Rule Text => Recursive(nameof(InnerText));
-        
-        public Rule Line => Node(CodeBlock | SpaceOrTab.OneOrMore() + (
+
+        public Rule Indent => Node(Space.ZeroOrMore());
+        public Rule Line => Node(Indent + (
+            CodeBlock | 
             OrderedListItem |
             UnorderedListItem |
             Heading |
@@ -62,6 +75,6 @@ namespace Parakeet.Grammars
             BlankLine | 
             Text));
 
-        public Rule Document => Node(Line.ZeroOrMore() + EndOfInput);
+        public Rule Document => Node(Line.ZeroOrMore());
     }
 }

@@ -80,7 +80,7 @@
             + LeafExpression
             + PostfixOperator.ZeroOrMore());
 
-        public Rule Expression => Recursive(nameof(InnerExpression));
+        public Rule Expression => Node(Recursive(nameof(InnerExpression)));
 
         // Statements 
         public Rule EOS => Named(Sym(";"));

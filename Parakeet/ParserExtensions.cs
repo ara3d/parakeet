@@ -78,5 +78,8 @@ namespace Parakeet
         
         public static IEnumerable<ParserError> AllErrors(this ParserState state)
             => state.LastError.AllErrorsReversed().Reverse();
+
+        public static ParserTreeNode GetParseTree(this ParserState state)
+            => state.Node.ToParseTree();
     }
 }
