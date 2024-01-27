@@ -1,12 +1,24 @@
-﻿namespace Parakeet.Console
+﻿using System.Text;
+using Parakeet.Grammars;
+
+namespace Parakeet.ConsoleApp
 {
     public class Program
     {
-        // Todo: 
-        // Generate CST, generate docs, run-tests.  
         static void Main(string[] args)
         {
-            System.Console.WriteLine("Hello, World!");
+            Console.WriteLine("Hello, World!");
+
+            foreach (var g in AllGrammars.Grammars)
+            {
+                var sb = new StringBuilder();
+                foreach (var r in g.GetRules())
+                {
+                    sb.AppendLine(r.GetName() + " := " + r.Body().ToDefinition());
+                }
+                var s = sb.ToString();
+                Console.WriteLine(s);
+            }
         }
     }
 }

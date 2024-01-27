@@ -9,8 +9,8 @@ namespace Parakeet
     /// </summary>
     public class ParserRange : ILocation
     {
-        public ParserState Begin { get; }
-        public ParserState End { get; }
+        public readonly ParserState Begin;
+        public readonly ParserState End;
 
         public ParserRange(ParserState begin, ParserState end)
         {

@@ -1,0 +1,833 @@
+// Primitives 
+
+// Built-in type that represents a real number 
+type Number 
+    implements Real, Numerical
+{ }
+
+// Built-in type that represent a positive or negative whole number 
+type Integer   
+    implements WholeNumber
+{ }
+
+// Built-in type that represents text
+type String
+    implements Array<Character>, Comparable, Equatable
+{ }
+
+// Built-in type that represents a truth value 
+type Boolean 
+    implements BooleanOperations
+{ }
+
+// Built-in type that represents a character of text 
+type Character
+    implements Value
+{ }
+
+// Built-in type that represents a run-time checked value. 
+type Dynamic
+{ }
+
+// An integer type in the range of 0 to N is used to return the number of items 
+// https://en.wikipedia.org/wiki/Cardinal_number
+type Cardinal
+    implements WholeNumber
+{
+    Value: Integer;
+}
+
+// An integer type in the range of -1 to N and is used for indexing arrays and collections 
+// The -1 value represent "not present". 
+type Index
+    implements WholeNumber
+{
+    Value: Integer;
+}
+
+// A numerical type that is normally in the range of 0 to 1. 
+type Unit
+    implements Real, Numerical
+{
+    Value: Number;
+}
+
+// A value in the range of 0 to 1 representing a chance of probability
+type Probability
+    implements Real, Numerical
+{
+    Value: Number;
+}
+
+// A numerical type used to accurately represent rotations in 3D space
+// https://en.wikipedia.org/wiki/Quaternion
+type Quaternion
+    implements Value
+{
+    X: Number;
+    Y: Number;
+    Z: Number;
+    W: Number;
+}
+
+type Unit2D
+    implements Value
+{
+    X: Unit;
+    Y: Unit;
+}
+
+type Unit3D
+    implements Value
+{
+    X: Unit;
+    Y: Unit;
+    Z: Unit;
+}
+
+type Direction3D
+    implements Value
+{
+    Value: Unit3D;
+}
+
+type AxisAngle
+    implements Value
+{
+    Axis: Unit3D;
+    Angle: Angle;
+}
+
+type EulerAngles
+    implements Value
+{
+    Yaw: Angle;
+    Pitch: Angle;
+    Roll: Angle;
+}
+
+type Rotation3D
+    implements Value
+{
+    Quaternion: Quaternion;
+}
+
+type Vector2D
+    implements Vector
+{
+    X: Number;
+    Y: Number;
+}
+
+type Vector3D
+    implements Vector
+{
+    X: Number;
+    Y: Number;
+    Z: Number;
+}
+
+type Vector4D
+    implements Vector
+{
+    X: Number;
+    Y: Number;
+    Z: Number;
+    W: Number;
+}
+
+type Orientation3D
+    implements Value
+{
+    Value: Rotation3D;
+}
+
+type Pose2D
+    implements Value
+{
+    Position: Vector3D;
+    Orientation: Orientation3D;
+}
+
+type Pose3D
+    implements Value
+{
+    Position: Vector3D;
+    Orientation: Orientation3D;
+}
+
+type Transform3D
+    implements Value
+{
+    Translation: Vector3D;
+    Rotation: Rotation3D;
+    Scale: Vector3D;
+}
+
+type Transform2D
+    implements Value
+{
+    Translation: Vector2D;
+    Rotation: Angle;
+    Scale: Vector2D;
+}
+
+type AlignedBox2D
+    implements Interval<Point2D, Vector2D>
+{
+    Min: Point2D;
+    Max: Point2D;
+}
+
+type AlignedBox3D
+    implements Interval<Point3D, Vector3D>
+{
+    Min: Point3D;
+    Max: Point3D;
+}
+
+type Complex
+    implements Vector
+{
+    Real: Number;
+    Imaginary: Number;
+}
+
+type Ray3D
+    implements Value
+{
+    Direction: Vector3D;
+    Position: Point3D;
+}
+
+type Ray2D
+    implements Value
+{
+    Direction: Vector2D;
+    Position: Point2D;
+}
+
+type Sphere
+    implements Value
+{
+    Center: Point3D;
+    Radius: Number;
+}
+
+type Plane
+    implements Value
+{
+    Normal: Unit3D;
+    D: Number;
+}
+
+type Triangle2D
+    implements Value
+{
+    A: Point2D;
+    B: Point2D;
+    C: Point2D;
+}
+
+type Triangle3D
+    implements Value
+{
+    A: Point3D;
+    B: Point3D;
+    C: Point3D;
+}
+
+type Quad2D
+    implements Value
+{
+    A: Point2D;
+    B: Point2D;
+    C: Point2D;
+    D: Point2D;
+}
+
+
+type Quad3D
+    implements Value
+{
+    A: Point3D;
+    B: Point3D;
+    C: Point3D;
+    D: Point3D;
+}
+
+type Point2D
+    implements Coordinate, AdditiveArithmetic<Vector2D>
+{
+    X: Number;
+    Y: Number;
+}
+
+type Point3D
+    implements Coordinate, AdditiveArithmetic<Vector3D>
+{
+    X: Number;
+    Y: Number;
+    Z: Number;
+}
+
+type Point4D
+    implements Coordinate, AdditiveArithmetic<Vector4D>
+{
+    X: Number;
+    Y: Number;
+    Z: Number;
+    W: Number;
+}
+
+type Line2D
+    implements Value
+{
+    A: Point2D;
+    B: Point2D;
+}
+
+type Line3D
+    implements Value
+{
+    A: Point3D;
+    B: Point3D;
+}
+
+// https://en.wikipedia.org/wiki/RGB_color_spaces
+type Color
+    implements Coordinate
+{
+    R: Unit;
+    G: Unit;
+    B: Unit;
+    A: Unit;
+}
+
+// https://en.wikipedia.org/wiki/CIELUV
+type ColorLUV
+    implements Coordinate
+{
+    Lightness: Unit;
+    U: Unit;
+    V: Unit;
+}
+
+// https://en.wikipedia.org/wiki/CIELAB_color_space
+type ColorLAB
+    implements Coordinate
+{
+    Lightness: Unit;
+    A: Number; 
+    B: Number;
+}
+
+// https://en.wikipedia.org/wiki/CIELAB_color_space#Cylindrical_model
+type ColorLCh
+    implements Coordinate
+{
+    Lightness: Unit;
+    ChromaHue: PolarCoordinate;
+}
+
+// https://en.wikipedia.org/wiki/HSL_and_HSV
+type ColorHSV
+    implements Coordinate
+{
+    Hue: Angle;
+    S: Unit;
+    V: Unit;
+}
+
+// https://en.wikipedia.org/wiki/HSL_and_HSV
+type ColorHSL
+    implements Coordinate
+{
+    Hue: Angle;
+    Saturation: Unit;
+    Luminance: Unit;
+}
+
+// https://en.wikipedia.org/wiki/YCbCr   
+type ColorYCbCr
+    implements Coordinate
+{
+    Y: Unit;
+    Cb: Unit;
+    Cr: Unit;
+}
+
+// https://en.wikipedia.org/wiki/Spherical_coordinate_system    
+type SphericalCoordinate
+    implements Coordinate
+{
+    Radius: Number;
+    Azimuth: Angle;
+    Polar: Angle;
+}
+
+// https://en.wikipedia.org/wiki/Polar_coordinate_system   
+type PolarCoordinate
+    implements Coordinate
+{
+    Radius: Number;
+    Angle: Angle;
+}
+
+// https://en.wikipedia.org/wiki/Log-polar_coordinates    
+type LogPolarCoordinate
+    implements Coordinate
+{
+    Rho: Number;
+    Azimuth: Angle;
+}
+
+// https://en.wikipedia.org/wiki/Cylindrical_coordinate_system    
+type CylindricalCoordinate
+    implements Coordinate
+{
+    RadialDistance: Number;
+    Azimuth: Angle;
+    Height: Number;
+}
+
+// https://en.wikipedia.org/wiki/Horizontal_coordinate_system    
+type HorizontalCoordinate
+    implements Coordinate
+{
+    Radius: Number;
+    Azimuth: Angle;
+    Height: Number;
+}
+
+// https://en.wikipedia.org/wiki/Geographic_coordinate_system    
+type GeoCoordinate
+    implements Coordinate
+{
+    Latitude: Angle;
+    Longitude: Angle;
+}
+
+// https://en.wikipedia.org/wiki/Geographic_coordinate_system    
+type GeoCoordinateWithAltitude
+    implements Coordinate
+{
+    Coordinate: GeoCoordinate;
+    Altitude: Number;
+}
+
+type Circle
+    implements Value
+{
+    Center: Point2D;
+    Radius: Number;
+}
+
+type Chord
+    implements Value
+{
+    Circle: Circle;
+    Arc: Arc;
+}
+
+type Size2D
+    implements Value
+{
+    Width: Number;
+    Height: Number;
+}
+
+type Size3D
+    implements Value
+{
+    Width: Number;
+    Height: Number;
+    Depth: Number;
+}
+
+type Rectangle2D
+    implements Value
+{
+    Center: Point2D;
+    Size: Size2D;
+}
+
+type Fraction
+    implements Value
+{
+    Numerator: Number;
+    Denominator: Number;
+}
+
+type Angle
+    implements Measure
+{
+    Radians: Number;
+}
+
+type Length
+    implements Measure
+{
+    Meters: Number;
+}
+
+type Mass
+    implements Measure
+{
+    Kilograms: Number;
+}
+
+type Temperature
+    implements Measure
+{
+    Celsius: Number;
+}
+
+type Time
+    implements Measure
+{
+    Seconds: Number;
+}
+
+type TimeRange
+    implements Interval<DateTime, Time>
+{
+    Min: DateTime;
+    Max: DateTime;
+}
+
+// Unix date-time representation: number of non-leap seconds elapsed since January 1st, 1970.
+// https://en.wikipedia.org/wiki/Unix_time
+type DateTime
+    implements Coordinate, AdditiveArithmetic<Time>
+{
+    Value: Number; 
+}
+
+type AnglePair
+    implements Interval<Angle, Angle>
+{
+    Min: Angle;
+    Max: Angle;
+}
+
+type Ring
+    implements Value
+{
+    Circle: Circle;
+    InnerRadius: Number;
+}
+
+type Arc
+    implements Value
+{
+    Angles: AnglePair;
+    Cirlce: Circle;
+}
+
+type NumberInterval
+    implements Interval<Number, Number>
+{
+    Min: Number;
+    Max: Number;
+}
+
+type Capsule
+    implements Value
+{
+    Line: Line3D;
+    Radius: Number;
+}
+
+// https://mindcontrol.org/~hplus/graphics/matrix-layout.html
+// Column major layout in memory 
+// Translation component is in Column4.XYZ    
+type Matrix3D
+    implements Value
+{
+    Column1: Vector4D;
+    Column2: Vector4D;
+    Column3: Vector4D;
+    Column4: Vector4D;
+}
+
+type Cylinder
+    implements Value
+{
+    Line: Line3D;
+    Radius: Number;
+}
+
+type Cone
+    implements Value
+{
+    Line: Line3D;
+    Radius: Number;
+}
+
+type Tube
+    implements Value
+{
+    Line: Line3D;
+    InnerRadius: Number;
+    OuterRadius: Number;
+}
+
+type ConeSegment
+    implements Value
+{
+    Line: Line3D;
+    Radius1: Number;
+    Radius2: Number;
+}
+
+type Box2D
+    implements Value
+{
+    Center: Point2D;
+    Rotation: Angle;
+    Extent: Size2D;
+}
+
+type Box3D
+    implements Value
+{
+    Center: Point3D;
+    Rotation: Rotation3D;
+    Extent: Size3D;
+}
+
+// https://en.wikipedia.org/wiki/UV_mapping    
+type UV
+    implements Vector
+{
+    U: Unit;
+    V: Unit;
+}
+
+type UVW
+    implements Vector
+{
+    U: Unit;
+    V: Unit;
+    W: Unit;
+}
+
+// https://en.wikipedia.org/wiki/B%C3%A9zier_curve    
+type CubicBezier2D
+    implements Value
+{
+    A: Point2D;
+    B: Point2D;
+    C: Point2D;
+    D: Point2D;
+}   
+
+// https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+type CubicBezier3D
+    implements Value
+{
+    A: Point3D;
+    B: Point3D;
+    C: Point3D;
+    D: Point3D;
+}
+
+// https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+type QuadraticBezier2D
+    implements Value
+{
+    A: Point2D;
+    B: Point2D;
+    C: Point2D;
+}
+
+// https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+type QuadraticBezier3D
+    implements Value
+{
+    A: Point3D;
+    B: Point3D;
+    C: Point3D;
+}
+
+// https://en.wikipedia.org/wiki/Area
+type Area
+    implements Measure
+{
+    MetersSquared: Number;
+}
+
+// https://en.wikipedia.org/wiki/Volume
+type Volume
+    implements Measure
+{
+    MetersCubed: Number;
+}
+
+// https://en.wikipedia.org/wiki/Velocity   
+type Velocity
+    implements Measure
+{
+    MetersPerSecond: Number;
+}
+
+// https://en.wikipedia.org/wiki/Acceleration
+type Acceleration
+    implements Measure
+{
+    MetersPerSecondSquared: Number;
+}
+
+// https://en.wikipedia.org/wiki/Force
+type Force
+    implements Measure
+{
+    Newtons: Number;
+}
+
+// https://en.wikipedia.org/wiki/Pressure  
+type Pressure
+    implements Measure
+{
+    Pascals: Number;
+}
+
+// https://en.wikipedia.org/wiki/Energy   
+type Energy
+    implements Measure
+{
+    Joules: Number;
+}
+
+// https://en.wikipedia.org/wiki/Byte    
+type Memory
+    implements Measure
+{
+    Bytes: Number;
+}
+
+// https://en.wikipedia.org/wiki/Frequency    
+type Frequency
+    implements Measure
+{
+    Hertz: Number;
+}
+
+// https://en.wikipedia.org/wiki/Loudness
+type Loudness
+    implements Measure
+{
+    Decibels: Number;
+}
+
+// https://en.wikipedia.org/wiki/Luminous_intensity    
+type LuminousIntensity
+    implements Measure
+{
+    Candelas: Number;
+}
+
+// https://en.wikipedia.org/wiki/Electric_potential    
+type ElectricPotential
+    implements Measure
+{
+    Volts: Number;
+}
+
+// https://en.wikipedia.org/wiki/Electric_charge
+type ElectricCharge
+    implements Measure
+{
+    Columbs: Number;
+}
+
+// https://en.wikipedia.org/wiki/Electric_current   
+type ElectricCurrent
+    implements Measure
+{
+    Amperes: Number;
+}
+
+// https://en.wikipedia.org/wiki/Electrical_resistance_and_conductance    
+type ElectricResistance
+    implements Measure
+{
+    Ohms: Number;
+}
+
+// https://en.wikipedia.org/wiki/Power_(physics)    
+type Power
+    implements Measure
+{
+    Watts: Number;
+}
+
+// https://en.wikipedia.org/wiki/Density    
+type Density
+    implements Measure
+{
+    KilogramsPerMeterCubed: Number;
+}
+
+// https://en.wikipedia.org/wiki/Normal_distribution    
+type NormalDistribution
+    implements Value
+{
+    Mean: Number;
+    StandardDeviation: Number;
+}
+
+// https://en.wikipedia.org/wiki/Poisson_distribution    
+type PoissonDistribution
+    implements Value
+{
+    Expected: Number;
+    Occurrences: Integer;
+}
+
+// https://en.wikipedia.org/wiki/Bernoulli_distribution    
+type BernoulliDistribution
+    implements Value
+{
+    P: Probability;
+}
+
+// https://en.wikipedia.org/wiki/Binomial_distribution    
+type BinomialDistribution
+    implements Value
+{
+    Trials: Integer;
+    P: Probability;
+}
+
+// Generic types. These are not used 
+
+type Tuple2<T0, T1>
+{
+    Item0: T0;
+    Item1: T1;
+}
+
+type Tuple3<T0, T1, T2>
+{
+    Item0: T0;
+    Item1: T1;
+    Item2: T2;
+}
+
+type Function0<TR>
+{
+}
+
+type Function1<T0, TR>
+{
+}
+
+type Function2<T0, T1, TR>
+{
+}
+
+type Function3<T0, T1, T2, TR>
+{
+}

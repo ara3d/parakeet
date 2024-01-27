@@ -13,10 +13,11 @@ namespace Parakeet
     /// and minimizes creating superfluous objects. 
     /// </summary>
     // [Mutable]
-    public class Grammar
+    public abstract class Grammar
     {
+        public abstract Rule StartRule { get; }
+
         public virtual Rule WS { get; } 
-        public virtual Rule Recovery { get; }
 
         public Rule GetRuleFromName(string name)
         {
@@ -29,7 +30,9 @@ namespace Parakeet
         public IEnumerable<Rule> GetRules()
             => GetType()
                 .GetProperties()
+                .OrderBy(p => p.Name)
                 .Where(pi => typeof(Rule).IsAssignableFrom(pi.PropertyType))
+                .Where(p => p.Name != "StartRule")
                 .Select(pi => pi.GetValue(this) as Rule)
                 .Where(r => r != null);
 
@@ -39,8 +42,8 @@ namespace Parakeet
         public static Rule Sequence(IEnumerable<Rule> rules)
             => new SequenceRule(rules.ToArray());
 
-        public Rule Recursive(string inner, [CallerMemberName] string nodeName = "")
-            => Node(new RecursiveRule(() => GetRuleFromName(inner)), nodeName);
+        public Rule Recursive(string inner)
+            => new RecursiveRule(() => GetRuleFromName(inner));
 
         public Rule Named(Rule r, [CallerMemberName] string name = "")
         {
@@ -92,6 +95,12 @@ namespace Parakeet
         
         public Rule Not(Rule r) 
             => r.NotAt();
+
+        public Rule CaseInvariant(string s)
+            => new CaseInvariantStringRule(s);
+
+        public Rule CharRange(int from, int to)
+            => new CharRangeRule((char)from, (char)to);
     }
 
 }

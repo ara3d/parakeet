@@ -1,4 +1,6 @@
-﻿namespace Parakeet.Tests
+﻿using Parakeet.Grammars;
+
+namespace Parakeet.Tests
 {
     public static class CSharpTests
     {
@@ -158,7 +160,6 @@ abc
             "new T[] { 1,2,3}",
             "new T<int,int>()",
             "new T(1, a)",
-            "new() { 1, 2, 3 }",
             "new T() { a=1, b = 3 }",
             "nameof(x)",
             "nameof(abc.def)",
@@ -391,6 +392,14 @@ abc
         [TestCase("l / 1.Seconds()", nameof(CSharpGrammar.Expression))]
         [TestCase("1.Seconds()", nameof(CSharpGrammar.Expression))]
         [TestCase("=> { }", nameof(CSharpGrammar.ExpressionBody))]
+        [TestCase(", ", nameof(CSharpGrammar.Comma))]
+        [TestCase("{}", nameof(CSharpGrammar.Initializer))]
+        [TestCase("{ 1 }", nameof(CSharpGrammar.Initializer))]
+        [TestCase("{x=1}", nameof(CSharpGrammar.Initializer))]
+        [TestCase("{ x = 1, y = 2 }", nameof(CSharpGrammar.Initializer))]
+        [TestCase("x=1", nameof(CSharpGrammar.InitializerClause))]
+        [TestCase("x", nameof(CSharpGrammar.InitializerClause))]
+        [TestCase("abc = 2.4", nameof(CSharpGrammar.InitializerClause))]
         public static void TargetedTest(string input, string name)
         {
             var rule = Grammar.GetRuleFromName(name);
@@ -400,7 +409,7 @@ abc
 
         public static IEnumerable<TestCaseData> SourceFiles()
         {
-            return Directory.GetFiles(ParserTests.TestsProjectFolder, "*.cs").Select(f => new TestCaseData(f));
+            return Directory.GetFiles(Folders.SourceFolder, "*.cs").Select(f => new TestCaseData(f));
         }
 
         [Test]

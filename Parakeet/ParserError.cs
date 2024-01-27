@@ -8,21 +8,19 @@
     /// </summary>
     public class ParserError
     {
-        public ParserError(Rule expected, Rule parent, ParserState parentState, ParserState state, string message, ParserError previous)
+        public ParserError(Rule expected, ParserState parentState, ParserState state, string message, ParserError previous)
         {
             Expected = expected;
-            Parent = parent;
             ParentState = parentState;
             State = state;
             Message = message;
             Previous = previous;
         }
 
-        public Rule Expected { get; }
-        public Rule Parent { get; }
-        public ParserState ParentState { get; }
-        public ParserState State { get; }
-        public string Message { get; }
-        public ParserError Previous { get; }
+        public readonly Rule Expected;
+        public readonly ParserState ParentState;
+        public readonly ParserState State;
+        public readonly string Message;
+        public readonly ParserError Previous;
     }
 }

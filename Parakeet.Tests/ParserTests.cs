@@ -3,14 +3,6 @@ namespace Parakeet.Tests
 {
     public static class ParserTests
     {
-        public static string ParserTestsDllPath => typeof(ParserTests).Assembly.Location;
-        public static string TestsProjectFolder => Path.Combine(Path.GetDirectoryName(ParserTestsDllPath), "..", "..", "..");
-        public static string DemosProjectFolder => Path.Combine(SolutionFolder, "src", "Ara3D.Parsing.Grammars");
-        public static string MainProjectFolder => Path.Combine(SolutionFolder, "Parakeet");
-        public static string SolutionFolder => Path.Combine(TestsProjectFolder, "..", "..");
-        public static string ThisFile => Path.Combine(TestsProjectFolder, "ParserTests.cs");
-        public static string InputFilesFolder => Path.Combine(ParserTests.TestsProjectFolder, "input");
-
         public static void OutputNodeCounts(ParserNode node)
         {
             var d = new Dictionary<string, int>();
@@ -124,15 +116,6 @@ namespace Parakeet.Tests
             return ps.AtEnd() ? 1 : 0;
         }
 
-
-        [Test]
-        public static void TestFolders()
-        {
-            var slnFile = Path.Combine(SolutionFolder, "Parakeet.sln");
-            Assert.IsTrue(File.Exists(slnFile));
-            Assert.IsTrue(File.Exists(ThisFile));
-        }
-
         public static IEnumerable<ParserRange> BetweenMatches(this IEnumerable<ParserRange> ranges)
         {
             ParserRange prev = null;
@@ -228,36 +211,6 @@ namespace Parakeet.Tests
                 (a + ab + ab, new [] { "aabab" }, new [] { "b", "aba" }),
                 (a + b.ZeroOrMore() + a, new [] { "aa", "aba", "abba" }, new [] { "b" }),
             };
-        }
-
-        public static IEnumerable<Grammar> Grammars()
-        {
-            yield return CSharpTests.Grammar;
-            yield return JsonTests.Grammar;
-        }
-
-        [Test, TestCaseSource(nameof(Grammars))]
-        public static void OptimizerTest(Grammar g)
-        {
-
-            Console.WriteLine("Rule Optimization");
-            var ro = new RuleOptimizer(g);
-
-            foreach (var kv in ro.OptimizedRules)
-            {
-                Console.WriteLine("Original");
-                Console.WriteLine(kv.Key);
-                
-                Console.WriteLine("Optimized");
-                Console.WriteLine(kv.Value);
-            }
-        }
-
-        [Test]
-        public static void OutputDefinitions()
-        {
-            foreach (var g in Grammars())
-                g.OutputDefinitions(false);
         }
     }
 }

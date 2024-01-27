@@ -1,4 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Linq.Expressions;
+using Ara3D.Utils;
+using Parakeet.Grammars;
 
 namespace Parakeet.Tests
 {
@@ -6,7 +9,7 @@ namespace Parakeet.Tests
     {
         public static PlatoGrammar Grammar = PlatoGrammar.Instance;
 
-        public static DirectoryPath InputFolder = @"C:\Users\cdigg\git\plato\PlatoStandardLibrary\";
+        public static DirectoryPath InputFolder = PathUtil.GetCallerSourceFolder().RelativeFolder("..", "input", "plato");
 
         [Test]
         [TestCase("libraries.plato")]
@@ -128,6 +131,7 @@ namespace Parakeet.Tests
         [TestCase("/* Abc */", "CommentOrSpaces")]
         [TestCase("/* Abc */ /* 123 */", "CommentOrSpaces")]
         [TestCase("// Hello\n", "Comment")]
+        [TestCase("// Hello", "Comment")]
         [TestCase("{ x:T", "DeclaredField")]
         [TestCase("; x:T", "DeclaredField")]
         [TestCase("{ xyz : Type1", "DeclaredField")]
@@ -135,6 +139,7 @@ namespace Parakeet.Tests
         public static void TargetedTest(string input, string name)
         {   
             var rule = PlatoTokenGrammar.Instance.GetRuleFromName(name);
+            if (rule == null) throw new Exception($"Could not find rule {name}");
             var result = ParserTests.ParseTest(input, rule);
             Assert.IsTrue(result == 1);
         }

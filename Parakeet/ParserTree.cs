@@ -7,7 +7,7 @@ namespace Parakeet
     /// </summary>
     public class ParserTreeNode : ILocation
     {
-        public ParserNode Node { get; }
+        public readonly ParserNode Node;
         public string Type => Node.Name;
         public IReadOnlyList<ParserTreeNode> Children { get; }
         public ParserTreeNode(ParserNode node, IReadOnlyList<ParserTreeNode> children)

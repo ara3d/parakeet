@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Ara3D.Utils;
 
 namespace Parakeet
 {
@@ -7,10 +8,10 @@ namespace Parakeet
     /// </summary>
     public class ParserState : ILocation
     {
-        public ParserInput Input { get; }
-        public int Position { get; }
-        public ParserNode Node { get; }
-        public ParserError LastError { get; }
+        public readonly ParserInput Input;
+        public readonly int Position;
+        public readonly ParserNode Node;
+        public readonly ParserError LastError;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AtEnd()
@@ -36,8 +37,12 @@ namespace Parakeet
             => AtEnd() ? null : GetCurrent() == c ? Advance() : null;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ParserState AdvanceIfWithin(char a, char b)
+            => AtEnd() ? null : GetCurrent() >= a && GetCurrent() <= b ? Advance() : null;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState AdvanceIfNotAtEnd()
-            => AtEnd() ? null : new ParserState(Input, Position + 1, Node, LastError);
+            => AtEnd() ? null : Advance();
 
         public ParserState JumpToEnd()
             => Advance(CharsLeft);
@@ -83,16 +88,26 @@ namespace Parakeet
             return Advance(n);
         }
 
-        public override bool Equals(object obj)
+        public ParserState MatchInvariant(string s)
         {
-            return obj is ParserState ps && Equals(ps);
+            var n = s.Length;
+            if (CharsLeft < n)
+                return null;
+            for (int i = 0, j = Position; i < n; i++, j++)
+            {
+                if (s[i].ToLower() != Input[j].ToLower())
+                    return null;
+            }
+
+            return Advance(n);
         }
 
+        public override bool Equals(object obj)
+            => obj is ParserState ps && Equals(ps);
+
         public bool Equals(ParserState state)
-        {
-            if (state == null) return false;
-            return Position == state.Position;
-        }
+            => (state != null) && Position == state.Position;
+        
 
         public ParserState AddNode(string name, ParserState prev)
             => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node), LastError);

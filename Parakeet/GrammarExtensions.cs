@@ -64,6 +64,8 @@ namespace Parakeet
                     return $"({z.Rule.ToDefinition(shortForm, indent)})*";
                 case OneOrMoreRule o:
                     return $"({o.Rule.ToDefinition(shortForm, indent)})+";
+                case CountedRule cr:
+                    return $"({cr.Rule.ToDefinition(shortForm, indent)}){{{cr.Min},{cr.Max}}}";
                 case RecursiveRule rec:
                     return rec.Rule.ToDefinition(shortForm, indent);
                 case StringRule sm:
@@ -75,7 +77,9 @@ namespace Parakeet
                 case AtRule at:
                     return $"&({at.Rule.ToDefinition(shortForm, indent)})";
                 case CharSetRule set:
-                    return $"[{set.ToString()}]";
+                    return $"[{set}]";
+                case CharRangeRule range:
+                    return $"[{range.From}-{range.To}]";
                 case OnError set:
                     return $"_RECOVER_";
                 case EndOfInputRule endOfInputRule:

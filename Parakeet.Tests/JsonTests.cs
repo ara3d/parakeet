@@ -1,10 +1,14 @@
 ﻿using System.Diagnostics;
+using Ara3D.Utils;
 using Newtonsoft.Json.Linq;
+using Parakeet.Grammars;
 
 namespace Parakeet.Tests
 {
     public static class JsonTests
     {
+        public static DirectoryPath InputFolder = Folders.InputFolder("json");
+
         public static JsonGrammar Grammar = new JsonGrammar();
 
         public static string[] Numbers = new[]
@@ -158,35 +162,15 @@ namespace Parakeet.Tests
             Assert.AreEqual(1, ParserTests.ParseTest(input, rule));
         }
 
-        [Test, Explicit]
-        [TestCase("twitter.json")]
-        [TestCase("1900b0aE.dag.json")]
-        [TestCase("59ba4880.json")]
-        [TestCase("7D0144EC2C5F43E42EF6587E214E857ABF59718F.json")]
-        [TestCase("basic2.json")]
-        [TestCase("boon-small.json")]
-        [TestCase("catalog.json")]
-        [TestCase("DataWarehouseActiveCollectionControllerMPCore.servicehub.service.json")]
-        [TestCase("dicos.json")]
-        [TestCase("eucjp.json")]
-        [TestCase("events.json")]
-        [TestCase("fathers.json")]
-        [TestCase("func.deps.json")]
-        [TestCase("func.runtimeconfig.json")]
-        [TestCase("index.json")]
-        [TestCase("large.json")]
-        [TestCase("Microsoft.ServiceHub.Framework.AlwaysUnauthorizedService.deps.json")]
-        [TestCase("package.json")]
-        [TestCase("project.assets.json")]
-        [TestCase("small.json")]
-        [TestCase("tiny.json")]
-        [TestCase("twitter.json")]
-        [TestCase("yan-cui-10k-simple-objects.json")]
-        [TestCase("_oj-highly-nested.json")]        
-        public static void JsonFileTest(string fileName)
+        public static IEnumerable<string> JsonFiles()
         {
-            var file = Path.Combine(ParserTests.InputFilesFolder, fileName);
-            //var input = System.IO.File.ReadAllText(file).Trim();
+            return InputFolder.GetFiles().Select(f => f.Value);
+        }
+
+        [Test, Explicit]
+        [TestCaseSource(nameof(JsonFiles))]
+        public static void JsonFileTest(string file)
+        {
             var input = ParserInput.FromFile(file);
             Assert.AreEqual(1, ParserTests.ParseTest(input, Grammar.Json, false));
         }
@@ -199,7 +183,7 @@ namespace Parakeet.Tests
         [Test]
         public static void CompareToNewtonsoft()
         {
-            var file = Path.Combine(ParserTests.InputFilesFolder, "59ba4880.json");
+            var file = InputFolder.RelativeFile("59ba4880.json");
             var text = File.ReadAllText(file);
             Console.WriteLine($"File size = {text.Length / 1000}k");
             {

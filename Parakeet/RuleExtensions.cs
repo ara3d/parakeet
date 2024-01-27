@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 namespace Parakeet
 {
@@ -34,6 +35,15 @@ namespace Parakeet
         public static Rule OneOrMore(this Rule rule)
             => new OneOrMoreRule(rule);
 
+        public static Rule Counted(this Rule rule, int min, int max)
+            => new CountedRule(rule, min, max);
+
+        public static Rule Counted(this Rule rule, int count)
+            => new CountedRule(rule, count, count);
+
+        public static Rule CountOrMore(this Rule rule, int min)
+            => new CountedRule(rule, min, int.MaxValue);
+
         public static Rule To(this char c1, char c2)
             => new CharSetRule(Enumerable.Range(c1, c2 - c1 + 1).Select(i => (char)i).ToArray());
 
@@ -42,6 +52,12 @@ namespace Parakeet
 
         public static Rule Optimize(this Rule rule)
             => new RuleOptimizer().Optimize(rule);
+
+        public static Rule RepeatUntilAt(this Rule repeat, Rule delimiter) 
+            => repeat.Except(delimiter).ZeroOrMore();
+        
+        public static Rule RepeatUntilPast(this Rule repeat, Rule delimiter) 
+            => repeat.RepeatUntilAt(delimiter).Then(delimiter);
 
         public static ParserState Parse(this Rule rule, string input)
             => new ParserInput(input).Parse(rule);

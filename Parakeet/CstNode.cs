@@ -12,55 +12,55 @@ namespace Parakeet
         public CstNode this[int index] => Children[index];
         public CstNode(IReadOnlyList<CstNode> children) => Children = children;
         public IReadOnlyList<CstNode> Children { get; }
-        public static implicit operator CstNode(string text) => new CstLeaf(text);
-        public bool IsLeaf => this is CstLeaf;
+        public static implicit operator CstNode(string text) => new CstNodeLeaf(text);
+        public bool IsLeaf => this is CstNodeLeaf;
         public override string ToString() => $"[{GetType().Name}: {string.Join(" ", Children)}]";
 
         public string Text
         {
             get
             {
-                if (this is CstLeaf leaf) return leaf.Text;
+                if (this is CstNodeLeaf leaf) return leaf.Text;
                 return string.Join(" ", Children.Select(x => x.Text));
             }
         }
     }
 
-    public class CstSequence : CstNode
+    public class CstNodeSequence : CstNode
     {
-        public CstSequence(params CstNode[] children) : base(children)
+        public CstNodeSequence(params CstNode[] children) : base(children)
         {
         }
     }
 
-    public class CstChoice : CstNode
+    public class CstNodeChoice : CstNode
     {
-        public CstChoice(params CstNode[] children) : base(children)
+        public CstNodeChoice(params CstNode[] children) : base(children)
         {
         }
 
         public CstNode Node => Children[0];
     }
 
-    public class CstLeaf : CstNode
+    public class CstNodeLeaf : CstNode
     {
         public string Text { get; }
-        public CstLeaf(string text) : base(Array.Empty<CstNode>()) => Text = text;
+        public CstNodeLeaf(string text) : base(Array.Empty<CstNode>()) => Text = text;
         public override string ToString() => Text;
     }
 
-    public class CstFilter : CstNode
+    public class CstNodeFilter : CstNode
     {
-        public CstFilter(IReadOnlyList<CstNode> children) : base(children)
+        public CstNodeFilter(IReadOnlyList<CstNode> children) : base(children)
         {
         }
     }
 
-    public class CstFilter<T> : CstFilter
+    public class CstNodeFilter<T> : CstNodeFilter
     {
         public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
 
-        public CstFilter(IReadOnlyList<CstNode> children) : base(children)
+        public CstNodeFilter(IReadOnlyList<CstNode> children) : base(children)
         {
         }
 
@@ -89,6 +89,4 @@ namespace Parakeet
             return sb;
         }
     }
-
-
 }

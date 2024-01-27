@@ -5,6 +5,14 @@ VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parakeet", "Parakeet\Parakeet.csproj", "{787B9914-AC73-4183-A153-DE8E54D65467}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parakeet.ConsoleApp", "Parakeet.Console\Parakeet.ConsoleApp.csproj", "{DF8DE2B1-31AC-45FE-837F-56889146A005}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parakeet.Grammars", "Parakeet.Grammars\Parakeet.Grammars.csproj", "{9E3B22C7-9AB3-4895-8E6C-77C7FB1A96DC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parakeet.Tests", "Parakeet.Tests\Parakeet.Tests.csproj", "{FD574D56-9EA3-4AAA-92C9-F270D12B75C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parakeet.Cst.Demo", "Parakeet.Cst.Demo\Parakeet.Cst.Demo.csproj", "{08D1E9BE-7914-45F5-BF38-BAEBF7A4153C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +23,22 @@ Global
 		{787B9914-AC73-4183-A153-DE8E54D65467}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{787B9914-AC73-4183-A153-DE8E54D65467}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{787B9914-AC73-4183-A153-DE8E54D65467}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF8DE2B1-31AC-45FE-837F-56889146A005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF8DE2B1-31AC-45FE-837F-56889146A005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF8DE2B1-31AC-45FE-837F-56889146A005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF8DE2B1-31AC-45FE-837F-56889146A005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E3B22C7-9AB3-4895-8E6C-77C7FB1A96DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E3B22C7-9AB3-4895-8E6C-77C7FB1A96DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E3B22C7-9AB3-4895-8E6C-77C7FB1A96DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E3B22C7-9AB3-4895-8E6C-77C7FB1A96DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD574D56-9EA3-4AAA-92C9-F270D12B75C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD574D56-9EA3-4AAA-92C9-F270D12B75C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD574D56-9EA3-4AAA-92C9-F270D12B75C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD574D56-9EA3-4AAA-92C9-F270D12B75C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08D1E9BE-7914-45F5-BF38-BAEBF7A4153C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08D1E9BE-7914-45F5-BF38-BAEBF7A4153C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08D1E9BE-7914-45F5-BF38-BAEBF7A4153C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08D1E9BE-7914-45F5-BF38-BAEBF7A4153C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

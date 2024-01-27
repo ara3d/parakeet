@@ -1,12 +1,16 @@
-﻿namespace Parakeet.Grammars.WIP
+﻿namespace Parakeet.Grammars
 {
-    public class CsvGrammar : CommonGrammar
+    // https://github.com/antlr/grammars-v4/blob/master/csv/CSV.g4
+    public class CsvGrammar : BaseCommonGrammar
     {
-        public Rule StringChar => AnyChar.Except('"') | "\"\"";
-        public Rule String => Node('"' + StringChar.ZeroOrMore() + '"');
-        public Rule Text => AnyChar.Except(",\n\r\"").OneOrMore();
-        public Rule Field => Text | String;
+        public static readonly CsvGrammar Instance = new CsvGrammar();
+        public override Rule StartRule => File;
+
+        public Rule StringChar => Named(AnyChar.Except('"') | "\"\"");
+        public Rule String => Node(DoubleQuotedString(StringChar));
+        public Rule Text => Node(AnyChar.Except(",\n\r\"").OneOrMore());
+        public Rule Field => Node(Text | String);
         public Rule Row => Node(Field.ZeroOrMore() + Optional('\r') + '\n');
-        public Rule File => Row.ZeroOrMore();
+        public Rule File => Node(Row.ZeroOrMore());
     }
 }

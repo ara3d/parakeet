@@ -9,12 +9,12 @@ namespace Parakeet
     /// </summary>
     public class ParserNode
     {
-        public ParserRange Range { get; }
+        public readonly ParserRange Range;
         public int Start => Range.Begin.Position;
         public int End => Range.End.Position;
         public int Length => Range.Length;
-        public string Name { get; }
-        public ParserNode Previous { get; }
+        public readonly string Name;
+        public readonly ParserNode Previous;
         public string Contents => Range.Text;
         
         public override string ToString()

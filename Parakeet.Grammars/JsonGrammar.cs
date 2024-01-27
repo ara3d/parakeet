@@ -1,21 +1,18 @@
 ﻿namespace Parakeet.Grammars
 {
-    public class JsonGrammar : CommonGrammar
+    public class JsonGrammar : BaseCommonGrammar
     {
-        public new static CSharpGrammar Instance = new CSharpGrammar();
+        public static readonly JsonGrammar Instance = new JsonGrammar();
+        public override Rule StartRule => Json;
 
+        // TODO: maybe this rule can be moved to the common grammar 
         public Rule DoubleQuoted(Rule r) => '\"' + OnError(AdvanceToEnd) + r + '\"';
 
-        public static readonly char CarriageReturn = '\r';
-        public static readonly char LineFeed = '\n';
-        public static readonly char Space = ' ';
-        public static readonly char Tab = '\t';
-
-        public override Rule WS => Named(CharSet(CarriageReturn, LineFeed, Space, Tab).ZeroOrMore());
+        public override Rule WS => Named((CarriageReturn | LineFeed | Space | Tab).ZeroOrMore());
         public Rule Exponent => Named(CharSet('e', 'E') + Sign.Optional() + Digits);
         public Rule Fraction => Named("." + Digits);
         public new Rule Integer => Named(Optional('-') + ("0" | Digits));
-        public Rule EscapedChar => Named('\\' + (CharSet("\"\\/bfnrt") | 'u' + (HexDigit + HexDigit + HexDigit + HexDigit)));
+        public new Rule EscapedChar => Named('\\' + (CharSet("\"\\/bfnrt") | 'u' + (HexDigit + HexDigit + HexDigit + HexDigit)));
         public Rule StringChar => Named(EscapedChar | AnyChar.Except('\"'));
         public Rule Number => Node(Integer + Fraction.Optional() + Exponent.Optional());
         public Rule String => Node(DoubleQuoted(StringChar.ZeroOrMore()));

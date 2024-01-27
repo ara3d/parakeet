@@ -1,9 +1,9 @@
 ﻿namespace Parakeet.Grammars
 {
-    public class PlatoTokenGrammar : CommonGrammar
+    public class PlatoTokenGrammar : BaseCommonGrammar
     {
-        public new static PlatoTokenGrammar Instance 
-            = new PlatoTokenGrammar();
+        public override Rule StartRule => Tokenizer;
+        public static PlatoTokenGrammar Instance  = new PlatoTokenGrammar();
 
         // Tokenization pass 
         public override Rule WS => true;
@@ -91,6 +91,6 @@
             | NullLiteral
             | Unknown);
 
-        public Rule Tokenizer => Named(Token.ZeroOrMore() + Recovery + EndOfInput);
+        public Rule Tokenizer => Named(Token.ZeroOrMore() + EndOfInput);
     }
 }

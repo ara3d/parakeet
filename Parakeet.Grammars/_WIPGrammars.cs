@@ -1,31 +1,36 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices.ComTypes;
+using System.Security.Cryptography.X509Certificates;
+using Ara3D.Utils;
+using static System.Net.Mime.MediaTypeNames;
 
-namespace Parakeet.Grammars.WIP
+namespace Parakeet.Grammars
 {
-    public class CGrammar : CommonGrammar
+    public class CGrammar : BaseCommonGrammar
     {
-      
-    }
-	
 
-    public class HTMLGrammar : CommonGrammar
-    {
     }
 
-    public class PythonGrammar : CommonGrammar
+
+    public class HTMLGrammar : BaseCommonGrammar
     {
+    }
+
+    public class PythonGrammar : BaseCommonGrammar
+    {
+        // https://docs.python.org/2.7/reference/grammar.html
         // https://docs.python.org/3/reference/grammar.html
     }
 
-    public class ExpressionTreeGrammar : CommonGrammar
+    public class ExpressionTreeGrammar : BaseCommonGrammar
     {
 
     }
 
-    public class GlslGrammar : CommonGrammar
+    public class GlslGrammar : BaseCommonGrammar
     {
         // https://github.com/nnesse/glsl-parser
         // https://github.com/nnesse/glsl-parser/blob/master/glsl.y
@@ -33,33 +38,24 @@ namespace Parakeet.Grammars.WIP
         // https://registry.khronos.org/OpenGL/specs/es/3.0/GLSL_ES_Specification_3.00.pdf
     }
 
-    public class JavaScriptGrammar : CommonGrammar
+    public class JavaScriptGrammar : BaseCommonGrammar
     {
 
     }
 
-    public class LogoGrammar : CommonGrammar
+    public class LogoGrammar : BaseCommonGrammar
     {
         // https://ia800907.us.archive.org/5/items/Apple_Logo_II_Reference_Manual/Apple_Logo_II_Reference_Manual.pdf
         // https://dspace.mit.edu/bitstream/handle/1721.1/6226/AIM-313.pdf
     }
 
-    public class PrologGrammar : CommonGrammar
+    public class PrologGrammar : BaseCommonGrammar
     {
         // https://en.wikipedia.org/wiki/Prolog
     }
 
-    // https://en.wikipedia.org/wiki/Lambda_calculus
-    public class LambdaGrammar : CommonGrammar
-    {
-        public Rule Variable => Node(IdentifierFirstChar + IdentifierChar.ZeroOrMore());
-        public Rule Parameter => Node("\\" + Variable);
-        public Rule Expression => Node(Variable | Abstraction | Application);
-        public Rule Abstraction => Node("(" + Parameter.Then(".").ZeroOrMore() + Expression + ")");
-        public Rule Application => Node("(" + Expression + Expression + ")");
-    }
 
-    public class NasmGrammar : CommonGrammar
+    public class NasmGrammar : BaseCommonGrammar
     {
         // https://www.cs.uaf.edu/2017/fall/cs301/reference/x86_64.html
         // https://www.nasm.us/index.php
@@ -72,149 +68,8 @@ namespace Parakeet.Grammars.WIP
     // https://en.wikipedia.org/wiki/Scheme_(programming_language)
     // https://gist.github.com/Idorobots/3378676
 
-
-    // https://github.com/antlr/grammars-v4/blob/master/csv/CSV.g4
-
-    // https://www.w3schools.com/cssref/css_selectors.php
-    // https://www.w3.org/TR/CSS21/grammar.html
-    // https://www.w3schools.com/css/css_syntax.asp
-    // https://developer.mozilla.org/en-US/docs/Web/CSS/Syntax
-    public class CssGrammar : CommonGrammar
-    {
-        public Rule Identifier => Node(IdentifierFirstChar + IdentifierChar.ZeroOrMore());
-        public Rule Comment => "/*" + RepeatUntilPast(AnyChar, "*/");
-        public Rule Property;
-        public Rule Value;
-        public Rule Declaration => Node(Property + ":" + Value + ";");
-        public Rule DeclarationBlock => Node("{" + Recovery + Declaration.ZeroOrMore() + "}");
-        public Rule IdSelector => Node("#" + Identifier);
-        public Rule ClassSelector => Node("." + Identifier);
-        public Rule ElementClassSelector => Node(Identifier + ClassSelector);
-
-        // https://www.w3schools.com/css/css_combinators.asp
-        // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors
-        public Rule Combinator => Node("+" | "~" | ">" | "|");
-        
-        // https://www.w3schools.com/css/css_pseudo_elements.asp
-        public Rule PseudoElement => 
-        public Rule PseudoClass => Node(":" + Recovery + Identifier);
-        public Rule QuotedValue; // => Node(StringLiteral);
-        public Rule AttributeOperator => Node("*=", "~=", "^=", "$=", "|=", "=");
-        public Rule AttributeSelector => Node("[" + Recovery + Identifier + AttributeOperator + QuotedValue + "]");
-        public Rule UniversalSelector => Node("*");
-        public Rule Selector => IdentifierChar;
-        public Rule SelectorList => Node(Selector + ("," + Recovery + Selector).ZeroOrMore());
-        public Rule RuleSet => SelectorList + DeclarationBlock;
-        public Rule AtRule => Node("@" + Identifier.ZeroOrMore());
-        public Rule Statement => Node((RuleSet | AtRule).ZeroOrMore());
-    }
-
-    // https://en.wikipedia.org/wiki/Joy_(programming_language)
-    public class JoyGrammar : CommonGrammar
-    {
-        public Rule Operator => Node(CharSet("+=-<>&|*/^%@$~!").ZeroOrMore() | Identifier);
-        public Rule Literal => Node(Float | Integer | String);
-        public Rule RecExpr => Recursive(nameof(Expr));
-        public Rule Quotation => Node(Symbol("[") + RecExpr.ZeroOrMore() + Symbol("]"));
-		public Rule Expr => Node(Quotation | Literal | Operator | Identifier);
-        public Rule Def => Node(Symbol("DEFINE") + Operator + "==" + Expr.ZeroOrMore() + ".");
-    }
-
-    // https://github.com/antlr/grammars-v4/blob/master/xml/XMLParser.g4
-    //  https://www.w3schools.com/xml/xml_syntax.asp
-    public class XmlGrammar : CommonGrammar
-    {
-        public Rule NL => Optional('\r') + '\n';
-        public override Rule WS => Named(OneOrMore(NL | ' ' | '\t'));
-
-        public Rule DTD => Node("<!")
-        public Rule CDATA => Node("<![CDATA['" + UntilPast("]]>"));
-        public Rule Prolog => "<?xml" + WS + Recursive(nameof(AttrList)) + "?>";
-        public Rule Comment => "<!--" + Recovery + RepeatUntilPast(AnyChar, "-->");
-        public Rule Document => Prolog.Optional() + Element;
-        public Rule Identifier => Node(IdentifierFirstChar + IdentifierChar.ZeroOrMore());
-        // https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
-        public Rule HexEntityValue => Node("x" + HexDigit.ZeroOrMore());
-        public Rule NumericEntityValue => Node(Digit.ZeroOrMore());
-        public Rule Entity => Node("&" + Recovery + (Identifier | HexEntityValue | NumericEntityValue) + ";");
-
-        public Rule AttrName => Node(Identifier);
-		public Rule AttrValue => Node((Identifier));
-        public Rule Attr => Node(AttrName + Symbol("=") + AttrValue);
-        public Rule AttrList => Node(Attr.ZeroOrMore());
-        public Rule NSIdent => Node(Identifier + Optional(":" + Identifier));
-        public Rule StartTag => Node(Symbol("<") + Identifier + AttrList + Symbol(">"));
-        public Rule EmptyElement => Node(Symbol("<") + Identifier + AttrList + Symbol("/>"));
-        public Rule EndTag => Node(Symbol("</") + Identifier + Symbol(">"));
-        public Rule NonEmptyElement => Node(StartTag + Content + EndTag);
-        public Rule Element => Node(EmptyElement | StartTag);
-    }
-
-    public class MarkdownGrammar : CommonGrammar
-    {
-        // https://github.com/jgm/lunamark/blob/master/lunamark/reader/markdown.lua
-        // https://github.com/jgm/peg-markdown/blob/master/markdown_parser.leg
-        // https://commonmark.org/help/
-        // https://www.markdownguide.org/basic-syntax/
-        // https://daringfireball.net/projects/markdown/syntax
-
-        public Rule SpaceOrTab => " \t\r".ToCharSetRule();
-        public Rule BlankLine => SpaceOrTab.ZeroOrMore();
-        public Rule LineText;
-        public Rule AnyCharUntilEor;
-        public Rule AtxHeader => "#" + AnyChar;
-        public Rule SetExtHeader;
-        public Rule Paragraph;
-
-        /*
-        public Rule ContentLine => ;
-        public Rule BlockQuotedParagraph => OneOrMore(">") + Paragraph;
-        public Rule Paragraph => ContentLine.OneOrMore() + BlankLine.AtRule() | EndOfInput;
-        public Rule BlankLine => WSToEndOfLine();
-        public Rule Text;
-        public Rule WS => ZeroOrMoreRule(Spaces);
-        public Rule WSToEndOfLine => ZeroOrMoreRule(" \t\r".ToCharSetRule()) + NewLine; 
-        public Rule LineBegin => After(NewLine);
-        public Rule Line => LineBegin;
-        public Rule Heading => LineBegin + OneOrMore('#') + OptionalRule(' ') + HeadingContent + NewLine;
-        public Rule NonHeadingText => LineBegin + NotAtRule("-") + Text;
-        public Rule Heading1Underlined => NonHeadingText + NewLine + "==" + ZeroOrMoreRule('=') + UntilNextLine;
-        public Rule Heading2Underlined => NonHeadingText + NewLine + "--" + ZeroOrMoreRule('-') + UntilNextLine;
-        public Rule Bold1 => "**" + Text + "**";
-        public Rule Bold2 => "__" + Text + "        __";
-        public Rule Italic1 => "*" + Text + "*";
-        public Rule Italic2 => "_" + Text + "_";
-        public Rule LineBreak => "  " + NewLine;
-        public Rule Mixed =>
-            ("***" + Text + "***")
-            | ("___" + Text + "___")
-            | ("__*" + Text + "*__")
-            | ("_**" + Text + "**_")
-            | ("*__" + Text + "__*")
-            | ("**_" + Text + "_**");
-        public Rule InlineCode => "`" + Text + "`";
-        public Rule LanguageIdentifier => Node(Identifier);
-        public Rule CodeBlock => "```" + LanguageIdentifier + UntilNextLine + UntilPast("```");
-        public Rule BlankLine => LineBegin + WS + NewLine;
-        public Rule BlockquotedLine => ">" + Line;
-        public Rule UnorderedListItemLine => CharSet("-*+") + Line;
-        public Rule OrderedListItemLine => Digits + "." + Line;
-        public Rule Inline => ;
-        public Rule EscapedChar => '\\' + EscapableChar;
-        public Rule EscapableChar => CharSet("\`*_{}[]<>()#+-.!");
-        public Rule LinkedText => Text;
-        public Rule URL => Text; // TODO:
-        public Rule UrlTitle => '"' + AnyChar.Except('"').ZeroOrMoreRule() + '"';
-        public Rule InlineUrl => "<" + URL + ">";
-        public Rule ReferenceStyleLink => "[" + LinkedText + "]" + OptionalRule(' ') + "[" + ReferenceLink + "]";
-        public Rule Image => "!" + Link;
-        public Rule LinkedImage => ? 
-        public Rule Link => "[" + LinkedText + "]" + WS + "(" + URL + WS + UrlTitle.OptionalRule() + ")";
-        public Rule HorizontalLine => (LineBegin + ThreeOrMore("*") | ThreeOrMore("-") | ThreeOrMore("_") + WSToEndOfLine; 
-    */
-    }
     // https://github.com/cdiggins/cat-language
-    public class CatGrammar : CommonGrammar
+    public class CatGrammar : BaseCommonGrammar
     {
         public Rule Definition { get; }
         public Rule Quotation { get; }

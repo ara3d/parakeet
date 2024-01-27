@@ -4,15 +4,6 @@ The **Ara3D.Parsing** library is a [recursive descent](https://en.wikipedia.org/
 introduced by [Bryan Ford](https://bford.info/pub/lang/peg.pdf). Parsers are defined directly in C# using operator overloading. 
 The parsing library can be used to do both lexical analysis (aka tokenization) and syntactic analysis in a single pass, or multiple passes. 
 
-## Features 
-
-* Parsing error recovery  
-* Run-time detection of stuck parsers 
-* Line number and column number reporting 
-* Immutable data structures 
-* Operator overloading
-* Fluent API syntax (aka method chaining)
-* Automated creation of untyped parse trees
 
 ## Steps 
 

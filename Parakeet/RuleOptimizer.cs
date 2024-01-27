@@ -90,7 +90,7 @@ namespace Parakeet
                         return Log(r1, r2, result, "[ab]|[cd] => [abcd]");
                     }
 
-                    if (r2 is CharRule cr)
+                    if (r2 is CharRule cr && cr.Char < 128)
                     {
                         var result = csr1.Append(cr.Char);
                         return Log(r1, r2, result, "[ab]|c => [abc]");

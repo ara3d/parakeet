@@ -1,19 +1,23 @@
-﻿namespace Parakeet.Grammars.WIP
+﻿using System.Xml.Linq;
+
+namespace Parakeet.Grammars
 {
-    public class SExpressionGrammar : CommonGrammar
+    public class SExpressionGrammar : BaseCommonGrammar
     {
+        public override Rule StartRule => Document;
+        public static readonly SExpressionGrammar Instance = new SExpressionGrammar();
+
         public override Rule WS => base.WS | Comment;
-
-        public Rule RecExpr => Recursive(nameof(Expr));
-
-        public Rule Comment => Named(";" + UntilNextLine);
+        
+        public Rule Comment => Named(";" + AnyCharUntilNextLine);
         public Rule SymbolChar => Named(IdentifierFirstChar | '-' | '?' | '@' | '!' | '$');
         public Rule SymbolCharWithSpace => Named(SymbolChar | ' ');
 
-        public new Rule Symbol => Node((SymbolChar | Digit).ZeroOrMore());
+        public Rule Symbol => Node((SymbolChar | Digit).ZeroOrMore());
         public Rule SymbolWithSpaces => Node("|" + SymbolCharWithSpace.ZeroOrMore() + "|");
         public Rule Atom => Node(Symbol | SymbolWithSpaces | Integer | Float);
-        public new Rule List => Node("(" + RecExpr.ZeroOrMore() + ")");
+        public new Rule List => Node("(" + Recursive(nameof(Expr)).ZeroOrMore() + ")");
         public Rule Expr => Node(Atom | List);
+        public Rule Document => Node(WS + Expr.ZeroOrMore() + EndOfInput);
     }
 }

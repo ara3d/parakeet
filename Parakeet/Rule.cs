@@ -4,11 +4,24 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Ara3D.Utils;
 
 namespace Parakeet
 {
+    /// <summary>
+    /// Base class of all rules. Matching is performed in a class's override
+    /// of MatchImplementation. 
+    /// </summary>
     public abstract class Rule
     {
+        /// <summary>
+        /// Attempts to match the parser starting at current state. Returns null
+        /// if and only if the Rule fails. Otherwise returns a valid ParserState.
+        /// The ParserState may or may not be different from the previous one.
+        /// A ParserState is immutable: it never changes. 
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         protected abstract ParserState MatchImplementation(ParserState state);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -54,12 +67,18 @@ namespace Parakeet
         public static implicit operator Rule(char c) 
             => new CharRule(c);
 
+        public static implicit operator Rule(int n)
+            => new CharRule((char)n);
+
         public static implicit operator Rule(bool b)
             => new BooleanRule(b);
 
         public static implicit operator Rule(char[] cs) 
             => cs.Length == 1 ? (Rule)cs[0] : new CharSetRule(cs);
-        
+
+        public static implicit operator Rule(string[] strings)
+            => strings.Length == 1 ? (Rule)strings[0] : new SequenceRule(strings.Select(s => (Rule)s).ToArray());
+
         public static implicit operator Rule(Func<Rule> f) 
             => new RecursiveRule(f);
         
@@ -92,10 +111,15 @@ namespace Parakeet
             => $"{this.GetName()} ::= {this.Body().ToDefinition()}";
     }
 
+    /// <summary>
+    /// Associates a name with a rule, for the purpose of debugging and pretty-printing grammars.
+    /// Succeed if and only if the child rule succeeds.
+    /// Advances if and only if the child rule advances.
+    /// </summary>
     public class NamedRule : Rule
     {
-        public Rule Rule { get; }
-        public string Name { get; }
+        public readonly Rule Rule;
+        public readonly string Name;
         
         public NamedRule(Rule r, string name) 
             => (Rule, Name) = (r, name);
@@ -112,11 +136,26 @@ namespace Parakeet
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Used to express recursive relationships between rules.
+    /// The child rule is retrieved via a function.
+    /// This is necessary to prevent infinite loops when parsing. 
+    /// This rule matches iff the child rule matches.
+    /// Advances iff the child rule advances. 
+    /// </summary>
     public class RecursiveRule : Rule
     {
-        public Rule Rule 
-            => CachedRule = CachedRule ?? (CachedRule = RuleFunc());
-        
+        public Rule Rule
+        {
+            get
+            {
+                if (CachedRule != null)
+                    return CachedRule;
+                CachedRule = RuleFunc();
+                return CachedRule;
+            }
+        }
+
         private Rule CachedRule { get; set; }
         private Func<Rule> RuleFunc { get; }
         
@@ -133,13 +172,21 @@ namespace Parakeet
             => Hash(RuleFunc);
     }
 
+    /// <summary>
+    /// Matches a specific sequence of characters.
+    /// Advances the parser when successful.
+    /// </summary>
     public class StringRule : Rule
     {
-        public string Pattern { get; }
-        
-        public StringRule(string s) 
-            => Pattern = s;
-        
+        public readonly string Pattern;
+
+        public StringRule(string s)
+        {
+            if (s.IsNullOrEmpty())
+                throw new ArgumentException("Pattern must be non-empty", nameof(s));
+            Pattern = s;
+        }
+
         protected override ParserState MatchImplementation(ParserState state)
             => state.Match(Pattern);
         
@@ -150,6 +197,34 @@ namespace Parakeet
             => Hash(Pattern);
     }
 
+    /// <summary>
+    /// Matches a specific sequence of characters ignoring case.
+    /// Advances the parser when successful.
+    /// </summary>
+    public class CaseInvariantStringRule : Rule
+    {
+        public readonly string Pattern;
+
+        public CaseInvariantStringRule(string s)
+        {
+            if (s.IsNullOrEmpty())
+                throw new ArgumentException("Pattern must be non-empty", nameof(s));
+            Pattern = s;
+        }
+
+        protected override ParserState MatchImplementation(ParserState state)
+            => state.MatchInvariant(Pattern);
+
+        public override bool Equals(object obj)
+            => obj is CaseInvariantStringRule smr && smr.Pattern == Pattern;
+
+        public override int GetHashCode()
+            => Hash(Pattern);
+    }
+
+    /// <summary>
+    /// Matches any character and advances the parser one character unless at the end of the input.
+    /// </summary>
     public class AnyCharRule : Rule
     {
         protected override ParserState MatchImplementation(ParserState state)
@@ -165,6 +240,34 @@ namespace Parakeet
             => nameof(AnyCharRule).GetHashCode();
     }
 
+    /// <summary>
+    /// Matches a character if it is within a specific character range (inclusive).
+    /// Advances the parser if successful.
+    /// </summary>
+    public class CharRangeRule : Rule
+    {
+        public readonly char From;
+        public readonly char To;
+
+        public CharRangeRule(char from, char to)
+            => (From, To) = (from, to);
+
+        protected override ParserState MatchImplementation(ParserState state)
+            => state.AdvanceIfWithin(From, To);
+
+        public override bool Equals(object obj)
+            => obj is CharRangeRule crr && crr.From == From && crr.To == To;
+
+        public override int GetHashCode()
+            => Hash(From, To);
+    }
+
+    /// <summary>
+    /// Matches a character if matches one of a set of ASCII characters.
+    /// Each character must be in the range of 0 to 128 (valid ASCII character set).
+    /// Uses a table lookup for performance.
+    /// Advances the parser if successful. 
+    /// </summary>
     public class CharSetRule : Rule
     {
         public static bool[] CharsToTable(IEnumerable<char> chars)
@@ -179,7 +282,7 @@ namespace Parakeet
             return r;
         }
 
-        public bool[] Chars { get; }
+        public readonly bool[] Chars;
 
         public CharSetRule(params char[] chars) 
             : this(CharsToTable(chars)) 
@@ -258,9 +361,13 @@ namespace Parakeet
         }
     }
 
+    /// <summary>
+    /// Matches a specific character.
+    /// Advances the parser if successful. 
+    /// </summary>
     public class CharRule : Rule
     {
-        public char Char { get; }
+        public readonly char Char;
         
         public CharRule(char ch) 
             => Char = ch;
@@ -275,6 +382,10 @@ namespace Parakeet
             => Hash(Char);
     }
 
+    /// <summary>
+    /// Succeeds iff the parser is at the end of input.
+    /// Does not advance the parser.
+    /// </summary>
     public class EndOfInputRule : Rule
     {
         protected override ParserState MatchImplementation(ParserState state) 
@@ -290,6 +401,11 @@ namespace Parakeet
             => nameof(EndOfInputRule).GetHashCode();
     }
 
+    /// <summary>
+    /// When the child rule matches, it creates a new parse node in the node list. 
+    /// Succeeds iff the child rule is successful.
+    /// Advances iff the child rules is successful.
+    /// </summary>
     public class NodeRule : NamedRule
     {
         public NodeRule(Rule rule, string name) 
@@ -306,9 +422,14 @@ namespace Parakeet
             => Hash(Rule, Name);
     }
 
+    /// <summary>
+    /// Attempts to match a child rule as many times as possible.
+    /// Advances if the child rule advances.
+    /// Child rule must advance, otherwise the parser can get stuck.   
+    /// </summary>
     public class ZeroOrMoreRule : Rule
     {
-        public Rule Rule { get; }
+        public readonly Rule Rule;
         public ZeroOrMoreRule(Rule rule) => Rule = rule;
 
         protected override ParserState MatchImplementation(ParserState state)
@@ -332,15 +453,21 @@ namespace Parakeet
             return curr;
         }
 
-        public override bool Equals(object obj) => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
-        public override int GetHashCode() => Hash (Rule);
+        public override bool Equals(object obj) 
+            => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
+        
+        public override int GetHashCode() 
+            => Hash (Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Succeeds if the child rule matches at least once 
+    /// </summary>
     public class OneOrMoreRule : Rule
     {
-        public Rule Rule { get; }
+        public readonly Rule Rule;
         public OneOrMoreRule(Rule rule) => Rule = rule;
 
         protected override ParserState MatchImplementation(ParserState state)
@@ -368,15 +495,79 @@ namespace Parakeet
             return curr;
         }
 
-        public override bool Equals(object obj) => obj is OneOrMoreRule o && o.Rule.Equals(Rule);
-        public override int GetHashCode() => Hash(Rule);
+        public override bool Equals(object obj) 
+            => obj is OneOrMoreRule o && o.Rule.Equals(Rule);
+        
+        public override int GetHashCode() 
+            => Hash(Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Succeeds if the child rule matches at least "Min" times.
+    /// Attempts to match the child rule up to "Max" times.
+    /// Always advances (the child rule must advance). 
+    /// </summary>
+    public class CountedRule : Rule
+    {
+        public readonly int Min;
+        public readonly int Max;
+        public readonly Rule Rule;
+
+        public CountedRule(Rule rule, int min, int max) 
+            => (Rule, Min, Max) = (rule, min, max);
+
+        protected override ParserState MatchImplementation(ParserState state)
+        {
+            var curr = state;
+
+            var i = 0;
+            while (i++ < Min)
+            {
+                var next = Rule.Match(curr);
+                if (next == null)
+                    return null;
+                curr = next;
+            }
+
+            while (curr != null && i++ < Max)
+            {
+                var next = Rule.Match(curr);
+#if DEBUG
+                if (next != null)
+                {
+                    if (next.Position <= curr.Position)
+                    {
+                        throw new ParserException(curr, "Parser is no longer making progress");
+                    }
+                }
+#endif
+                if (next == null)
+                    return curr;
+                curr = next;
+            }
+            return curr;
+        }
+
+        public override bool Equals(object obj) 
+            => obj is CountedRule o && o.Rule.Equals(Rule);
+        
+        public override int GetHashCode() 
+            => Hash(Rule);
+
+        public override IReadOnlyList<Rule> Children 
+            => new[] { Rule };
+
+    }
+
+    /// <summary>
+    /// Always succeeds.
+    /// Advances if the child rule advances. 
+    /// </summary>
     public class OptionalRule : Rule
     {
-        public Rule Rule { get; }
+        public readonly Rule Rule;
         
         public OptionalRule(Rule rule) 
             => Rule = rule;
@@ -393,9 +584,13 @@ namespace Parakeet
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Succeeds only if each of the sequence of rules advances.
+    /// Advances if all of the rules advance. 
+    /// </summary>
     public class SequenceRule : Rule
     {
-        public Rule[] Rules { get; }
+        public readonly Rule[] Rules;
 
         public SequenceRule(params Rule[] rules)
         {
@@ -429,7 +624,7 @@ namespace Parakeet
                     {
                         if (onError != null)
                         {
-                            var error = new ParserError(rule, this, state, prevState, msg, prevState.LastError);
+                            var error = new ParserError(rule, state, prevState, msg, prevState.LastError);
                             prevState = prevState.WithError(error);
                             var recovery = onError.RecoveryRule;
                             var result = recovery.Match(prevState);
@@ -444,15 +639,22 @@ namespace Parakeet
             return newState;
         }
 
-        public override bool Equals(object obj) => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
-        public override int GetHashCode() => Hash(Rules);
+        public override bool Equals(object obj) 
+            => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
+        
+        public override int GetHashCode() 
+            => Hash(Rules);
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
 
+    /// <summary>
+    /// Succeeds if any of the child rules pass.
+    /// Advances if the passing child rule advances.
+    /// </summary>
     public class ChoiceRule : Rule
     {
-        public Rule[] Rules { get; }
+        public readonly Rule[] Rules;
         
         public ChoiceRule(params Rule[] rules) 
             => Rules = rules;
@@ -483,10 +685,14 @@ namespace Parakeet
         public override IReadOnlyList<Rule> Children => Rules;
     }
 
+    /// <summary>
+    /// Succeed only if the rule matches.
+    /// Does not advance the parser state.  
+    /// </summary>
     public class AtRule : Rule
     {
-        public Rule Rule { get; }
-        
+        public readonly Rule Rule;
+
         public AtRule(Rule rule) 
             => Rule = rule;
         
@@ -502,9 +708,13 @@ namespace Parakeet
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Succeed only if the rule does not match.
+    /// Does not advance the parser state.
+    /// </summary>
     public class NotAtRule : Rule
     {
-        public Rule Rule { get; }
+        public readonly Rule Rule;
 
         public NotAtRule(Rule rule) 
             => (Rule) = (rule);
@@ -521,9 +731,15 @@ namespace Parakeet
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
 
+    /// <summary>
+    /// Used in sequences, to specify what happens if one of the subsequent nodes fails.
+    /// For example, in a statement you could advance to the end of statement terminator (';').
+    /// Or you could use results from a structural analysis pass to jump to next code block.
+    /// Does not advance parser state.
+    /// </summary>
     public class OnError : Rule
     {
-        public Rule RecoveryRule { get; }
+        public readonly Rule RecoveryRule;
         
         public OnError(Rule rule) 
             => RecoveryRule = rule;
@@ -538,9 +754,13 @@ namespace Parakeet
             => Hash(RecoveryRule);
     }
 
+    /// <summary>
+    /// Either always succeeds or fails regardless of parser state.
+    /// Does not advance parser state.
+    /// </summary>
     public class BooleanRule : Rule
     {
-        public bool Value {get;}
+        public readonly bool Value;
 
         public BooleanRule(bool b)
             => Value = b;
