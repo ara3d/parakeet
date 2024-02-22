@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Parakeet.ConsoleApp;
+namespace Ara3D.Parakeet.ConsoleApp;
 
 /// <summary>
 /// TODO: move this to Ara3D.Utils

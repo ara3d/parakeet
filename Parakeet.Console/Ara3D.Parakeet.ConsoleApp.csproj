@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Parakeet.Grammars\Parakeet.Grammars.csproj" />
+    <ProjectReference Include="..\Parakeet.Grammars\Ara3D.Parakeet.Grammars.csproj" />
   </ItemGroup>
 
 </Project>

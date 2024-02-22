@@ -2,9 +2,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Parakeet.Grammars;
+using Ara3D.Parakeet.Grammars;
 
-namespace Parakeet.Cst.CombinatorCalculusGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.CombinatorCalculusGrammarNameSpace
 {
     public class CstNodeFactory
     {

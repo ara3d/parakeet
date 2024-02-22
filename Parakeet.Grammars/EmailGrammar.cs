@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Security;
 using System.Text.RegularExpressions;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     // https://datatracker.ietf.org/doc/html/rfc5322
     // Note: obsolete forms are omitted. 

@@ -1,6 +1,6 @@
 using Ara3D.Utils;
 
-namespace Parakeet.Tests;
+namespace Ara3D.Parakeet.Tests;
 
 public class Folders
 {

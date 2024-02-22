@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.CsvGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.CsvGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Text|String)

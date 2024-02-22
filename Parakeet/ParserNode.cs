@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// A node generated from successful "NodeRule" parses. 

@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     // https://github.com/antlr/grammars-v4/blob/master/csv/CSV.g4
     public class CsvGrammar : BaseCommonGrammar

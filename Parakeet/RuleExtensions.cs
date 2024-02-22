@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     public static class RuleExtensions
     {

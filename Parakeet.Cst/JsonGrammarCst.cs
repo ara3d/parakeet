@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.JsonGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.JsonGrammarNameSpace
 {
     /// <summary>
     /// Nodes = 

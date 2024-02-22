@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.CombinatorCalculusGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.CombinatorCalculusGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Term+Term)

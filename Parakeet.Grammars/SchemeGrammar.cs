@@ -2,7 +2,7 @@
 using System.Data;
 using System.Linq.Expressions;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     // https://en.wikipedia.org/wiki/S-expression
     // https://en.wikipedia.org/wiki/Lisp_(programming_language)

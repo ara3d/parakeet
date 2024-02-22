@@ -1,4 +1,4 @@
-﻿namespace Parakeet.ConsoleApp;
+﻿namespace Ara3D.Parakeet.ConsoleApp;
 
 public class DocBuilder
 {

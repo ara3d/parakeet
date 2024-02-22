@@ -1,4 +1,4 @@
-﻿namespace Parakeet
+﻿namespace Ara3D.Parakeet
 {
     /// <summary>
     /// An abstract notion of location. This could be ParserState, ParserRange, or a ParseNode,

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Ara3D.Parakeet.Grammars;
 using Ara3D.Utils;
-using Parakeet.Grammars;
 
-namespace Parakeet.Tests
+namespace Ara3D.Parakeet.Tests
 {
     public static class MarkdownTests
     {

@@ -1,4 +1,4 @@
-﻿    namespace Parakeet.Grammars
+﻿    namespace Ara3D.Parakeet.Grammars
 {
     public class PlatoGrammar : PlatoTokenGrammar
     {

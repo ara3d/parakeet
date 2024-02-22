@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.SimpleLambdaCalculusGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.SimpleLambdaCalculusGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Parameter+Term)

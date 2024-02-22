@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     public static class AllGrammars
     {

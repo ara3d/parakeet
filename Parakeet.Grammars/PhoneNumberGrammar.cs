@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     // https://stackoverflow.com/questions/16699007/regular-expression-to-match-standard-10-digit-phone-number
     // https://github.com/google/libphonenumber

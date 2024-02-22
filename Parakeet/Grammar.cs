@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// A class inheriting from grammar contains a set of parsing rules. Each parse rule is defined as 
@@ -12,7 +12,6 @@ namespace Parakeet
     /// so that they can have recursive relations in them, have fixed names based on the properties, 
     /// and minimizes creating superfluous objects. 
     /// </summary>
-    // [Mutable]
     public abstract class Grammar
     {
         public abstract Rule StartRule { get; }

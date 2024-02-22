@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Ara3D.Utils;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// Base class of all rules. Matching is performed in a class's override

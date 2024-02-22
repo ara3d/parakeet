@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// Wraps the input string to a parser, providing utility

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.SchemeGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.SchemeGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (AbbrevPrefix+Datum)

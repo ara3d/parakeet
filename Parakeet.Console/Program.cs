@@ -1,7 +1,7 @@
 ﻿using System.Text;
-using Parakeet.Grammars;
+using Ara3D.Parakeet.Grammars;
 
-namespace Parakeet.ConsoleApp
+namespace Ara3D.Parakeet.ConsoleApp
 {
     public class Program
     {

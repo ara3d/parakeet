@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.CssGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.CssGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (AttribOperator+(AttribValue)?)

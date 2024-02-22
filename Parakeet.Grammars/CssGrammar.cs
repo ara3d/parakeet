@@ -1,5 +1,5 @@
 ﻿
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     /// <summary>
     /// https://www.w3.org/TR/CSS21/grammar.html

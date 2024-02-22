@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     // https://en.wikipedia.org/wiki/SKI_combinator_calculus
     public class CombinatorCalculusGrammar : BaseCommonGrammar

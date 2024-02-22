@@ -1,9 +1,9 @@
 using System.Text;
 using System.Xml.Linq;
+using Ara3D.Parakeet.Grammars;
 using Ara3D.Utils;
-using Parakeet.Grammars;
 
-namespace Parakeet.Tests;
+namespace Ara3D.Parakeet.Tests;
 
 public static class GrammarTests
 {

@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.SExpressionGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.SExpressionGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Symbol|SymbolWithSpaces)

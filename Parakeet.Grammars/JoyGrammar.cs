@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     /// <summary>
     /// https://en.wikipedia.org/wiki/Joy_(programming_language)

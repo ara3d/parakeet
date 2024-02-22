@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     // https://datatracker.ietf.org/doc/html/rfc5234#appendix-B
     public class BaseIETFGrammar : BaseCommonGrammar

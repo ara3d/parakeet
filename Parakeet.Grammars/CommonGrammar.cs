@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     /// <summary>
     /// Common rules. All of which can be overridden. 

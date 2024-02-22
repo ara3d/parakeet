@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     // https://github.com/antlr/grammars-v4/blob/master/xml/XMLParser.g4
     // https://www.w3schools.com/xml/xml_syntax.asp

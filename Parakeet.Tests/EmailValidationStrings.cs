@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Tests;
+﻿namespace Ara3D.Parakeet.Tests;
 
 // https://github.com/jstedfast/EmailValidation/blob/master/UnitTests/EmailValidationTests.cs
 // Author: Jeffrey Stedfast <jestedfa@microsoft.com>

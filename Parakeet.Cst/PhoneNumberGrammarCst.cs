@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.PhoneNumberGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.PhoneNumberGrammarNameSpace
 {
     /// <summary>
     /// Nodes = 

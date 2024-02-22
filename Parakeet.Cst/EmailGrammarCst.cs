@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.EmailGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.EmailGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Mailbox|Group)

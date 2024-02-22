@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.PlatoTokenGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.PlatoTokenGrammarNameSpace
 {
     /// <summary>
     /// Nodes = 

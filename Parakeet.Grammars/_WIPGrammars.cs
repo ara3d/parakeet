@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using Ara3D.Utils;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Parakeet.Grammars
+namespace Ara3D.Parakeet.Grammars
 {
     public class CGrammar : BaseCommonGrammar
     {

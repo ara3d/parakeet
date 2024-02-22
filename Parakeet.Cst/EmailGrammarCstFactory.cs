@@ -2,9 +2,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using Parakeet.Grammars;
+using Ara3D.Parakeet.Grammars;
 
-namespace Parakeet.Cst.EmailGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.EmailGrammarNameSpace
 {
     public class CstNodeFactory
     {

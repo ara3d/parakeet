@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Parakeet\Parakeet.csproj" />
+    <ProjectReference Include="..\Parakeet\Ara3D.Parakeet.csproj" />
   </ItemGroup>
 
 </Project>

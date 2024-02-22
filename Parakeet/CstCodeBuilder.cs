@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Ara3D.Utils;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// This class is used to generate typed classes for the concrete syntax tree,

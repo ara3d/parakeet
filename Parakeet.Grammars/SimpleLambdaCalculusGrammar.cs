@@ -1,4 +1,4 @@
-﻿namespace Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     // https://en.wikipedia.org/wiki/Lambda_calculus
     public class SimpleLambdaCalculusGrammar : BaseCommonGrammar

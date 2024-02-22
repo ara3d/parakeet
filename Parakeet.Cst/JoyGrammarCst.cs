@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace Parakeet.Cst.JoyGrammarNameSpace
+namespace Ara3D.Parakeet.Cst.JoyGrammarNameSpace
 {
     /// <summary>
     /// Nodes = (Operator+(Expr)*)

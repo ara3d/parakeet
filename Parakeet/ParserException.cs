@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Parakeet
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// Thrown in rare cases by the parser usually indicates a problem in the grammar.
