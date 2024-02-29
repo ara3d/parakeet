@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Ara3D.Parakeet.Grammars;
+﻿using Ara3D.Parakeet.Grammars;
 using Ara3D.Utils;
 
 namespace Ara3D.Parakeet.Tests

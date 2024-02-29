@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Ara3D.Parakeet.Grammars
+﻿namespace Ara3D.Parakeet.Grammars
 {
     public class SExpressionGrammar : BaseCommonGrammar
     {
