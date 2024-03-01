@@ -20,13 +20,22 @@ namespace Ara3D.Parakeet
         /// The ParserState may or may not be different from the previous one.
         /// A ParserState is immutable: it never changes. 
         /// </summary>
-        /// <param name="state"></param>
-        /// <returns></returns>
         protected abstract ParserState MatchImplementation(ParserState state);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Match(ParserState state)
         {
+#if DEBUG
+            // Trace the parsing during debug builds.
+            if (state.Input.Debugging && this.HasName())
+            {
+                Console.WriteLine($"Starting parse - {this.GetName()} {state}");
+                var r = MatchImplementation(state);
+                var result = r?.ToString() ?? "FAILED";
+                Console.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
+                return r;
+            }
+#endif
             return MatchImplementation(state);
         }
 
@@ -608,12 +617,12 @@ namespace Ara3D.Parakeet
         protected override ParserState MatchImplementation(ParserState state)
         {
             var newState = state;
-            OnError onError = null;
+            OnFail onFail = null;
             foreach (var rule in Rules)
             {
-                if (rule is OnError)
+                if (rule is OnFail)
                 {
-                    onError = (OnError)rule;
+                    onFail = (OnFail)rule;
                 }
                 else
                 {
@@ -622,11 +631,11 @@ namespace Ara3D.Parakeet
                     newState = rule.Match(prevState);
                     if (newState == null)
                     {
-                        if (onError != null)
+                        if (onFail != null)
                         {
                             var error = new ParserError(rule, state, prevState, msg, prevState.LastError);
                             prevState = prevState.WithError(error);
-                            var recovery = onError.RecoveryRule;
+                            var recovery = onFail.RecoveryRule;
                             var result = recovery.Match(prevState);
                             Debug.Assert(result == null || result.LastError != null);
                             return result;
@@ -737,18 +746,18 @@ namespace Ara3D.Parakeet
     /// Or you could use results from a structural analysis pass to jump to next code block.
     /// Does not advance parser state.
     /// </summary>
-    public class OnError : Rule
+    public class OnFail : Rule
     {
         public readonly Rule RecoveryRule;
         
-        public OnError(Rule rule) 
+        public OnFail(Rule rule) 
             => RecoveryRule = rule;
         
         protected override ParserState MatchImplementation(ParserState state) 
             => state;
         
         public override bool Equals(object obj) 
-            => obj is OnError rec && RecoveryRule.Equals(rec.RecoveryRule);
+            => obj is OnFail rec && RecoveryRule.Equals(rec.RecoveryRule);
         
         public override int GetHashCode() 
             => Hash(RecoveryRule);

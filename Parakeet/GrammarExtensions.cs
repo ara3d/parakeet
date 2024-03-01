@@ -80,7 +80,7 @@ namespace Ara3D.Parakeet
                     return $"[{set}]";
                 case CharRangeRule range:
                     return $"[{range.From}-{range.To}]";
-                case OnError set:
+                case OnFail set:
                     return $"_RECOVER_";
                 case EndOfInputRule endOfInputRule:
                     return $"_END_";

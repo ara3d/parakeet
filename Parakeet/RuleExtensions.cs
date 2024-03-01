@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading;
 
 namespace Ara3D.Parakeet
 {
@@ -46,6 +47,9 @@ namespace Ara3D.Parakeet
         public static Rule To(this char c1, char c2)
             => new CharSetRule(Enumerable.Range(c1, c2 - c1 + 1).Select(i => (char)i).ToArray());
 
+        public static bool HasName(this Rule rule)
+            => rule is NamedRule;
+
         public static string GetName(this Rule rule)
             => rule is NamedRule nr ? nr.Name : "__";
 
@@ -58,7 +62,7 @@ namespace Ara3D.Parakeet
         public static Rule RepeatUntilPast(this Rule repeat, Rule delimiter) 
             => repeat.RepeatUntilAt(delimiter).Then(delimiter);
 
-        public static ParserState Parse(this Rule rule, string input)
-            => new ParserInput(input).Parse(rule);
+        public static ParserState Parse(this Rule rule, string input, bool debugging = false)
+            => new ParserInput(input, "", debugging).Parse(rule);
     }
 }

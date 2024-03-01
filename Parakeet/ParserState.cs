@@ -48,7 +48,7 @@ namespace Ara3D.Parakeet
             => Advance(CharsLeft);
 
         public override string ToString()
-            => $"Parse state: line {CurrentLineIndex} column {CurrentColumn} position {Position}/{Input.Length} node = {Node}";
+            => $"Ln:{CurrentLineIndex} Ch:{CurrentColumn} Pos:{Position}/{Input.Length} Node:{Node}";
 
         public int CurrentLineIndex
             => Input.GetLineIndex(Position);
@@ -108,7 +108,6 @@ namespace Ara3D.Parakeet
         public bool Equals(ParserState state)
             => (state != null) && Position == state.Position;
         
-
         public ParserState AddNode(string name, ParserState prev)
             => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node), LastError);
 

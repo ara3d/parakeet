@@ -72,8 +72,8 @@ namespace Ara3D.Parakeet
             return r;
         }
 
-        public OnError OnError(Rule r)
-            => new OnError(r);       
+        public OnFail OnFail(Rule r)
+            => new OnFail(r);       
 
         public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 

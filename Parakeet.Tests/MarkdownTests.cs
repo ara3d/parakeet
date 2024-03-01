@@ -5,17 +5,62 @@ namespace Ara3D.Parakeet.Tests
 {
     public static class MarkdownTests
     {
-        public static IEnumerable<(string, Rule)> GetTests()
+        public static void ExplainWhyRuleFailed(string input, Rule r)
         {
-            var g = MarkdownGrammar.Instance;
+            r.Parse(input, true);
+        }
+
+        public static IEnumerable<(string, Rule)> GetTestInputs()
+        {
+            var g = MarkdownInlineGrammar.Instance;
             var tmp = new[]
             {
+                ("a", g.PlainText),
+                ("abc", g.PlainText),
+
                 ("** bold **", g.Bold),
                 ("**a**", g.Bold),
                 ("__a__", g.Bold),
                 ("__ abc __", g.Bold),
+                ("** _bold_ **", g.Bold),
+                ("**a*b* **", g.Bold),
+                ("__*a*__", g.Bold),
+                ("__ **abc** __", g.Bold),
+                
+                ("* abc *", g.Italic),
+                ("*abc*", g.Italic),
+                ("*a*", g.Italic),
+                ("_a_", g.Italic),
+                ("_ abc _", g.Italic),
+                ("_ abc _", g.Italic),
+                ("* __abc__ *", g.Italic),
+
+                ("~~abc~~", g.Strikethrough),
+                ("~~ abc ~~", g.Strikethrough),
+
+                ("`a`", g.Code),
+                ("``", g.Code),
+                ("` abc `", g.Code),
+                ("` *abc* `", g.Code),
+
+                ("***abc***", g.BoldAndItalic),
+                ("___abc___", g.BoldAndItalic),
+
+                ("<abc>", g.UrlLink),
+                ("http://www.ara3d.com", g.UrlLink),
             };
             return tmp;
+        }
+
+        [TestCaseSource(nameof(GetTestInputs))]
+        public static void SmallMarkdownTest((string, Rule) tuple)
+        {
+            var (input, r) = tuple;
+            var p = r.Parse(input);
+            if (p == null)
+                ExplainWhyRuleFailed(input, r);
+            Assert.NotNull(p);
+            Assert.IsTrue(p.AtEnd());
         }
 
         public static void OutputParseResult(ParserState ps)
@@ -43,7 +88,7 @@ namespace Ara3D.Parakeet.Tests
             var file = Folders.SourceFolder.RelativeFile("..", "readme.md");
 
             var lines = file.ReadAllLines();
-            var g = MarkdownGrammar.Instance;
+            var g = MarkdownBlockGrammar.Instance;
             foreach (var line in lines)
             {
                 var ps = g.Line.Parse(line);

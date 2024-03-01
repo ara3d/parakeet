@@ -1,78 +1,125 @@
 ﻿namespace Ara3D.Parakeet.Grammars
 {
-    public class MarkdownGrammar : BaseCommonGrammar
+    // https://github.com/jgm/lunamark/blob/master/lunamark/reader/markdown.lua
+    // https://github.com/jgm/peg-markdown/blob/master/markdown_parser.leg
+    // https://commonmark.org/help/
+    // https://www.markdownguide.org/basic-syntax/
+    // https://daringfireball.net/projects/markdown/syntax
+
+    /// <summary>
+    /// This is a grammar for inline elements within parsed Markdown blocks. 
+    /// Markdown parsing is easier when broken down into two passes.    
+    /// </summary>
+    public class MarkdownInlineGrammar : BaseCommonGrammar
     {
-        // https://github.com/jgm/lunamark/blob/master/lunamark/reader/markdown.lua
-        // https://github.com/jgm/peg-markdown/blob/master/markdown_parser.leg
-        // https://commonmark.org/help/
-        // https://www.markdownguide.org/basic-syntax/
-        // https://daringfireball.net/projects/markdown/syntax
-        public static readonly MarkdownGrammar Instance = new MarkdownGrammar();
-        public override Rule StartRule => Document;
-        public override Rule WS => SpaceOrTab;
-        public Rule SpaceOrTab => " \t".ToCharSetRule();
-        public Rule BlankLine => SpaceOrTab.ZeroOrMore();
-        public Rule HeadingOperator => Node(new CountedRule('#', 1, 6));
-        public Rule Heading => Node(HeadingOperator + Text);
-        public Rule WSToEndOfLine => Node(WS.ZeroOrMore() + NewLine);
-        public Rule HorizontalLine => Node((ThreeOrMore('*') | ThreeOrMore('-') | ThreeOrMore('_')) + WSToEndOfLine);
-        public Rule Heading1Underlined => Node(TwoOrMore('=') + WSToEndOfLine);
-        public Rule Heading2Underlined => Node(TwoOrMore('-') + WSToEndOfLine);
-        public Rule Comment => Node(XmlStyleComment);
-        public Rule UrlChar => Named(IdentifierChar | "/:?+%-#".ToCharSetRule());
-        public Rule Url => Node(UrlChar.ZeroOrMore());
-        public Rule UrlTitle => Node(DoubleQuoteBasicString);
-        public Rule Link => "[" + Text + "]" + WS + "(" + Url + WS + UrlTitle + ")";
-        public Rule Bold1 => Named("**" + Text + "**");
-        public Rule Bold2 => Named("__" + Text + "__");
-        public Rule Bold => Node(Bold1 | Bold2);
-        public Rule Italic1 => Named("*" + Text + "*");
-        public Rule Italic2 => Named("_" + Text + "_");
-        public Rule Italic => Node(Italic1 | Italic2);
-        public Rule Code => "`" + Not('`') + Text + "`";
-        public Rule LangIdentifier => Node(AnyCharUntilNextLine);
-        public Rule CodeBlock => "```" + LangIdentifier + AnyCharUntilPast("```");
-        public new Rule EscapedChar => Node("\\" + "\\`*-{}[]<>()#+-.!|".ToCharSetRule());
-        public Rule BlockQuotedLine => Node("> " + Text);
-        public Rule Break => Node("<br" + Optional("/") + ">");
-        public Rule OrderedListItem => Node(Digit.ZeroOrMore() + "." + WS + Text);
-        public Rule UnorderedListItem => Node("+-*".ToCharSetRule() + WS + Text);
+        public static readonly MarkdownInlineGrammar Instance = new MarkdownInlineGrammar();
+        public override Rule StartRule => Content;
+        public override Rule WS => Named(SpaceOrTab.ZeroOrMore());
+
+        public Rule EscapableChar => "\\`*-{}[]<>()#+-.!|".ToCharSetRule();
+        public new Rule EscapedChar => Node("\\" + EscapableChar);
+        public Rule HtmlTag => Node("<" + AbortOnFail + AnyCharUntilPast(">"));
         public Rule AltText => Node(Bracketed(AnyCharExcept(']').ZeroOrMore()));
-        public Rule UrlLink => Node("<" + Url + ">");
+        public Rule UrlLink => Node(("<" + Url + ">") | PlainTextUrl);
         public Rule EmailChar => Named(AnyCharExcept(">@\n\r "));
         public Rule Email => Node(EmailChar.ZeroOrMore() + '@' + EmailChar.ZeroOrMore());
         public Rule EmailLink => Node("<" + Email + ">");
+
         // TODO: support HTML but that is another grammar. 
         public Rule Img => Node("!" + AltText + Parenthesized(Url + WS + UrlTitle.Optional()));
-        public Rule FormattedText => Node(
-            Link | 
-            Bold | 
-            Italic | 
-            Code | 
-            EmailLink | 
-            UrlLink | 
-            Img | 
-            Break | 
-            Comment | 
-            EscapedChar);
-
-        public Rule PlainText => Node(AnyCharExcept(NewLine | FormattedText).ZeroOrMore());
-        public Rule InnerText => Node(FormattedText | PlainText);
+        public Rule FormatChar => "*[<`~*_!\\".ToCharSetRule();
+        public Rule PlainText => Node(AnyCharExcept(FormatChar).OneOrMore());
         public Rule Text => Recursive(nameof(InnerText));
 
-        public Rule Indent => Node(Space.ZeroOrMore());
-        public Rule Line => Node(Indent + (
-            CodeBlock | 
-            OrderedListItem |
-            UnorderedListItem |
-            Heading |
-            Heading1Underlined |
-            Heading2Underlined |
-            BlockQuotedLine |
-            HorizontalLine |
-            BlankLine | 
-            Text));
+        public Rule UrlChar => Named(DigitOrLetter | "_:?+%-#.$~!*'();:@&=+$,/?#[]".ToCharSetRule());
+        public Rule Url => Node(UrlChar.ZeroOrMore());
+        public Rule PlainTextUrl => Node("http://" + UrlChar.ZeroOrMore());
+        public Rule UrlTitle => Node(DoubleQuoteBasicString);
+        public Rule Link => Node("[" + Text + "]" + WS + "(" + Url + WS + UrlTitle + ")");
 
-        public Rule Document => Node(Line.ZeroOrMore());
+        public Rule FormattedText(string delimiter) 
+            => Text.Except(delimiter).ZeroOrMore();
+
+        public Rule FormattedSpan(string delimiter) 
+            => delimiter + FormattedText(delimiter) + delimiter;
+
+        public Rule Italic => Node(FormattedSpan("*") | FormattedSpan("_"));
+        public Rule Bold => Node(FormattedSpan("**") | FormattedSpan("__"));
+        public Rule Strikethrough => Node(FormattedSpan("~~"));
+        public Rule BoldAndItalic => Node(FormattedSpan("***") | FormattedSpan("___"));
+        public Rule Code => Node(FormattedSpan("`"));
+
+        public Rule InnerText => Node(
+            BoldAndItalic 
+            | Strikethrough 
+            | Bold
+            | Italic 
+            | Code
+            | Link
+            | Img
+            | EmailLink
+            | UrlLink
+            | HtmlTag
+            | EscapedChar
+            | PlainText
+            | AnyChar);
+
+        public Rule Content => Node(InnerText.ZeroOrMore());
+    }
+
+    /// <summary>
+    /// This is used for parsing the block structure of a Markdown document.
+    /// Note: XML comments must be at the beginning of a line. 
+    /// </summary>
+    public class MarkdownBlockGrammar : BaseCommonGrammar
+    {
+        public static readonly MarkdownBlockGrammar Instance = new MarkdownBlockGrammar();
+
+        public override Rule StartRule => Document;
+        public override Rule WS => Named(SpaceOrTab);
+        public Rule WSToEndOfLine => Named(WS.ZeroOrMore() + NewLine);
+
+        public Rule Document => Node(Block.ZeroOrMore());
+        public Rule BlankLine => Node(WSToEndOfLine);
+        public Rule RestOfLine => Recursive(nameof(Line));
+
+        public Rule CodeBlockDelimiter => Named("```");
+        public Rule CodeBlockLang => Node(Identifier.Optional() + AbortOnFail + WSToEndOfLine);
+        public Rule CodeBlockText => Node(AnyCharUntilAt(CodeBlockDelimiter));
+        public Rule CodeBlock => Node(CodeBlockDelimiter + AbortOnFail + CodeBlockLang + CodeBlockText + CodeBlockDelimiter);
+
+        public Rule HeadingOperator => Node(new CountedRule('#', 1, 6));
+        public Rule H1Underline => Node(TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
+        public Rule H2Underline => Node(TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
+        public Rule HeadingWithOperator => Node(HeadingOperator + AbortOnFail + TextLine);
+        public Rule HeadingUnderlined => Node(TextLine + (H1Underline | H2Underline));
+        public Rule Heading => Node(HeadingWithOperator | HeadingUnderlined);
+
+        public Rule HorizontalLine => Node((ThreeOrMore('*') | ThreeOrMore('-') | ThreeOrMore('_')) + AbortOnFail + WSToEndOfLine);
+
+        public Rule OrderedListItem => Node(Digit.ZeroOrMore() + "." + WS + AbortOnFail + RestOfLine);
+        public Rule UnorderedListItem => Node("+-*".ToCharSetRule() + WS + AbortOnFail + RestOfLine);
+
+        public Rule Indent => Node(Tab | "    ");
+        public Rule IndentedLine => Node(Indent + AbortOnFail + RestOfLine);
+
+        public Rule BlockQuotedLine => Node(">" + RestOfLine);
+
+        public Rule TextLine => Node(AnyChar);
+
+        public Rule Line => Node(
+            Heading 
+            | HorizontalLine
+            | UnorderedListItem 
+            | OrderedListItem 
+            | IndentedLine 
+            | BlockQuotedLine
+            | TextLine); 
+
+        public Rule Block => Node(
+            BlankLine 
+             | CodeBlock 
+             | XmlStyleComment 
+             | Line);
     }
 }

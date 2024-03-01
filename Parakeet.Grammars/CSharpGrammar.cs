@@ -10,7 +10,7 @@
         public override Rule StartRule => File;
 
         // Recovery on error 
-        public Rule RecoverEos => OnError(
+        public Rule RecoverEos => OnFail(
             TokenOrStructure.Except(EOS).ZeroOrMore()
             + (EOS | EndOfInput) | AdvanceToEnd);
 
@@ -264,7 +264,7 @@
         public Rule StatementKeyword => Node(Keywords("for", "if", "return", "break", "continue", "do", "foreach", "throw", "switch", "try", "catch", "finally", "using", "case", "default"));
         public Rule Token => Node(Separator | CppStyleComment | Spaces | OperatorToken | Identifier | Literal);
         public Rule TokenOrStructure => Named(Token | Structure);
-        public Rule Tokenizer => TokenOrStructure.ZeroOrMore() + OnError(AdvanceToEnd) + EndOfInput;
+        public Rule Tokenizer => TokenOrStructure.ZeroOrMore() + OnFail(AdvanceToEnd) + EndOfInput;
 
         // Structural pass 
         public Rule TokenGroup => Node((Token | Separator).Except(Delimiter).OneOrMore());

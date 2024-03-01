@@ -7,7 +7,7 @@
 
         // Recovery on error 
 
-        public Rule NoRecovery => OnError(Token.RepeatUntilPast(EOS | "}"));
+        public Rule NoRecovery => OnFail(Token.RepeatUntilPast(EOS | "}"));
 
         // Basic 
         public override Rule WS => Named((SpaceChars | Comment).ZeroOrMore());

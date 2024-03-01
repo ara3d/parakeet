@@ -101,5 +101,8 @@ namespace Ara3D.Parakeet.Grammars
         public Rule BasicEscapedString(char delim, Rule escape) => Delimited(delim, delim, (escape | AnyChar).RepeatUntilPast(delim));
         public Rule DoubleQuoteBasicString => Named(BasicEscapedString('"', EscapedDoubleQuote));
         public Rule SingleQuoteBasicString => Named(BasicEscapedString('\'', EscapedSingleQuote));
+
+        // By default, if an error occurs, will jump to the end of input.  
+        public Rule AbortOnFail => OnFail(AdvanceToEnd);
     }
 }

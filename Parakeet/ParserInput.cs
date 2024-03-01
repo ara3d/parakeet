@@ -8,6 +8,10 @@ namespace Ara3D.Parakeet
     /// </summary>
     public class ParserInput
     {
+        /// <summary>
+        /// When debug build is true, this will output the parsing steps to the console. 
+        /// </summary>
+        public bool Debugging { get; }
         public string File { get; }
         public string Text { get; }
 
@@ -15,10 +19,11 @@ namespace Ara3D.Parakeet
 
         public IReadOnlyList<int> CharToLine { get; }
 
-        public ParserInput(string s, string file = "")
+        public ParserInput(string s, string file = "", bool debugging = false)
         {
             File = file;
             Text = s;
+            Debugging = debugging;
             var curLine = 0;
             var lineToChar = new List<int>();
             var charToLine = new List<int>();
