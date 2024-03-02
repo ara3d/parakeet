@@ -76,11 +76,11 @@
         public static readonly MarkdownBlockGrammar Instance = new MarkdownBlockGrammar();
 
         public override Rule StartRule => Document;
-        public override Rule WS => Named(SpaceOrTab);
-        public Rule WSToEndOfLine => Named(WS.ZeroOrMore() + NewLine);
+        public override Rule WS => Named(SpaceOrTab.ZeroOrMore());
+        public Rule WSToEndOfLine => Named(WS + (NewLine | EndOfInput));
 
         public Rule Document => Node(Block.ZeroOrMore());
-        public Rule BlankLine => Node(WSToEndOfLine);
+        public Rule BlankLine => Node(WS + NewLine);
         public Rule RestOfLine => Recursive(nameof(Line));
 
         public Rule CodeBlockDelimiter => Named("```");
@@ -88,14 +88,16 @@
         public Rule CodeBlockText => Node(AnyCharUntilAt(CodeBlockDelimiter));
         public Rule CodeBlock => Node(CodeBlockDelimiter + AbortOnFail + CodeBlockLang + CodeBlockText + CodeBlockDelimiter);
 
-        public Rule HeadingOperator => Node(new CountedRule('#', 1, 6));
         public Rule H1Underline => Node(TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
         public Rule H2Underline => Node(TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
-        public Rule HeadingWithOperator => Node(HeadingOperator + AbortOnFail + TextLine);
+        public Rule HeadingWithOperator => Node('#' + RestOfLine);
         public Rule HeadingUnderlined => Node(TextLine + (H1Underline | H2Underline));
         public Rule Heading => Node(HeadingWithOperator | HeadingUnderlined);
 
-        public Rule HorizontalLine => Node((ThreeOrMore('*') | ThreeOrMore('-') | ThreeOrMore('_')) + AbortOnFail + WSToEndOfLine);
+        public Rule HorizontalLine => Node(
+            (ThreeOrMore('*') 
+             | ThreeOrMore('-') 
+             | ThreeOrMore('_')) + AbortOnFail + WSToEndOfLine);
 
         public Rule OrderedListItem => Node(Digit.ZeroOrMore() + "." + WS + AbortOnFail + RestOfLine);
         public Rule UnorderedListItem => Node("+-*".ToCharSetRule() + WS + AbortOnFail + RestOfLine);
@@ -105,7 +107,7 @@
 
         public Rule BlockQuotedLine => Node(">" + RestOfLine);
 
-        public Rule TextLine => Node(AnyChar);
+        public Rule TextLine => Node(AnyCharExcept(NewLine) + AnyCharUntilNextLine);
 
         public Rule Line => Node(
             Heading 
@@ -114,11 +116,11 @@
             | OrderedListItem 
             | IndentedLine 
             | BlockQuotedLine
+            | BlankLine
             | TextLine); 
 
         public Rule Block => Node(
-            BlankLine 
-             | CodeBlock 
+            CodeBlock 
              | XmlStyleComment 
              | Line);
     }

@@ -64,10 +64,9 @@ namespace Ara3D.Parakeet
                 throw new ArgumentException("Name must not be null");
             if (Lookup.ContainsKey(name)) 
                 return Lookup[name];
-            //r = r.Optimize();
-            r = new NodeRule(r, name);
             if (WS != null)
                 r = r.Then(WS);
+            r = new NodeRule(r, name);
             Lookup.Add(name, r);
             return r;
         }

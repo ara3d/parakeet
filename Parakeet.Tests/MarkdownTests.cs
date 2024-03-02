@@ -5,12 +5,53 @@ namespace Ara3D.Parakeet.Tests
 {
     public static class MarkdownTests
     {
-        public static void ExplainWhyRuleFailed(string input, Rule r)
+        public static IEnumerable<(string, Rule)> GetBlockLineInputs()
         {
-            r.Parse(input, true);
+            var g = MarkdownBlockGrammar.Instance;
+
+            var tmp = new[]
+            {
+                ("# Header", g.Heading),
+                ("## Header", g.Heading),
+                ("Header\n--", g.Heading),
+                ("Header\n==", g.Heading),
+                ("    indented line", g.IndentedLine),
+                ("- unordered line", g.UnorderedListItem),
+                ("1. ordered line", g.OrderedListItem),
+                ("> blockquoted line", g.BlockQuotedLine),
+                ("  \n", g.BlankLine),
+                ("****", g.HorizontalLine),
+                ("abc *def* ghi", g.TextLine)
+            };
+
+            return tmp;
         }
 
-        public static IEnumerable<(string, Rule)> GetTestInputs()
+        [Test]
+        public static void FindEmptyMatchingLine()
+        {
+            var input = "";
+            var g = MarkdownBlockGrammar.Instance;
+            var rules = new[]
+            {
+                g.Heading,
+                g.HorizontalLine,
+                g.UnorderedListItem,
+                g.OrderedListItem,
+                g.IndentedLine,
+                g.BlockQuotedLine,
+                g.BlankLine,
+                g.TextLine,
+            };
+            foreach (var rule in rules)
+            {
+                Console.WriteLine($"Checking that Rule {rule} does not match empty string");
+                var p = rule.Parse(input);
+                Assert.IsNull(p);
+            }
+        }
+
+        public static IEnumerable<(string, Rule)> GetTestInlineInputs()
         {
             var g = MarkdownInlineGrammar.Instance;
             var tmp = new[]
@@ -52,14 +93,41 @@ namespace Ara3D.Parakeet.Tests
             return tmp;
         }
 
-        [TestCaseSource(nameof(GetTestInputs))]
-        public static void SmallMarkdownTest((string, Rule) tuple)
+        [TestCaseSource(nameof(GetTestInlineInputs))]
+        public static void InlineMarkdownTests((string, Rule) tuple)
+            => SimpleTest(tuple.Item1, tuple.Item2);
+
+        [TestCaseSource(nameof(GetTestInlineInputs))]
+        public static void InlineMarkdownTestsAsContent((string, Rule) tuple)
+            => SimpleTest(tuple.Item1, MarkdownInlineGrammar.Instance.Content);
+
+        [TestCaseSource(nameof(GetBlockLineInputs))]
+        public static void BlockMarkdownTests((string, Rule) tuple)
+            => SimpleTest(tuple.Item1, tuple.Item2);
+
+        [TestCaseSource(nameof(GetBlockLineInputs))]
+        public static void BlockMarkdownTestsBlock((string, Rule) tuple)
+            => SimpleTest(tuple.Item1, MarkdownBlockGrammar.Instance.Block);
+
+        public static string[] Snippets = new[]
         {
-            var (input, r) = tuple;
-            var p = r.Parse(input);
-            if (p == null)
-                ExplainWhyRuleFailed(input, r);
+            "# h1\nsome text",
+            "# h1\n\nsome text",
+            "some\n\n# h1\n\ntext\n",
+            "some\n# h1\ntext\n",
+        };
+
+        [TestCaseSource(nameof(Snippets))]
+        public static void MultiBlockTest(string input)
+            => SimpleTest(input, MarkdownBlockGrammar.Instance.StartRule);
+
+        public static void SimpleTest(string input, Rule r)
+        {
+            Console.WriteLine($"Input: {input}");
+            Console.WriteLine($"Rule: {r}");
+            var p = r.Parse(input, true);
             Assert.NotNull(p);
+            Assert.IsNull(p.LastError);
             Assert.IsTrue(p.AtEnd());
         }
 
@@ -82,27 +150,36 @@ namespace Ara3D.Parakeet.Tests
             Console.WriteLine($"Parse Tree: {tree.ToXml()}");
         }
 
-        [Test]
-        public static void ParseMarkdown()
+        public static IEnumerable<FilePath> TestMarkdownFiles()
         {
-            var file = Folders.SourceFolder.RelativeFile("..", "readme.md");
+            var rootFolder = Folders.SourceFolder.RelativeFolder("..", "..");
+            return rootFolder.GetFiles("*.md", true).Where(fp => !fp.Value.Contains("unity"));
+        }
 
-            var lines = file.ReadAllLines();
+        [TestCaseSource(nameof(TestMarkdownFiles))]
+        public static void TestParseMarkdownFile(FilePath file)
+        {
             var g = MarkdownBlockGrammar.Instance;
-            foreach (var line in lines)
-            {
-                var ps = g.Line.Parse(line);
-                OutputParseResult(ps);
-            }
-
             var markdown = file.ReadAllText();
             var parserState = g.Parse(markdown);
             Assert.NotNull(parserState);
-            foreach (var e in parserState.AllErrors())
-                Console.WriteLine(e.Message);
+            var errors = parserState.AllErrors().ToList();
+            if (errors.Count > 0)
+            {
+                Console.WriteLine($"Found {errors.Count} errors!");
+                foreach (var e in errors)
+                    Console.WriteLine(e.Message);
+            }
             Assert.IsNull(parserState.LastError);
             var tree = parserState.GetParseTree();
             Console.WriteLine(tree.ToXml());
+        }
+
+        [Test]
+        public static void TestRuleNames()
+        {
+            var r = MarkdownBlockGrammar.Instance.TextLine;
+            Assert.AreEqual("TextLine", r.GetName());
         }
     }
 }

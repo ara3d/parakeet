@@ -14,7 +14,7 @@ public class Folders
         = SourceFolder.RelativeFolder("..", "output");
 
     public static DirectoryPath CstOutputFolder
-        = SourceFolder.RelativeFolder("..", "Parakeet.Cst.Demo");
+        = SourceFolder.RelativeFolder("..", "Parakeet.Cst");
 
     public static DirectoryPath InputFolder(string name) 
         => BaseInputFolder.RelativeFolder(name);

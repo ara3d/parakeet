@@ -627,12 +627,12 @@ namespace Ara3D.Parakeet
                 else
                 {
                     var prevState = newState;
-                    var msg = string.Empty;
                     newState = rule.Match(prevState);
                     if (newState == null)
                     {
                         if (onFail != null)
                         {
+                            var msg = $"Error between {state} and {prevState} while parsing {this}";
                             var error = new ParserError(rule, state, prevState, msg, prevState.LastError);
                             prevState = prevState.WithError(error);
                             var recovery = onFail.RecoveryRule;
