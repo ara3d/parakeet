@@ -75,12 +75,13 @@
             | Identifier
         );
 
-        public Rule InnerExpression => Named(
+        public Rule InnerExpression => Node(
             PrefixOperator.ZeroOrMore()
             + LeafExpression
             + PostfixOperator.ZeroOrMore());
 
-        public Rule Expression => Node(Recursive(nameof(InnerExpression)));
+        public Rule Expression => Node(
+            Recursive(nameof(InnerExpression)));
 
         // Statements 
         public Rule EOS => Named(Sym(";"));
@@ -130,7 +131,7 @@
         public Rule VarDecl => Node(TypeExpr + ListOfAtLeastOne(VarWithInitialization));
         public Rule VarDeclStatement => Node(VarDecl + EOS);
 
-        public Rule InnerStatement => Named(
+        public Rule InnerStatement => Node(
             EOS
             | CompoundStatement
             | IfStatement
@@ -146,11 +147,9 @@
             | TryStatement
             | YieldStatement
             | SwitchStatement
-            | ExpressionStatement
-        );
+            | ExpressionStatement);
 
         public Rule Statement => Node(Recursive(nameof(InnerStatement)));
-
         public Rule QualifiedIdentifier => Node(List(Identifier, Sym(".")));
         public Rule TypeParameter => Node(Identifier);
         public Rule TypeParameterList => Node(AngleBracketedList(TypeParameter).Optional());

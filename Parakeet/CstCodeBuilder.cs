@@ -239,7 +239,7 @@ namespace Ara3D.Parakeet
             cb.WriteLine($"using System;");
             cb.WriteLine($"using System.Linq;");
             cb.WriteLine($"using System.Collections.Generic;");
-            cb.WriteLine($"using Parakeet.Grammars;");
+            cb.WriteLine($"using Ara3D.Parakeet.Grammars;");
             cb.WriteLine();
             cb.WriteLine($"namespace {namespaceName}");
             cb.WriteLine("{").Indent();
