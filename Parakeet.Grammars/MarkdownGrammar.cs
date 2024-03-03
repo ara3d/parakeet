@@ -109,6 +109,8 @@
 
         public Rule TextLine => Node(AnyCharExcept(NewLine) + AnyCharUntilNextLine);
 
+        public Rule Comment => Node(XmlStyleComment);
+
         public Rule Line => Node(
             Heading 
             | HorizontalLine
@@ -121,7 +123,7 @@
 
         public Rule Block => Node(
             CodeBlock 
-             | XmlStyleComment 
+             | Comment 
              | Line);
     }
 }

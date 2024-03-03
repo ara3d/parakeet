@@ -7,12 +7,12 @@
     {
         public static readonly PhoneNumberGrammar Instance = new PhoneNumberGrammar();
         public override Rule StartRule => PhoneNumber;
-        public Rule CountryCode => Named(Optional('+' + Spaces) + Digit.Counted(1, 3));
+        public Rule CountryCode => Node(Optional('+' + Spaces) + Digit.Counted(1, 3));
         public Rule Separators => Named(".- ".ToCharSetRule().ZeroOrMore());
-        public Rule AreaCodeDigits => Named(Digit.Counted(3));
-        public Rule AreaCode => Named(Parenthesized(AreaCodeDigits) | AreaCodeDigits);
-        public Rule Exchange => Named(Digit.Counted(3));
-        public Rule Subscriber => Named(Digit.Counted(4));
-        public Rule PhoneNumber => Named((CountryCode + Separators).Optional() + AreaCode + Separators + Exchange + Separators + Subscriber);
+        public Rule AreaCodeDigits => Node(Digit.Counted(3));
+        public Rule AreaCode => Node(Parenthesized(AreaCodeDigits) | AreaCodeDigits);
+        public Rule Exchange => Node(Digit.Counted(3));
+        public Rule Subscriber => Node(Digit.Counted(4));
+        public Rule PhoneNumber => Node((CountryCode + Separators).Optional() + AreaCode + Separators + Exchange + Separators + Subscriber);
     }
 }
