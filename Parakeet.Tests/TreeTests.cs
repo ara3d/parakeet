@@ -8,7 +8,7 @@
             var input = "double Radians(double x) => x / 360;";
             var rule = CSharpTests.Grammar.MethodDeclaration;
             var pi = new ParserInput(input);
-            var ps = pi.Parse(rule);
+            var ps = rule.Parse(pi);
             Assert.IsTrue(ps.AtEnd());
             Console.WriteLine("Nodes:");
             foreach (var node in ps.AllNodes())   

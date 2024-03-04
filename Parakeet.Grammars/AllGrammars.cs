@@ -22,6 +22,5 @@
             SimpleLambdaCalculusGrammar.Instance,
             XmlGrammar.Instance,
         };
-
     }
 }

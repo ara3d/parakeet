@@ -15,7 +15,7 @@ namespace Ara3D.Parakeet
             return rule;
         }
 
-        public static void OutputDefinitions(this Grammar grammar, bool shortForm)
+        public static void OutputDefinitions(this IGrammar grammar, bool shortForm)
         {
             foreach (var r in grammar.GetRules())
             {
@@ -196,7 +196,7 @@ namespace Ara3D.Parakeet
             return null;
         }
 
-        public static ParserState Parse(this Grammar g, string input)
+        public static ParserState Parse(this IGrammar g, string input)
             => g.StartRule.Parse(input);
     }
 }

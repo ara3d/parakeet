@@ -63,6 +63,6 @@ namespace Ara3D.Parakeet
             => repeat.RepeatUntilAt(delimiter).Then(delimiter);
 
         public static ParserState Parse(this Rule rule, string input, bool debugging = false)
-            => new ParserInput(input, "", debugging).Parse(rule);
+            => rule.Parse(new ParserInput(input, "", debugging));
     }
 }

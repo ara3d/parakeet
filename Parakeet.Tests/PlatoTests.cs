@@ -40,7 +40,7 @@ namespace Ara3D.Parakeet.Tests
         public static void OutputTokens(string file)
         {
             var pi = ParserInput.FromFile(InputFolder.RelativeFile(file));
-            var state = pi.Parse(PlatoTokenGrammar.Instance.Tokenizer);
+            var state = PlatoTokenGrammar.Instance.Tokenizer.Parse(pi);
             Debug.Assert(state != null);
             var nodes = state.AllNodes().ToList();
             foreach (var n in nodes)

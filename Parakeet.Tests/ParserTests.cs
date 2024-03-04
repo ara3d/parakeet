@@ -49,7 +49,7 @@ namespace Ara3D.Parakeet.Tests
             ParserState ps = null;
             try
             {
-                ps = input.Parse(rule);
+                ps = rule.Parse(input);
             }
             catch (ParserException pe)
             {
@@ -81,7 +81,7 @@ namespace Ara3D.Parakeet.Tests
 
             // Check that optimized rules produce the same output 
             var optimizedRule = rule.Optimize();
-            var ps2 = input.Parse(optimizedRule);
+            var ps2 = optimizedRule.Parse(input);
 
             Assert.IsTrue(ps == null ? ps2 == null : ps2 != null);
 

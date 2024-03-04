@@ -12,11 +12,11 @@ namespace Ara3D.Parakeet
     /// so that they can have recursive relations in them, have fixed names based on the properties, 
     /// and minimizes creating superfluous objects. 
     /// </summary>
-    public abstract class Grammar
+    public abstract class Grammar : IGrammar
     {
         public abstract Rule StartRule { get; }
-
-        public virtual Rule WS { get; } 
+        public virtual Rule WS { get; }
+        public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 
         public Rule GetRuleFromName(string name)
         {
@@ -73,8 +73,6 @@ namespace Ara3D.Parakeet
 
         public OnFail OnFail(Rule r)
             => new OnFail(r);       
-
-        public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 
         public Rule CharSet(params char[] chars)
             => chars.Length == 1 ? (Rule)chars[0] : new CharSetRule(chars);

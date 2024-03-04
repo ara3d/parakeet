@@ -6,7 +6,7 @@ namespace Ara3D.Parakeet
 {
     public static class ParserExtensions
     {
-        public static ParserState Parse(this ParserInput input, Rule r)
+        public static ParserState Parse(this Rule r, ParserInput input)
             => r.Match(new ParserState(input));
 
         public static IEnumerable<ParserRange> GetMatches(this string input, Rule rule)

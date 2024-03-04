@@ -118,6 +118,7 @@ namespace Ara3D.Parakeet
             //cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
 
             cb = cb.WriteLine($"/// <summary>");
+            cb = cb.WriteLine($"/// Rule = {r.ToString().Replace("\n", "\\n")}");
             cb = cb.WriteLine($"/// Nodes = {body?.ToDefinition()}");
             cb = cb.WriteLine($"/// </summary>");
 
@@ -142,7 +143,7 @@ namespace Ara3D.Parakeet
 
             cb = cb.WriteLine("{").Indent();
 
-            cb = cb.WriteLine($"public static Rule Rule = CstNodeFactory.Grammar.{nr.Name};");
+            cb = cb.WriteLine($"public static Rule Rule = CstNodeFactory.StaticGrammar.{nr.Name};");
 
             if (isLeaf)
             {
@@ -176,9 +177,10 @@ namespace Ara3D.Parakeet
 
         public static void OutputCstClassFactory(CodeBuilder cb, Grammar g)
         {
-            cb.WriteLine("public class CstNodeFactory");
+            cb.WriteLine("public class CstNodeFactory : INodeFactory");
             cb.WriteLine("{").Indent();
-            cb.WriteLine($"public static readonly {g.GetType().Name} Grammar = new {g.GetType().Name}();");
+            cb.WriteLine($"public static {g.GetType().Name} StaticGrammar = {g.GetType().Name}.Instance;");
+            cb.WriteLine($"public IGrammar Grammar {{ get; }} = StaticGrammar;");
             cb.WriteLine(
                 "public Dictionary<CstNode, ParserTreeNode> Lookup { get;} = new Dictionary<CstNode, ParserTreeNode>();");
             

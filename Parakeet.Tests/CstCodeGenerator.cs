@@ -10,7 +10,7 @@ public static class CstCodeGenerator
 
     [Test, TestCaseSource(nameof(Grammars))]
     public static void OutputCstCode(Grammar g)
-    {
+    {       
         var name = g.GetType().Name;
         var folder = Folders.CstOutputFolder;
 
