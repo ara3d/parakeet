@@ -90,7 +90,8 @@
 
         public Rule H1Underline => Node(TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
         public Rule H2Underline => Node(TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
-        public Rule HeadingWithOperator => Node('#' + RestOfLine);
+        public Rule HeadingOperator => Node(OneOrMore('#'));
+        public Rule HeadingWithOperator => Node(HeadingOperator + RestOfLine);
         public Rule HeadingUnderlined => Node(TextLine + (H1Underline | H2Underline));
         public Rule Heading => Node(HeadingWithOperator | HeadingUnderlined);
 

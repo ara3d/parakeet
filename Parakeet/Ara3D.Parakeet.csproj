@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ara3D.Utils" Version="1.2.0" />
+    <PackageReference Include="Ara3D.Utils" Version="1.3.1" />
     <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
