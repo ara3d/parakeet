@@ -118,7 +118,7 @@ namespace Ara3D.Parakeet
             //cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
 
             cb = cb.WriteLine($"/// <summary>");
-            cb = cb.WriteLine($"/// Rule = {r.ToString().Replace("\n", "\\n")}");
+            cb = cb.WriteLine($"/// Rule = {r.ToString().Replace("\n", "\\n").Replace("\r", "\\r")}");
             cb = cb.WriteLine($"/// Nodes = {body?.ToDefinition()}");
             cb = cb.WriteLine($"/// </summary>");
 
