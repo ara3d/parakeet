@@ -1,5 +1,6 @@
 using Ara3D.Parakeet.Grammars;
 using Ara3D.Utils;
+using System.Xml.Linq;
 
 namespace Ara3D.Parakeet.Tests;
 
@@ -26,7 +27,7 @@ public static class CstCodeGeneratorTestTool
             var path = folder.RelativeFile($"{name}Cst.cs");
             var text = cb.ToString();
             Console.WriteLine(text);
-            File.WriteAllText(path, text);
+            path.WriteAllText(text);
         }
         {
             var cb = new CodeBuilder();
@@ -34,8 +35,30 @@ public static class CstCodeGeneratorTestTool
             var path = folder.RelativeFile($"{name}CstFactory.cs");
             var text = cb.ToString();
             Console.WriteLine(text);
-            File.WriteAllText(path, text);
+            path.WriteAllText(text);
         }
     }
 
+    [Test]
+    public static void GenerateAllCstFactories()
+    {
+        var cb = new CodeBuilder();
+        var path = Folders.CstOutputFolder.RelativeFile($"AllCstFactories.cs");
+        cb.WriteLine($"namespace Ara3D.Parakeet.Cst");
+        cb.WriteStartBlock();
+        cb.WriteLine($"public static class AllCstFactories");
+        cb.WriteStartBlock();
+        foreach (var g in Grammars)
+        {
+            var name = g.GetType().Name;
+            var nameSpace = $"{name}NameSpace";
+            name = name.RemoveSuffix("Grammar");
+            cb.WriteLine($"public static CstNode {name}(ParserTreeNode input) => (new {nameSpace}.CstNodeFactory()).Create(input);");
+        }
+        cb.WriteEndBlock();
+        cb.WriteEndBlock();
+        var text = cb.ToString();
+        Console.WriteLine(text);
+        path.WriteAllText(text);
+    }
 }
