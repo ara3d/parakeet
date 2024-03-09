@@ -3,13 +3,18 @@ using Ara3D.Utils;
 
 namespace Ara3D.Parakeet.Tests;
 
-public static class CstCodeGenerator
+public static class CstCodeGeneratorTestTool
 {
     public static IEnumerable<Grammar> Grammars
         => AllGrammars.Grammars;
 
+    /// <summary>
+    /// Generates the source files for the CST project.
+    /// This includes CstNode factories: which convert from AST nodes to CST nodes
+    /// and the definitions for the various CstNode classes. 
+    /// </summary>
     [Test, TestCaseSource(nameof(Grammars))]
-    public static void OutputCstCode(Grammar g)
+    public static void GenerateCstCode(Grammar g)
     {       
         var name = g.GetType().Name;
         var folder = Folders.CstOutputFolder;
