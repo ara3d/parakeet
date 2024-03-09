@@ -179,23 +179,21 @@ namespace Ara3D.Parakeet
 
         public static void OutputCstClassFactory(CodeBuilder cb, Grammar g)
         {
-            var iface = GetGrammarCstInterfaceName(g);
-
             cb.WriteLine("public class CstNodeFactory : INodeFactory");
             cb.WriteLine("{").Indent();
             cb.WriteLine($"public static {g.GetType().Name} StaticGrammar = {g.GetType().Name}.Instance;");
             cb.WriteLine($"public IGrammar Grammar {{ get; }} = StaticGrammar;");
             cb.WriteLine(
-                $"public Dictionary<{iface}, ParserTreeNode> Lookup {{ get;}} = new Dictionary<{iface}, ParserTreeNode>();");
+                $"public Dictionary<CstNode, ParserTreeNode> Lookup {{ get;}} = new Dictionary<CstNode, ParserTreeNode>();");
             
-            cb.WriteLine($"public {iface} Create(ParserTreeNode node)");
+            cb.WriteLine($"public CstNode Create(ParserTreeNode node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("var r = InternalCreate(node);");
             cb.WriteLine("Lookup.Add(r, node);");
             cb.WriteLine("return r;");
             cb.Dedent().WriteLine("}");
 
-            cb.WriteLine($"public {iface} InternalCreate(ParserTreeNode node)");
+            cb.WriteLine($"public CstNode InternalCreate(ParserTreeNode node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
             cb.WriteLine("{").Indent();
