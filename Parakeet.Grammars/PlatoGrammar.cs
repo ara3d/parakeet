@@ -192,6 +192,6 @@
         public Rule InnerTypeExpr => Node(CompoundOrSimpleTypeExpr + TypeArgList.Optional() + ArrayRankSpecifiers);
         public Rule TypeExpr => Node(Recursive(nameof(InnerTypeExpr)));
 
-        public Rule File => Node(WS + TopLevelDeclaration.ZeroOrMore() + EndOfInput);
+        public Rule File => Node(WS + TopLevelDeclaration.ZeroOrMore() + NoRecovery + EndOfInput);
     }
 }

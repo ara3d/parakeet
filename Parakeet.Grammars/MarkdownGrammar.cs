@@ -1,9 +1,12 @@
 ﻿namespace Ara3D.Parakeet.Grammars
 {
+    // Mostly follows this guideline:
+    // https://www.markdownguide.org/basic-syntax/
+
+    // See also:
     // https://github.com/jgm/lunamark/blob/master/lunamark/reader/markdown.lua
     // https://github.com/jgm/peg-markdown/blob/master/markdown_parser.leg
     // https://commonmark.org/help/
-    // https://www.markdownguide.org/basic-syntax/
     // https://daringfireball.net/projects/markdown/syntax
 
     /// <summary>
@@ -88,26 +91,28 @@
         public Rule CodeBlockText => Node(AnyCharUntilAt(CodeBlockDelimiter));
         public Rule CodeBlock => Node(CodeBlockDelimiter + AbortOnFail + CodeBlockLang + CodeBlockText + CodeBlockDelimiter);
 
-        public Rule H1Underline => Node(TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
-        public Rule H2Underline => Node(TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
+        public Rule H1Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
+        public Rule H2Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
         public Rule HeadingOperator => Node(OneOrMore('#'));
-        public Rule HeadingWithOperator => Node(HeadingOperator + RestOfLine);
+        public Rule HeadingWithOperator => Node(HeadingOperator + TextLine);
         public Rule HeadingUnderlined => Node(TextLine + (H1Underline | H2Underline));
         public Rule Heading => Node(HeadingWithOperator | HeadingUnderlined);
 
         public Rule HorizontalLine => Node(
             (ThreeOrMore('*') 
              | ThreeOrMore('-') 
-             | ThreeOrMore('_')) + AbortOnFail + WSToEndOfLine);
+             | ThreeOrMore('_')
+             | ThreeOrMore('=')) + AbortOnFail + WSToEndOfLine);
 
-        public Rule OrderedListItem => Node(Digit.ZeroOrMore() + "." + WS + AbortOnFail + RestOfLine);
-        public Rule UnorderedListItem => Node("+-*".ToCharSetRule() + WS + AbortOnFail + RestOfLine);
+        public Rule OrderedListItem => Node(Indents + WS + Digit.OneOrMore() + "." + WS + AbortOnFail + TextLine);
+        public Rule UnorderedListItem => Node(Indents + WS + "+-*".ToCharSetRule() + WS + AbortOnFail + TextLine);
 
+        public Rule Indents => Node(Indent.ZeroOrMore());
         public Rule Indent => Node(Tab | "    ");
-        public Rule IndentedLine => Node(Indent + AbortOnFail + RestOfLine);
+        public Rule QuoteMarker => Node(">");
+        public Rule IndentsOrQuoteMarkers => Node((Indent | QuoteMarker).ZeroOrMore());
 
-        public Rule BlockQuotedLine => Node(">" + RestOfLine);
-
+        public Rule BlockQuotedLine => Node(Indents + QuoteMarker + RestOfLine);
         public Rule TextLine => Node(AnyCharExcept(NewLine) + AnyCharUntilNextLine);
 
         public Rule Comment => Node(XmlStyleComment);
@@ -117,7 +122,6 @@
             | HorizontalLine
             | UnorderedListItem 
             | OrderedListItem 
-            | IndentedLine 
             | BlockQuotedLine
             | BlankLine
             | TextLine); 
