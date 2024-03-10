@@ -10,6 +10,7 @@
     {
         public ParserError(Rule expected, ParserState parentState, ParserState state, string message, ParserError previous)
         {
+
             Expected = expected;
             ParentState = parentState;
             State = state;
@@ -17,6 +18,7 @@
             Previous = previous;
         }
 
+        public ParserInput Input => ParentState.Input;
         public readonly Rule Expected;
         public readonly ParserState ParentState;
         public readonly ParserState State;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Ara3D.Parakeet
 {
@@ -16,7 +17,6 @@ namespace Ara3D.Parakeet
         public string Text { get; }
 
         public IReadOnlyList<int> LineToChar { get; }
-
         public IReadOnlyList<int> CharToLine { get; }
 
         public ParserInput(string s, string file = "", bool debugging = false)
@@ -44,7 +44,7 @@ namespace Ara3D.Parakeet
         }
 
         public int Length => Text.Length;
-
+        public int NumLines => LineToChar.Count;
         public char this[int index] => Text[index];
 
         public int GetLineLength(int lineIndex)
@@ -63,6 +63,15 @@ namespace Ara3D.Parakeet
 
         public int GetColumn(int charIndex)
             => charIndex - GetLineBegin(charIndex);
+
+        public int ClampLineNumber(int lineIndex)
+            => lineIndex < 0 ? 0 : lineIndex >= NumLines ? NumLines - 1: lineIndex;
+
+        public int GetCharIndex(int lineIndex)
+            => LineToChar[lineIndex];
+
+        public int GetCharIndex(int lineIndex, int columnIndex)
+            => GetCharIndex(lineIndex) + Math.Min(GetLineLength(lineIndex), columnIndex);
 
         public string GetIndicator(int charIndex)
             => new string(' ', GetColumn(charIndex)) + '^';
