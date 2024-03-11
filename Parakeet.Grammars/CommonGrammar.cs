@@ -75,15 +75,15 @@ namespace Ara3D.Parakeet.Grammars
         // Delimited and list rules (assumes white-space before/after symbols, and by default does not recover), default separator is a comma
         public Rule ListOfAtLeastOne(Rule r, Rule sep = null) => (r + WS + ((sep ?? Comma) + r + WS).ZeroOrMore()).Then(Optional(sep ?? Comma));
         public Rule List(Rule r, Rule sep = null) => ListOfAtLeastOne(r, sep).Optional();
-        public Rule Delimited(Rule startDelim, Rule endDelim, Rule r, Rule recover = null) => startDelim + WS + (recover ?? true) + r + WS + endDelim + WS;
-        public Rule Parenthesized(Rule r, Rule recover = null) => Delimited('(', ')', r, recover);
-        public Rule ParenthesizedList(Rule r, Rule sep = null, Rule recover = null) => Parenthesized(List(r, sep), recover);
-        public Rule Bracketed(Rule r, Rule recover = null) => Delimited('[', ']', r, recover);
-        public Rule BracketedList(Rule r, Rule sep = null, Rule recover = null) => Bracketed(List(r, sep), recover);
-        public Rule Braced(Rule r, Rule recover = null) => Delimited('{', '}', r, recover);
-        public Rule BracedList(Rule r, Rule sep = null, Rule recover = null) => Braced(List(r, sep), recover);
-        public Rule AngleBracketed(Rule r, Rule recover = null) => Delimited('<', '>', r, recover);
-        public Rule AngleBracketedList(Rule r, Rule sep = null, Rule recover = null) => AngleBracketed(List(r, sep), recover);
+        public Rule Delimited(Rule startDelim, Rule endDelim, Rule r, Rule onFail = null) => startDelim + WS + (onFail ?? true) + r + WS + endDelim + WS;
+        public Rule Parenthesized(Rule r, Rule onFail = null) => Delimited('(', ')', r, onFail);
+        public Rule ParenthesizedList(Rule r, Rule sep = null, Rule onFail = null) => Parenthesized(List(r, sep), onFail);
+        public Rule Bracketed(Rule r, Rule onFail = null) => Delimited('[', ']', r, onFail);
+        public Rule BracketedList(Rule r, Rule sep = null, Rule onFail = null) => Bracketed(List(r, sep), onFail);
+        public Rule Braced(Rule r, Rule onFail = null) => Delimited('{', '}', r, onFail);
+        public Rule BracedList(Rule r, Rule sep = null, Rule onFail = null) => Braced(List(r, sep), onFail);
+        public Rule AngleBracketed(Rule r, Rule onFail = null) => Delimited('<', '>', r, onFail);
+        public Rule AngleBracketedList(Rule r, Rule sep = null, Rule onFail = null) => AngleBracketed(List(r, sep), onFail);
 
         // String rules that eat whitespace
         public Rule Keyword(string s) => Named(s + IdentifierChar.NotAt() + WS, $"Keyword('{s}')");

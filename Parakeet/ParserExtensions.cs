@@ -24,7 +24,7 @@ namespace Ara3D.Parakeet
                 var result = rule.Match(p);
                 if (result != null)
                 {
-                    yield return p.To(result);
+                    yield return ParserRange.Create(p, result);
                 }
 
                 if (result?.Position > p.Position)
@@ -64,8 +64,8 @@ namespace Ara3D.Parakeet
         public static string ToXml(this ParserTreeNode treeNode)
             => treeNode.BuildXmlString().ToString();
 
-        public static IEnumerable<ParserNode> AllNodes(this ParserState state)
-            => state.Node.AllNodesReversed().Reverse();
+        public static IEnumerable<ParserNode> AllEndNodes(this ParserState state)
+            => state.Node.AllEndAllNodesReversed().Reverse();
 
         public static IEnumerable<ParserError> AllErrorsReversed(this ParserError error)
         {

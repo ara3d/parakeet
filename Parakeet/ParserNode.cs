@@ -3,20 +3,23 @@
 namespace Ara3D.Parakeet
 {
     /// <summary>
-    /// A node generated from successful "NodeRule" parses. 
+    /// A node generated from a "NodeRule". A "NodeRule" will create two nodes
+    /// one when it starts (with no previous), and one when it ends.  
     /// These nodes are stored as a linked list, and can be converted 
-    /// to a tree representation after all parsing is completed. 
+    /// to a tree representation after all parsing is completed.
     /// </summary>
     public class ParserNode
     {
         public readonly ParserRange Range;
-        public int Start => Range.Begin.Position;
+        public int Start => Range.BeginPosition;
         public int End => Range.End.Position;
         public int Length => Range.Length;
         public readonly string Name;
         public readonly ParserNode Previous;
         public string Contents => Range.Text;
-        
+        public bool IsBegin => Range.Begin == null;
+        public bool IsEnd => Range.Begin != null;
+
         public override string ToString()
             => $"Node {Name}:{Start}-{End}:{EllidedContents}";
 
@@ -47,17 +50,18 @@ namespace Ara3D.Parakeet
             return (new ParserTreeNode(node, children), prev);
         }
 
-        public IEnumerable<ParserNode> AllNodesReversed()
+        public IEnumerable<ParserNode> AllEndAllNodesReversed()
         {
             for (var node = this; node != null; node = node.Previous)
-                yield return node;
+                if (node.IsEnd)
+                    yield return node;
         }
 
         public IEnumerable<ParserNode> SelfAndSiblings()
         {
             yield return this;
             var current = this;
-            foreach (var node in AllNodesReversed())
+            foreach (var node in AllEndAllNodesReversed())
             {
                 if (node.End < current.Start)
                 {

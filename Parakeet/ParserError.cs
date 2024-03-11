@@ -1,28 +1,34 @@
 ﻿namespace Ara3D.Parakeet
 {
     /// <summary>
-    /// Parse errors are only created within sequence when a "OnError" node fails. 
-    /// They occur because previous tokens in a sequence are unambiguous about what 
-    /// is expected to follow. For example, an "if" keyword indicate that a parenthesized
+    /// Parse errors are created within a sequence when a rule following an "OnFail" rule fails. 
+    /// They can occur because previous tokens in a sequence might be unambiguous about what 
+    /// is expected to follow. For example, in some languages an "if" keyword indicate that a parenthesized
     /// expression must follow, and then another statement, with an optional else clause. 
     /// </summary>
     public class ParserError
     {
-        public ParserError(Rule expected, ParserState parentState, ParserState state, string message, ParserError previous)
+        public ParserError(Rule seqRule, ParserState seqState, Rule rule, ParserState state, ParserError previous)
         {
-
-            Expected = expected;
-            ParentState = parentState;
+            SeqRule = seqRule;
+            SeqState = seqState;
+            Rule = rule;
             State = state;
-            Message = message;
             Previous = previous;
         }
 
-        public ParserInput Input => ParentState.Input;
-        public readonly Rule Expected;
-        public readonly ParserState ParentState;
+        public string NodeName => Node?.Name ?? "_INPUT_";
+        public ParserNode Node => SeqState.Node;
+        public ParserInput Input => SeqState.Input;
+        public ParserRange Range => ParserRange.Create(SeqState, State);
+
+        public readonly ParserState SeqState;
         public readonly ParserState State;
-        public readonly string Message;
+        public readonly Rule SeqRule;
+        public readonly Rule Rule;
         public readonly ParserError Previous;
+        
+        public override string ToString()
+            => $"Error at {Range} while parsing {NodeName}, expected Rule failed {Rule}";
     }
 }

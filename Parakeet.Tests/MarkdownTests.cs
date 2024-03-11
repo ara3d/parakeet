@@ -141,7 +141,7 @@ namespace Ara3D.Parakeet.Tests
             {
                 Console.WriteLine("Errors");
                 foreach (var err in ps.AllErrors())
-                    Console.WriteLine(err.Message);
+                    Console.WriteLine(err);
             }
 
             var tree = ps.GetParseTree();
@@ -166,7 +166,7 @@ namespace Ara3D.Parakeet.Tests
             {
                 Console.WriteLine($"Found {errors.Count} errors!");
                 foreach (var e in errors)
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e);
             }
             Assert.IsNull(parserState.LastError);
             var tree = parserState.GetParseTree();

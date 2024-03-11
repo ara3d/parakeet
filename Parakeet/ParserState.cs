@@ -48,25 +48,22 @@ namespace Ara3D.Parakeet
             => Advance(CharsLeft);
 
         public override string ToString()
-            => $"Ln:{CurrentLineIndex} Ch:{CurrentColumn} Pos:{Position}/{Input.Length} Node:{Node}";
+            => $"Ln:{LineIndex} Ch:{Column} Pos:{Position}/{Input.Length} Node:{Node}";
 
-        public int CurrentLineIndex
+        public int LineIndex
             => Input.GetLineIndex(Position);
 
-        public int CurrentColumn
+        public int Column
             => Input.GetColumn(Position);
 
         public string CurrentLine
-            => Input.GetLine(CurrentLineIndex);
+            => Input.GetLine(LineIndex);
 
         public string Indicator
             => Input.GetIndicator(Position);
 
         public ParserState ClearNodes()
             => new ParserState(Input, Position);
-
-        public ParserRange To(ParserState other)
-            => new ParserRange(this, other);
 
         public ParserState WithError(ParserError error)
             => new ParserState(Input, Position, Node, error);
@@ -109,7 +106,7 @@ namespace Ara3D.Parakeet
             => (state != null) && Position == state.Position;
         
         public ParserState AddNode(string name, ParserState prev)
-            => new ParserState(Input, Position, new ParserNode(name, prev.To(this), Node), LastError);
+            => new ParserState(Input, Position, new ParserNode(name, ParserRange.Create(prev, this), Node), LastError);
 
         public override int GetHashCode()
             => Position.GetHashCode();

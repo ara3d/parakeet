@@ -91,6 +91,12 @@
             | NullLiteral
             | Unknown);
 
+        public Rule BracedTokenGroup => Node(Braced(Token));
+        public Rule BracketedTokenGroup => Node(Bracketed(Token));
+        public Rule ParenthesizedTokenGroup => Node(Parenthesized(Token));
+
+        public Rule TokenGroup => Node((BracedTokenGroup | BracketedTokenGroup | ParenthesizedTokenGroup | Token).OneOrMore());
+
         public Rule Tokenizer => Named(Token.ZeroOrMore() + EndOfInput);
     }
 }

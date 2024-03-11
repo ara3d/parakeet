@@ -42,7 +42,7 @@ namespace Ara3D.Parakeet.Tests
             var pi = ParserInput.FromFile(InputFolder.RelativeFile(file));
             var state = PlatoTokenGrammar.Instance.Tokenizer.Parse(pi);
             Debug.Assert(state != null);
-            var nodes = state.AllNodes().ToList();
+            var nodes = state.AllEndNodes().ToList();
             foreach (var n in nodes)
             {
                 Console.WriteLine($"{n.Name} {n.Start}+{n.Length}");
@@ -74,6 +74,7 @@ namespace Ara3D.Parakeet.Tests
             "f()",
             "abc(123)",
             "f(g(), h())",
+            "p < 0.5 \r\n            ? 0.5 * easeIn(p * 2) \r\n            : 0.5 * easeOut(p * 2 - 1) + 0.5",
         };
 
         public static string[] Statements =
@@ -127,7 +128,7 @@ namespace Ara3D.Parakeet.Tests
         [TestCase(" ", "CommentOrSpaces")]
         [TestCase("", "CommentOrSpaces")]
         [TestCase("/* Abc */", "Comment")]
-        [TestCase("/* Abc */", "CommentOrSpaces")]
+        [TestCase("/* Abc */", "Comme   ntOrSpaces")]
         [TestCase("/* Abc */ /* 123 */", "CommentOrSpaces")]
         [TestCase("// Hello\n", "Comment")]
         [TestCase("// Hello", "Comment")]

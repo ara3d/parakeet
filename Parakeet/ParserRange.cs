@@ -9,26 +9,38 @@ namespace Ara3D.Parakeet
     /// </summary>
     public class ParserRange : ILocation
     {
+        // May be null
         public readonly ParserState Begin;
+
+        // Cannot be null 
         public readonly ParserState End;
 
         public ParserRange(ParserState begin, ParserState end)
         {
-            if (begin == null) throw new ArgumentNullException(nameof(begin));
-            if (end == null) throw new ArgumentNullException(nameof(end));
-            if (end.Input.Text != begin.Input.Text)
-                throw new ArgumentException("End range and begin range do not refer to same string", nameof(end));
-            if (end.Position < begin.Position) 
-                throw new ArgumentException("End of range occurs before the beginning", nameof(end));
-            if (end.Input.Text != begin.Input.Text)
-                throw new ArgumentException("End range and begin range do not refer to same string", nameof(end));
             Begin = begin;
             End = end;
+            if (end == null) 
+                throw new ArgumentNullException(nameof(end));
+            if (end.Position < BeginPosition) 
+                throw new ArgumentException("End of range occurs before the beginning", nameof(end));
         }
             
-        public int Length => End.Position - Begin.Position;
-        public string Text => Begin.Input.Text.Substring(Begin.Position, Length);
+        public string InputText => End.Input.Text;
+        public int BeginPosition => Begin?.Position ?? 0;
+        public int Length => End.Position - BeginPosition;
+        public string Text => InputText.Substring(BeginPosition, Length);
         public ParserNode Node => End.Node;
-        public IEnumerable<ParserNode> Nodes => Node.AllNodesReversed().Reverse();
+        public IEnumerable<ParserNode> Nodes => Node.AllEndAllNodesReversed().Reverse();
+
+        public int BeginLineIndex => Begin?.LineIndex ?? 0;
+        public int BeginColumn => Begin?.Column ?? 0;
+        public int EndLineIndex => End.LineIndex;
+        public int EndColumn => End.Column;
+
+        public override string ToString()
+            => $"({BeginLineIndex},{BeginColumn},{EndLineIndex},{EndColumn})";
+
+        public static ParserRange Create(ParserState begin, ParserState end)
+            => new ParserRange(begin, end);
     }
 }

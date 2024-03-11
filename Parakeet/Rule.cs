@@ -422,7 +422,7 @@ namespace Ara3D.Parakeet
         { }
 
         protected override ParserState MatchImplementation(ParserState state)
-            => Rule.Match(state)?.AddNode(Name, state);
+            => Rule.Match(state.AddNode(Name, null))?.AddNode(Name, state);
 
         public override bool Equals(object obj) 
             => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule);
@@ -632,12 +632,10 @@ namespace Ara3D.Parakeet
                     {
                         if (onFail != null)
                         {
-                            var msg = $"Error between {state} and {prevState} while parsing {this}";
-                            var error = new ParserError(rule, state, prevState, msg, prevState.LastError);
+                            var error = new ParserError(this, state, rule, prevState, prevState.LastError);
                             prevState = prevState.WithError(error);
                             var recovery = onFail.RecoveryRule;
                             var result = recovery.Match(prevState);
-                            Debug.Assert(result == null || result.LastError != null);
                             return result;
                         }
                         return null;
