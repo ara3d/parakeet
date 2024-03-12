@@ -2,9 +2,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>A library of strongly typed CST nodes and factories for select Parakeet grammars. Mostly auto-generated. </Description>
+    <PackageProjectUrl>https://github.com/ara3d/parakeet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ara3d/parakeet</RepositoryUrl>
   </PropertyGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <PackageReference Include="Ara3D.Parakeet" Version="*" />
+    <PackageReference Include="Ara3D.Parakeet.Grammars" Version="*" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Parakeet.Grammars\Ara3D.Parakeet.Grammars.csproj" />
     <ProjectReference Include="..\Parakeet\Ara3D.Parakeet.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>

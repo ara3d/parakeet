@@ -3,10 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>A PEG parsing libray. </Description>
+    <Description>A PEG parsing library that uses operator overloading to allow grammars to be written in cross-platform C#.</Description>
     <PackageProjectUrl>https://github.com/ara3d/parakeet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ara3d/parakeet</RepositoryUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\README.md">
@@ -14,6 +13,11 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <PackageReference Include="Ara3D.Utils" Version="*" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Ara3D.Utils\Ara3D.Utils.csproj" />
   </ItemGroup>

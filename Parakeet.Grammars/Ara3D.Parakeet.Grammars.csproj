@@ -2,8 +2,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>A library of Parakeet grammars.</Description>
+    <PackageProjectUrl>https://github.com/ara3d/parakeet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ara3d/parakeet</RepositoryUrl>
   </PropertyGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <PackageReference Include="Ara3D.Parakeet" Version="*" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Parakeet\Ara3D.Parakeet.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
