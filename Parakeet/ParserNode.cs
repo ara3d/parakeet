@@ -12,7 +12,7 @@ namespace Ara3D.Parakeet
     {
         public readonly ParserRange Range;
         public int Start => Range.BeginPosition;
-        public int End => Range.End.Position;
+        public int End => Range.EndPosition;
         public int Length => Range.Length;
         public readonly string Name;
         public readonly ParserNode Previous;
@@ -21,7 +21,7 @@ namespace Ara3D.Parakeet
         public bool IsEnd => Range.Begin != null;
 
         public override string ToString()
-            => $"Node {Name}:{Start}-{End}:{EllidedContents}";
+            => $"({Name}:{Start}-{End}:{EllidedContents} end:{IsEnd})";
 
         public const int MaxLength = 20;
 
@@ -43,6 +43,11 @@ namespace Ara3D.Parakeet
             while (prev != null && node.IsParentOf(prev))
             {
                 ParserTreeNode child;
+                if (prev.IsBegin)
+                {
+                    prev = prev.Previous;
+                    continue;
+                }
                 (child, prev) = prev.ToParseTreeAndNode();
                 children.Add(child);
             }
@@ -56,23 +61,6 @@ namespace Ara3D.Parakeet
                 if (node.IsEnd)
                     yield return node;
         }
-
-        public IEnumerable<ParserNode> SelfAndSiblings()
-        {
-            yield return this;
-            var current = this;
-            foreach (var node in AllEndAllNodesReversed())
-            {
-                if (node.End < current.Start)
-                {
-                    current = node;
-                    yield return current;
-                }
-            }
-        }
-
-        public bool IsChildOf(ParserNode parent)
-            => parent.IsParentOf(this);
 
         public bool IsParentOf(ParserNode other)
             => Start <= other.Start && End >= other.End;

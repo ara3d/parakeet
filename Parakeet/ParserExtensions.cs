@@ -38,12 +38,6 @@ namespace Ara3D.Parakeet
             }
         }
 
-        public static IEnumerable<ParserNode> ToNodes(this IEnumerable<ParserState> states)
-            => states.Where(state => state.Node != null).Select(state => state.Node).SelectMany(n => n.SelfAndSiblings());
-
-        public static IEnumerable<string> ToStrings(this IEnumerable<ParserNode> nodes)
-            => nodes.Select(n => n.Contents);
-
         public static IEnumerable<IGrouping<string, ParserNode>> GroupNodes(this IEnumerable<ParserNode> nodes)
             => nodes.GroupBy(n => n.Name).OrderBy(g => g.Key);
 

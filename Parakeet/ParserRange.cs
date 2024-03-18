@@ -26,7 +26,8 @@ namespace Ara3D.Parakeet
         }
             
         public string InputText => End.Input.Text;
-        public int BeginPosition => Begin?.Position ?? 0;
+        public int BeginPosition => Begin?.Position ?? EndPosition;
+        public int EndPosition => End.Position;
         public int Length => End.Position - BeginPosition;
         public string Text => InputText.Substring(BeginPosition, Length);
         public ParserNode Node => End.Node;
