@@ -191,6 +191,8 @@ Parakeet is designed to be as fast as possible while retaining a clean and elega
 * https://github.com/teo-tsirpanis/Farkle
 * https://github.com/takahisa/parseq
 * https://github.com/picoe/Eto.Parse
+* https://github.com/b3b00/CSLY
+* https://github.com/stephan-tolksdorf/fparsec
 
 ### Parser Generator Tools
 
