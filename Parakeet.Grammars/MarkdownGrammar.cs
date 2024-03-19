@@ -30,15 +30,16 @@
 
         // TODO: support HTML but that is another grammar. 
         public Rule Img => Node("!" + AltText + Parenthesized(Url + WS + UrlTitle.Optional()));
-        public Rule FormatChar => "*[<`~*_!\\".ToCharSetRule();
+        public Rule FormatChar => "*[<`~*_!\\>]".ToCharSetRule();
         public Rule PlainText => Node(AnyCharExcept(FormatChar).OneOrMore());
         public Rule Text => Recursive(nameof(InnerText));
 
-        public Rule UrlChar => Named(DigitOrLetter | "_:?+%-#.$~!*'();:@&=+$,/?#[]".ToCharSetRule());
+        public Rule UrlChar => Named(DigitOrLetter | "_:?+%-#.$~!*';:@&=+$,/?#[]".ToCharSetRule());
         public Rule Url => Node(UrlChar.ZeroOrMore());
         public Rule PlainTextUrl => Node("http://" + UrlChar.ZeroOrMore());
         public Rule UrlTitle => Node(DoubleQuoteBasicString);
-        public Rule Link => Node("[" + Text + "]" + WS + "(" + Url + WS + UrlTitle + ")");
+        public Rule LinkedText => Node(Text.RepeatUntilAt(']'));
+        public Rule Link => Node('[' + LinkedText + ']' + WS + Parenthesized(Url + WS + UrlTitle.Optional()));
 
         public Rule FormattedText(string delimiter) 
             => Text.Except(delimiter).ZeroOrMore();
@@ -80,19 +81,20 @@
 
         public override Rule StartRule => Document;
         public override Rule WS => Named(SpaceOrTab.ZeroOrMore());
-        public Rule WSToEndOfLine => Named(WS + (NewLine | EndOfInput));
 
-        public Rule Document => Node(Block.ZeroOrMore());
         public Rule BlankLine => Node(WS + NewLine);
-        public Rule RestOfLine => Recursive(nameof(Line));
+        public Rule EatWsToNextLine => Named(WS + (NewLine | EndOfInput));
+        public Rule Document => Node(Block.ZeroOrMore());
+        
+        public Rule RestOfLine => Node(Recursive(nameof(Line)));
 
         public Rule CodeBlockDelimiter => Named("```");
-        public Rule CodeBlockLang => Node(Identifier.Optional() + AbortOnFail + WSToEndOfLine);
+        public Rule CodeBlockLang => Node(Identifier.Optional() + AbortOnFail + BlankLine);
         public Rule CodeBlockText => Node(AnyCharUntilAt(CodeBlockDelimiter));
         public Rule CodeBlock => Node(CodeBlockDelimiter + AbortOnFail + CodeBlockLang + CodeBlockText + CodeBlockDelimiter);
 
-        public Rule H1Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('=') + AbortOnFail + WSToEndOfLine);
-        public Rule H2Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('-') + AbortOnFail + WSToEndOfLine);
+        public Rule H1Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('=') + AbortOnFail + EatWsToNextLine);
+        public Rule H2Underline => Node(IndentsOrQuoteMarkers + WS + TwoOrMore('-') + AbortOnFail + EatWsToNextLine);
         public Rule HeadingOperator => Node(OneOrMore('#'));
         public Rule HeadingWithOperator => Node(HeadingOperator + TextLine);
         public Rule HeadingUnderlined => Node(TextLine + (H1Underline | H2Underline));
@@ -102,7 +104,7 @@
             (ThreeOrMore('*') 
              | ThreeOrMore('-') 
              | ThreeOrMore('_')
-             | ThreeOrMore('=')) + AbortOnFail + WSToEndOfLine);
+             | ThreeOrMore('=')) + AbortOnFail + BlankLine);
 
         public Rule OrderedListItem => Node(Indents + WS + Digit.OneOrMore() + "." + WS + AbortOnFail + TextLine);
         public Rule UnorderedListItem => Node(Indents + WS + "+-*".ToCharSetRule() + WS + AbortOnFail + TextLine);
@@ -113,9 +115,14 @@
         public Rule IndentsOrQuoteMarkers => Node((Indent | QuoteMarker).ZeroOrMore());
 
         public Rule BlockQuotedLine => Node(Indents + QuoteMarker + RestOfLine);
-        public Rule TextLine => Node(AnyCharExcept(NewLine) + AnyCharUntilNextLine);
 
-        public Rule Comment => Node(XmlStyleComment);
+        // Note: everything on a line after the comment close will be ignored. (e.g., <!-- --> blabla will have blabla ignored ) 
+        public Rule Comment => Node(XmlStyleComment + TextLine);
+
+        public Rule TextLine => Node(AnyCharUntilNextLine);
+
+        // If we don't have this rule the parser can get stuck.
+        public Rule NonEmptyTextLine => Node(!NewLine + AnyChar + AnyCharUntilNextLine);
 
         public Rule Line => Node(
             Heading 
@@ -124,7 +131,7 @@
             | OrderedListItem 
             | BlockQuotedLine
             | BlankLine
-            | TextLine); 
+            | NonEmptyTextLine); 
 
         public Rule Block => Node(
             CodeBlock 

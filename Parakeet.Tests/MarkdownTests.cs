@@ -54,8 +54,8 @@ namespace Ara3D.Parakeet.Tests
             var g = MarkdownInlineGrammar.Instance;
             var tmp = new[]
             {
-                ("a", g.PlainText),
-                ("abc", g.PlainText),
+                ("a", g.Content),
+                ("abc", g.Content),
 
                 ("** bold **", g.Bold),
                 ("**a**", g.Bold),
@@ -87,6 +87,15 @@ namespace Ara3D.Parakeet.Tests
 
                 ("<abc>", g.UrlLink),
                 ("http://www.ara3d.com", g.UrlLink),
+
+                ("[abc](abc)", g.Link),
+                ("[abc](http://ara3d.com)", g.Link),
+                ("[abc](http://wwww.ara3d.com?fubar&something#27%2C-more)", g.Link),
+                ("[abc](http://ara3d.com \"and here is a title\")", g.Link),
+                ("[abc def](abc)", g.Link),
+                ("[abc def] (abc)", g.Link),
+                ("[**bolded**](abc)", g.Link),
+                ("[some **bolded** _text_](abc)", g.Link),
             };
             return tmp;
         }

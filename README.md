@@ -1,8 +1,9 @@
 # Parakeet
 
-**Parakeet** is a simple parsing library written in C#. Parakeet is the parsing library being used by the 
-[Plato programming language project](https://github.com/cdiggins/plato) to Parse both Plato 
-and C# source code. 
+[![NuGet Version](https://img.shields.io/nuget/v/Ara3D.Parakeet)](https://www.nuget.org/packages/Ara3D.Parakeet)
+
+**Parakeet** is a text parsing library written in C#. Parakeet is the parsing library being used by the 
+[Plato programming language project](https://github.com/cdiggins/plato) to Parse both Plato and C# source code. 
 
 ![Parakeet1](https://user-images.githubusercontent.com/1759994/222930131-4edeb2ce-757f-4471-8905-8c24ecbc67f8.png)
 
@@ -10,11 +11,13 @@ and C# source code.
 
 ## Overview 
 
-Parakeet is a [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser) (RD) parsing library based on the [parsing expression grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar) (PEG) formalization
+Parakeet is a [recursive descent](https://en.wikipedia.org/wiki/Recursive_descent_parser) (RD) parsing library based on the 
+[parsing expression grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar) (PEG) formalization
 introduced by [Bryan Ford](https://bford.info/pub/lang/peg.pdf). Parakeet parsers are defined directly in C# using operator overloading. 
 Parakeet combines both lexical analysis (aka tokenization) and syntactic analysis in a single pass. 
 
-For an example of how to define grammars in Parakeet see the [C# Grammar](https://github.com/cdiggins/parakeet/blob/master/Parakeet.Demos/CSharpGrammar.cs).
+See this [CodeProject article](https://www.codeproject.com/Articles/5379232/Introduction-to-Text-Parsing-in-Csharp-using-Parak)
+for an introduction to the core concepts of Parakeet. 
 
 ## More Details and Features
 
@@ -145,9 +148,9 @@ Several rules never advance the parser state:
 
 ### Error Handling Rules
 
-* `OnError` - Used only within `Sequence` rules. Contains a child rule called the recovery rule. 
-Will always return the `ParserState` when matched. If a sequence encounters an `OnError` node and 
-one of the subsequent child rules fails, the parser will then try to match the `OnError` recovery rule to advance 
+* `OnFail` - Used only within `Sequence` rules. Contains a child rule called the recovery rule. 
+Will always succeed and return the `ParserState` when matched. If a sequence encounters an `OnFail` error and 
+one of the subsequent child rules fails, the parser will then use the recovery rule to try to advance 
 to a place where it is likely to be able to continue parsing successfully (e.g. the end of a statement).
 
 ## Parse Trees 
@@ -159,7 +162,15 @@ is converted into a tree structure.
 ## Typed Parse Tree (CST)
 
 A set of classes representing a strongly typed parse tree can be created automatically from a Parakeet grammar. This is called the 
-Concrete Syntax Tree. 
+Concrete Syntax Tree. Concrete syntax trees are generated from the `Ara3D.Parakeet.Grammars` project using one of the 
+functions in the `Ara3d.Parakeet.Tests` project. 
+
+## Examples of Using Parakeet 
+
+The following projects use Parakeet:
+
+* <https://github.com/ara3d/ara3d/tree/main/src/Ara3D.Parsing.Markdown>
+* <https://github.com/cdiggins/Plato>
 
 ## History 
 
@@ -226,4 +237,4 @@ Q: Isn't parsing library X faster?
 Q: Can you provide some benchmarks? Or implement grammar X? 
 
 > I'm kind of busy getting work done. 
-> If you are willing to fund this project, then we should talk: email me at cdiggins@gmail.com.   
+> If you are willing to fund this project, then we should talk: email me at <cdiggins@gmail.com>.   

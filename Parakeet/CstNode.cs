@@ -49,25 +49,18 @@ namespace Ara3D.Parakeet
         public override string ToString() => Text;
     }
 
-    public class CstNodeFilter : CstNode
+    public class CstNodeFilter<T> 
+        where T: CstNode
     {
-        public CstNodeFilter(IReadOnlyList<CstNode> children) : base(children)
-        {
-        }
-    }
-
-    public class CstNodeFilter<T> : CstNodeFilter
-    {
-        public IReadOnlyList<T> Nodes => Children.OfType<T>().ToList();
-
-        public CstNodeFilter(IReadOnlyList<CstNode> children) : base(children)
-        {
-        }
-
         public T Node => Nodes.FirstOrDefault();
         public bool Present => Node != null;
+        public int Count => Nodes.Count;
+        public CstNode this[int index] => Nodes[index];
+        public IReadOnlyList<T> Nodes { get; }
+        public CstNodeFilter(IReadOnlyList<CstNode> nodes)
+            => Nodes = nodes.OfType<T>().ToList();
     }
-    
+
     public static class CstExtensions
     {
         public static StringBuilder ToXml(this CstNode node, StringBuilder sb = null, string indent = "")
