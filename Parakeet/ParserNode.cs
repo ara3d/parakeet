@@ -8,7 +8,7 @@ namespace Ara3D.Parakeet
     /// These nodes are stored as a linked list, and can be converted 
     /// to a tree representation after all parsing is completed.
     /// </summary>
-    public class ParserNode
+    public class ParserNode : ILocation
     {
         public readonly ParserRange Range;
         public int Start => Range.BeginPosition;
@@ -19,6 +19,9 @@ namespace Ara3D.Parakeet
         public string Contents => Range.Text;
         public bool IsBegin => Range.Begin == null;
         public bool IsEnd => Range.Begin != null;
+
+        public ParserRange GetRange()
+            => Range;
 
         public override string ToString()
             => $"({Name}:{Start}-{End}:{EllidedContents} end:{IsEnd})";

@@ -1,18 +1,16 @@
 ﻿namespace Ara3D.Parakeet
 {
     /// <summary>
-    /// An abstract notion of location. This could be ParserState, ParserRange, or a ParseNode,
-    /// but it can also be the result of some generated code, or refactoring, and express a relationship to
-    /// something else. 
+    /// An abstract notion of location.
+    /// This could be ParserState, ParserRange, ParseNode, CstNode, or AstNode. 
     /// </summary>
     public interface ILocation
-    { }
+    {
+        ParserRange GetRange();
+    }
 
     public class Location : ILocation
     {
-    }
-
-    public static class LocationExtensions
-    {
+        public ParserRange GetRange() => null;
     }
 }

@@ -7,35 +7,43 @@ namespace Ara3D.Parakeet
 {
     public class CstNode : ILocation
     {
-        public int Count => Children.Count;
-        public ILocation Location { get; set; }
-        public CstNode this[int index] => Children[index];
-        public CstNode(IReadOnlyList<CstNode> children) => Children = children;
+        public ILocation Location { get; }
         public IReadOnlyList<CstNode> Children { get; }
-        public static implicit operator CstNode(string text) => new CstNodeLeaf(text);
-        public bool IsLeaf => this is CstNodeLeaf;
-        public override string ToString() => $"[{GetType().Name}: {string.Join(" ", Children)}]";
+
+        public ParserRange GetRange() 
+            => Location?.GetRange();
+        
+        public int Count 
+            => Children.Count;
+        
+        public CstNode this[int index] 
+            => Children[index];
+
+        public CstNode(ILocation location, IReadOnlyList<CstNode> children) 
+            => (Location, Children) = (location, children);
+        
+        public bool IsLeaf 
+            => this is CstNodeLeaf;
+        
+        public override string ToString() 
+            => $"[{GetType().Name}: {string.Join(" ", Children)}]";
 
         public string Text
-        {
-            get
-            {
-                if (this is CstNodeLeaf leaf) return leaf.Text;
-                return string.Join(" ", Children.Select(x => x.Text));
-            }
-        }
+            => this is CstNodeLeaf leaf 
+                ? leaf.Text 
+                : string.Join(" ", Children.Select(x => x.Text));
     }
 
     public class CstNodeSequence : CstNode
     {
-        public CstNodeSequence(params CstNode[] children) : base(children)
+        public CstNodeSequence(ILocation location, params CstNode[] children) : base(location, children)
         {
         }
     }
 
     public class CstNodeChoice : CstNode
     {
-        public CstNodeChoice(params CstNode[] children) : base(children)
+        public CstNodeChoice(ILocation location, params CstNode[] children) : base(location, children)
         {
         }
 
@@ -45,7 +53,7 @@ namespace Ara3D.Parakeet
     public class CstNodeLeaf : CstNode
     {
         public string Text { get; }
-        public CstNodeLeaf(string text) : base(Array.Empty<CstNode>()) => Text = text;
+        public CstNodeLeaf(ILocation location, string text) : base(location, Array.Empty<CstNode>()) => Text = text;
         public override string ToString() => Text;
     }
 

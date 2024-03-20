@@ -132,6 +132,8 @@ namespace Ara3D.Parakeet
                     return o.Rule.ChildrenWithNodes();
                 case RecursiveRule rec:
                     return rec.Rule.ChildrenWithNodes();
+                case CountedRule cr:
+                    return cr.Rule.ChildrenWithNodes();
                 default:
                     return Enumerable.Empty<Rule>();
             }
@@ -189,6 +191,13 @@ namespace Ara3D.Parakeet
                     var tmp = rec.Rule.OnlyNodes();
                     if (tmp != null)
                         return tmp;
+                    break;
+                }
+                case CountedRule cr:
+                {
+                    var tmp = cr.Rule.OnlyNodes();
+                    if (tmp != null)
+                        return new CountedRule(tmp, cr.Min, cr.Max);
                     break;
                 }
             }

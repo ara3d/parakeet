@@ -14,6 +14,10 @@ namespace Ara3D.Parakeet
         public readonly ParserError LastError;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ParserRange GetRange()
+            => new ParserRange(null, this);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AtEnd()
             => Position >= Input.Length;
 

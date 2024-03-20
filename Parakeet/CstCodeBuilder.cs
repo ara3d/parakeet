@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Ara3D.Utils;
 
 namespace Ara3D.Parakeet
@@ -49,43 +50,52 @@ namespace Ara3D.Parakeet
             return "Node";
         }
 
-        public static CodeBuilder OutputFields(CodeBuilder cb, Rule r, HashSet<string> fields)
+        public static CodeBuilder OutputFields(CodeBuilder cb, HashSet<string> fields)
+        {
+            foreach (var f in fields)
+                cb = cb.WriteLine($"public CstNodeFilter<Cst{f}> {f} => new CstNodeFilter<Cst{f}> (Children);");
+            return cb;
+        }
+
+        public static HashSet<string> GatherFields(Rule r, HashSet<string> fields = null)
         {
             fields = fields ?? new HashSet<string>();
 
+            if (r == null)
+                return fields;
+
             if (r is NodeRule nr)
             {
-                if (fields.Contains(nr.Name))
-                    return cb;
-                fields.Add(nr.Name);
-                return cb.WriteLine($"public CstNodeFilter<Cst{nr.Name}> {nr.Name} => new CstNodeFilter<Cst{nr.Name}> (Children);");
+                if (!fields.Contains(nr.Name))
+                    fields.Add(nr.Name);
+                return fields;
             }
-
             if (r is SequenceRule seq)
             {
                 foreach (var child in seq.Rules)
-                    cb = OutputFields(cb, child, fields);
-                return cb;
+                    GatherFields(child, fields);
+                return fields;
             }
-
             if (r is ChoiceRule ch)
             {
                 foreach (var child in ch.Rules)
-                    cb = OutputFields(cb, child, fields);
-                return cb;
+                    GatherFields(child, fields);
+                return fields;
             }
-
             if (r is ZeroOrMoreRule z)
-                return OutputFields(cb, z.Rule, fields);
+                return GatherFields(z.Rule, fields);
 
             if (r is OneOrMoreRule o)
-                return OutputFields(cb, o.Rule, fields);
+                return GatherFields(o.Rule, fields);
 
             if (r is OptionalRule opt)
-                return OutputFields(cb, opt.Rule, fields);
+                return GatherFields(opt.Rule, fields);
 
             if (r is RecursiveRule rec)
-                return OutputFields(cb, rec.Rule, fields);
+                return GatherFields(rec.Rule, fields);
+
+            if (r is CountedRule cr)
+                return GatherFields(cr.Rule, fields);
 
             throw new NotImplementedException($"Unhandled type {r}");
         }
@@ -102,25 +112,21 @@ namespace Ara3D.Parakeet
             if (!(r is NodeRule nr))
                 return cb;
 
-            var isLeaf = ExpectedNumChildNodes(nr) == 0;
-
             var body = r.Body();
-            //cb = cb.WriteLine($"// Original Rule: {body.ToDefinition()}");
-
             body = body.Optimize();
             if (body == null)
                 throw new Exception("Failed to create node");
 
-            body = body.OnlyNodes();
-            //cb = cb.WriteLine($"// Only Nodes: {body?.ToDefinition()}");
-
-            body = body?.Optimize();
-            //cb = cb.WriteLine($"// Optimized only nodes: {body?.ToDefinition()}");
+            body = body.OnlyNodes()?.Optimize();
+            var def = body?.ToDefinition()?.Replace("\n", "\\n")?.Replace("\r", "\\r");
 
             cb = cb.WriteLine($"/// <summary>");
             cb = cb.WriteLine($"/// Rule = {r.ToString().Replace("\n", "\\n").Replace("\r", "\\r")}");
-            cb = cb.WriteLine($"/// Nodes = {body?.ToDefinition()}");
+            cb = cb.WriteLine($"/// Nodes = {def}");
             cb = cb.WriteLine($"/// </summary>");
+
+            var fields = GatherFields(body);
+            var isLeaf = IsLeaf(r);
 
             cb = cb.Write($"public class Cst{nr.Name}");
 
@@ -149,21 +155,15 @@ namespace Ara3D.Parakeet
 
             if (isLeaf)
             {
-                cb = cb.WriteLine($"public Cst{nr.Name}(string text) : base(text) {{ }}");
+                cb = cb.WriteLine($"public Cst{nr.Name}(ILocation location, string text) : base(location, text) {{ }}");
             }
             else
             {
-                cb = cb.WriteLine($"public Cst{nr.Name}(params CstNode[] children) : base(children) {{ }}");
+                cb = cb.WriteLine($"public Cst{nr.Name}(ILocation location, params CstNode[] children) : base(location, children) {{ }}");
             }
 
-            if (body == null)
-            {
-                cb = cb.WriteLine("// No children");
-            }
-            else 
-            {
-                OutputFields(cb, body, null);
-            }
+            OutputFields(cb, fields);
+
             cb = cb.Dedent().WriteLine("}");            
             return cb.WriteLine();
         }
@@ -177,23 +177,19 @@ namespace Ara3D.Parakeet
             }
         }
 
+        public static bool IsLeaf(Rule r)
+        {
+            var body = r.Body()?.Optimize()?.OnlyNodes()?.Optimize();
+            return body == null || GatherFields(body).Count == 0;
+        }
+
         public static void OutputCstClassFactory(CodeBuilder cb, Grammar g)
         {
             cb.WriteLine("public class CstNodeFactory : INodeFactory");
             cb.WriteLine("{").Indent();
             cb.WriteLine($"public static {g.GetType().Name} StaticGrammar = {g.GetType().Name}.Instance;");
             cb.WriteLine($"public IGrammar Grammar {{ get; }} = StaticGrammar;");
-            cb.WriteLine(
-                $"public Dictionary<CstNode, ParserTreeNode> Lookup {{ get;}} = new Dictionary<CstNode, ParserTreeNode>();");
-            
             cb.WriteLine($"public CstNode Create(ParserTreeNode node)");
-            cb.WriteLine("{").Indent();
-            cb.WriteLine("var r = InternalCreate(node);");
-            cb.WriteLine("Lookup.Add(r, node);");
-            cb.WriteLine("return r;");
-            cb.Dedent().WriteLine("}");
-
-            cb.WriteLine($"public CstNode InternalCreate(ParserTreeNode node)");
             cb.WriteLine("{").Indent();
             cb.WriteLine("switch (node.Type)");
             cb.WriteLine("{").Indent();
@@ -206,13 +202,13 @@ namespace Ara3D.Parakeet
 
                 if (r2 is NodeRule nr)
                 {
-                    if (ExpectedNumChildNodes(nr) == 0)
+                    if (IsLeaf(nr))
                     {
-                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node.Contents);");
+                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node, node.Contents);");
                     }
                     else
                     {
-                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node.Children.Select(Create).ToArray());");
+                        cb.WriteLine($"case \"{nr.Name}\": return new Cst{nr.Name}(node, node.Children.Select(Create).ToArray());");
                     }
                 }
             }

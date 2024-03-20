@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Ara3D.Parakeet
 {
@@ -24,7 +25,10 @@ namespace Ara3D.Parakeet
             if (end.Position < BeginPosition) 
                 throw new ArgumentException("End of range occurs before the beginning", nameof(end));
         }
-            
+
+        public ParserRange GetRange()
+            => this;
+
         public string InputText => End.Input.Text;
         public int BeginPosition => Begin?.Position ?? EndPosition;
         public int EndPosition => End.Position;

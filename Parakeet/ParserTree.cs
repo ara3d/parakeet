@@ -15,5 +15,8 @@ namespace Ara3D.Parakeet
         public string Contents => Node.Contents;
         public override string ToString()
             => $"({Type} {string.Join(" ", Children)})";
+
+        public ParserRange GetRange()
+            => Node.GetRange();
     }
 }
