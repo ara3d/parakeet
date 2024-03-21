@@ -1,4 +1,6 @@
-﻿namespace Ara3D.Parakeet
+﻿using Ara3D.Utils;
+
+namespace Ara3D.Parakeet
 {
     /// <summary>
     /// An abstract notion of location.
@@ -12,5 +14,14 @@
     public class Location : ILocation
     {
         public ParserRange GetRange() => null;
+    }
+
+    public static class LocationExtensions
+    {
+        public static FileAndRange ToFileAndRange(this ILocation location)
+            => location.GetRange().ToFileAndRange();
+
+        public static FileAndRange ToFileAndRange(this ParserRange range)
+            => new FileAndRange(range.FilePath, range.BeginPosition, range.EndPosition);
     }
 }

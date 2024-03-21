@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using Ara3D.Utils;
 
 namespace Ara3D.Parakeet
 {
@@ -47,5 +47,11 @@ namespace Ara3D.Parakeet
 
         public static ParserRange Create(ParserState begin, ParserState end)
             => new ParserRange(begin, end);
+
+        public ParserInput Input 
+            => End.Input;
+
+        public FilePath FilePath
+            => Input?.File;
     }
 }
