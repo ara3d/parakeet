@@ -23,7 +23,7 @@
         public Rule Members => Named(Member + OnFail(AdvanceToEnd) + WS + ("," + WS + Member + WS).ZeroOrMore());
         public Rule Object => Node("{" + OnFail(AdvanceToEnd) + WS + Members.Optional() + "}");
         public Rule Value => Named(Object | Array | String | Number | Constant);
-        public Rule Element => Recursive(nameof(Value));
+        public Rule Element => Node(Recursive(nameof(Value)));
         public Rule Json => Node(WS + Element + WS);
     }
 }
