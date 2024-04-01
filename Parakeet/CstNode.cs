@@ -89,5 +89,13 @@ namespace Ara3D.Parakeet
 
             return sb;
         }
+
+        public static IEnumerable<CstNode> Descendants(this CstNode node)
+        {
+            yield return node;
+            foreach (var c in node.Children)
+            foreach (var d in c.Descendants())
+                yield return d;
+        }
     }
 }
