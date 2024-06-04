@@ -35,6 +35,7 @@
         public Rule BinaryOperation => Node(Not("=>") + BinaryOperator + AdvanceOnFail + Expression);
         public Rule TernaryOperation => Node(Sym("?") + AdvanceOnFail + Expression + Sym(":") + Expression);
         public Rule ParenthesizedExpression => Node(ParenthesizedList(Expression));
+        public Rule ArrayExpression => Node(BracketedList(Expression));
 
         public Rule ThrowExpression => Node(Keyword("throw") + AdvanceOnFail + Expression);
         public Rule LambdaParameter => Node(Identifier);
@@ -65,6 +66,7 @@
             LambdaExpr
             | CastExpression
             | ParenthesizedExpression
+            | ArrayExpression
             | ThrowExpression
             | Literal
             | TypeOf
