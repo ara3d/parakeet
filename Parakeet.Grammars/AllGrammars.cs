@@ -20,6 +20,7 @@
             SchemeGrammar.Instance,
             SExpressionGrammar.Instance,
             SimpleLambdaCalculusGrammar.Instance,
+            StepGrammar.Instance,
             XmlGrammar.Instance,
         };
     }

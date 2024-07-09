@@ -18,6 +18,7 @@ namespace Ara3D.Parakeet.Cst
         public static CstNode Scheme(ParserTreeNode input) => (new SchemeGrammarNameSpace.CstNodeFactory()).Create(input);
         public static CstNode SExpression(ParserTreeNode input) => (new SExpressionGrammarNameSpace.CstNodeFactory()).Create(input);
         public static CstNode SimpleLambdaCalculus(ParserTreeNode input) => (new SimpleLambdaCalculusGrammarNameSpace.CstNodeFactory()).Create(input);
+        public static CstNode Step(ParserTreeNode input) => (new StepGrammarNameSpace.CstNodeFactory()).Create(input);
         public static CstNode Xml(ParserTreeNode input) => (new XmlGrammarNameSpace.CstNodeFactory()).Create(input);
     }
 }
