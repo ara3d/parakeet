@@ -68,7 +68,7 @@
         public Rule MemberDelimiter => Named(Tok("{;".ToCharSetRule()));
         public Rule DeclaredFunction => Named(MemberDelimiter + Tok(FunctionName) + Parameters + Optional(TypeAnnotationToken));
         public Rule DeclaredField => Named(MemberDelimiter + Tok(FieldName) + Tok(TypeAnnotationToken));
-        public Rule Comment => Node(CppStyleComment);
+        public Rule Comment => Named(CppStyleComment);
         public Rule CommentOrSpaces => Named((Comment | Spaces).ZeroOrMore());
 
         public Rule Token => Named(
