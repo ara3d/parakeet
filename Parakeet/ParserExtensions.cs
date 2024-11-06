@@ -59,7 +59,7 @@ namespace Ara3D.Parakeet
             => treeNode.BuildXmlString().ToString();
 
         public static IEnumerable<ParserNode> AllEndNodes(this ParserState state)
-            => state.Node.AllEndAllNodesReversed().Reverse();
+            => state.Node?.AllEndAllNodesReversed().Reverse() ?? Enumerable.Empty<ParserNode>();
 
         public static IEnumerable<ParserError> AllErrorsReversed(this ParserError error)
         {
