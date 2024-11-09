@@ -164,7 +164,7 @@
         public Rule Type => Node(Keyword("type") + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
                                  Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail));
 
-        public Rule Concept => Node(Keyword("concept") + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + InheritsList +
+        public Rule Concept => Node(Keyword("interface") + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + InheritsList +
                                     Braced(MethodDeclaration.ZeroOrMore(), AdvanceOnFail));
 
         public Rule Library =>
