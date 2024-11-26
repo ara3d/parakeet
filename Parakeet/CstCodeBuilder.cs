@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Ara3D.Utils;
@@ -100,13 +100,19 @@ namespace Ara3D.Parakeet
             throw new NotImplementedException($"Unhandled type {r}");
         }
 
-        public static CodeBuilder OutputNodeClass(CodeBuilder cb, Grammar g, Rule r)
+        public static CodeBuilder OutputNodeClass(CodeBuilder cb, Grammar g, Rule r, HashSet<Rule> generated = default)
         {
+            if (generated is null)
+                generated = new HashSet<Rule>();
+            if (generated.Contains(r))
+                return cb;
+            generated.Add(r);
+
             if (r is SequenceRule seq)
             {
                 foreach (var child in seq.Rules)
                     if (child is NodeRule nr2)
-                        OutputNodeClass(cb, g, nr2);
+                        OutputNodeClass(cb, g, nr2, generated);
             }
 
             if (!(r is NodeRule nr))
@@ -171,9 +177,10 @@ namespace Ara3D.Parakeet
         public static void OutputCstClasses(CodeBuilder cb, Grammar g)
         {
             var rules = g.GetRules();
+            var generated = new HashSet<Rule>();
             foreach (var r in rules)
             {
-                OutputNodeClass(cb, g,r);
+                OutputNodeClass(cb, g, r, generated);
             }
         }
 
