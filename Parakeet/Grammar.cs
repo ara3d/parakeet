@@ -43,6 +43,8 @@ namespace Ara3D.Parakeet
 
         public Rule Recursive(string inner)
             => new RecursiveRule(() => GetRuleFromName(inner));
+        public Rule Recursive(Func<Rule> func)
+            => new RecursiveRule(func);
 
         public Rule Named(Rule r, [CallerMemberName] string name = "")
         {
