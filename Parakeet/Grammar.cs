@@ -16,7 +16,7 @@ namespace Ara3D.Parakeet
     {
         public abstract Rule StartRule { get; }
         public virtual Rule WS => BooleanRule.True;
-        public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
+        public readonly Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 
         public Rule GetRuleFromName(string name)
         {
