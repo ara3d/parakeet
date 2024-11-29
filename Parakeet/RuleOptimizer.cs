@@ -12,7 +12,8 @@ namespace Ara3D.Parakeet
 
         private readonly TextWriter Logger;
 
-        public RuleOptimizer(Grammar g, TextWriter logger = null)
+        public RuleOptimizer(Grammar g, TextWriter logger = null) :
+            this(logger)
         {
             foreach (var r in g.GetRules())
             {

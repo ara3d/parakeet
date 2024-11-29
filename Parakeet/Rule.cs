@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -767,6 +767,9 @@ namespace Ara3D.Parakeet
     /// </summary>
     public class BooleanRule : Rule
     {
+        public static BooleanRule True { get; } = new BooleanRule(true);
+        public static BooleanRule False { get; } = new BooleanRule(false);
+
         public readonly bool Value;
 
         public BooleanRule(bool b)

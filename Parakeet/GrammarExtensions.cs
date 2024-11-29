@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -86,6 +86,8 @@ namespace Ara3D.Parakeet
                     return $"_END_";
                 case CharRule ch:
                     return $"'{ch.Char}'";
+                case BooleanRule br:
+                    return br.Value ? "_TRUE_" : "_FALSE_";
                 default:
                     return "_UNKNOWN_";
             }
