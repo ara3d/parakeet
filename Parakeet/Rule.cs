@@ -25,17 +25,15 @@ namespace Ara3D.Parakeet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Match(ParserState state)
         {
-#if DEBUG
             // Trace the parsing during debug builds.
-            if (state.Input.Debugging && this.HasName())
+            if (state.Input.Debugging && Debugger.IsAttached && this.HasName())
             {
-                Console.WriteLine($"Starting parse - {this.GetName()} {state}");
+                Debug.WriteLine($"Starting parse - {this.GetName()} {state}");
                 var r = MatchImplementation(state);
                 var result = r?.ToString() ?? "FAILED";
-                Console.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
+                Debug.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
                 return r;
             }
-#endif
             return MatchImplementation(state);
         }
 
