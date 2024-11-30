@@ -449,15 +449,10 @@ namespace Ara3D.Parakeet
             {
                 curr = next;
                 next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
+                if (next != null && next.Position <= curr.Position)
                 {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
+                    throw new ParserException(curr, "Parser is no longer making progress");
                 }
-#endif
             }
             return curr;
         }
@@ -491,15 +486,10 @@ namespace Ara3D.Parakeet
             {
                 curr = next;
                 next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
+                if (next != null && next.Position <= curr.Position)
                 {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
+                    throw new ParserException(curr, "Parser is no longer making progress");
                 }
-#endif
             }
             return curr;
         }
@@ -543,17 +533,12 @@ namespace Ara3D.Parakeet
             while (curr != null && i++ < Max)
             {
                 var next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
-                {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
-                }
-#endif
                 if (next == null)
                     return curr;
+                if (next.Position <= curr.Position)
+                {
+                    throw new ParserException(curr, "Parser is no longer making progress");
+                }
                 curr = next;
             }
             return curr;
