@@ -221,7 +221,7 @@ namespace Ara3D.Parakeet
                     return rr;
 
                 case NodeRule nodeRule:
-                    return nodeRule;
+                    return new NodeRule(Optimize(nodeRule.Rule), nodeRule.Name);
 
                 case NamedRule namedRule:
                     return Optimize(namedRule.Rule);
