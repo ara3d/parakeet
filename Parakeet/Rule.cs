@@ -25,17 +25,15 @@ namespace Ara3D.Parakeet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Match(ParserState state)
         {
-#if DEBUG
             // Trace the parsing during debug builds.
-            if (state.Input.Debugging && this.HasName())
+            if (state.Input.Debugging && Debugger.IsAttached && this.HasName())
             {
-                Console.WriteLine($"Starting parse - {this.GetName()} {state}");
+                Debug.WriteLine($"Starting parse - {this.GetName()} {state}");
                 var r = MatchImplementation(state);
                 var result = r?.ToString() ?? "FAILED";
-                Console.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
+                Debug.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
                 return r;
             }
-#endif
             return MatchImplementation(state);
         }
 
@@ -449,15 +447,10 @@ namespace Ara3D.Parakeet
             {
                 curr = next;
                 next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
+                if (next != null && next.Position <= curr.Position)
                 {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
+                    throw new ParserException(curr, "Parser is no longer making progress");
                 }
-#endif
             }
             return curr;
         }
@@ -491,15 +484,10 @@ namespace Ara3D.Parakeet
             {
                 curr = next;
                 next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
+                if (next != null && next.Position <= curr.Position)
                 {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
+                    throw new ParserException(curr, "Parser is no longer making progress");
                 }
-#endif
             }
             return curr;
         }
@@ -543,17 +531,12 @@ namespace Ara3D.Parakeet
             while (curr != null && i++ < Max)
             {
                 var next = Rule.Match(curr);
-#if DEBUG
-                if (next != null)
-                {
-                    if (next.Position <= curr.Position)
-                    {
-                        throw new ParserException(curr, "Parser is no longer making progress");
-                    }
-                }
-#endif
                 if (next == null)
                     return curr;
+                if (next.Position <= curr.Position)
+                {
+                    throw new ParserException(curr, "Parser is no longer making progress");
+                }
                 curr = next;
             }
             return curr;
