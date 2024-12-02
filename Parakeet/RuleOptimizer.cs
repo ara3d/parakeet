@@ -397,6 +397,39 @@ namespace Ara3D.Parakeet
 
                     return new OneOrMoreRule(inner);
                 }
+
+                case CountedRule counted:
+                {
+                    var inner = Optimize(counted.Rule);
+
+                    switch (counted.Min)
+                    {
+                        case 0:
+                            switch (counted.Max)
+                            {
+                                case 1:
+                                    return Log(r, null, new OptionalRule(inner), "A{0,1} => A?");
+
+                                case int.MaxValue:
+                                    return Log(r, null, new ZeroOrMoreRule(inner), "A{0,} => A*");
+                            }
+                            break;
+
+                        case 1:
+                            switch (counted.Max)
+                            {
+                                case 1:
+                                    return Log(r, null, inner, "A{1,1} => A");
+
+                                case int.MaxValue:
+                                    return Log(r, null, new OneOrMoreRule(inner), "A{1,} => A+");
+
+                            }
+                            break;
+                    }
+
+                    return new CountedRule(inner, counted.Min, counted.Max);
+                }
             }
 
             return r;
