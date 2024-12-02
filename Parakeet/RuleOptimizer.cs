@@ -337,6 +337,22 @@ namespace Ara3D.Parakeet
                         
                     return new ZeroOrMoreRule(inner);
                 }
+
+                case OneOrMoreRule oom:
+                {
+                    var inner = Optimize(oom.Rule);
+
+                    if (inner is OptionalRule opt)
+                        return Log(r, null, new ZeroOrMoreRule(opt.Rule), "A?+ => A*");
+
+                    if (inner is ZeroOrMoreRule z)
+                        return Log(r, null, new ZeroOrMoreRule(z.Rule), "A*? => A*");
+
+                    if (inner is OneOrMoreRule oom1)
+                        return Log(r, null, new CountedRule(oom1.Rule, 2, int.MaxValue), "A++ => A{2,}");
+
+                    return new OneOrMoreRule(inner);
+                }
             }
 
             return r;
