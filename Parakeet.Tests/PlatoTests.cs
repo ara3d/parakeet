@@ -128,7 +128,7 @@ namespace Ara3D.Parakeet.Tests
         [TestCase(" ", "CommentOrSpaces")]
         [TestCase("", "CommentOrSpaces")]
         [TestCase("/* Abc */", "Comment")]
-        [TestCase("/* Abc */", "Comme   ntOrSpaces")]
+        [TestCase("/* Abc */", "CommentOrSpaces")]
         [TestCase("/* Abc */ /* 123 */", "CommentOrSpaces")]
         [TestCase("// Hello\n", "Comment")]
         [TestCase("// Hello", "Comment")]

@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace Ara3D.Parakeet
@@ -9,7 +10,10 @@ namespace Ara3D.Parakeet
     {
         public Dictionary<Rule, Rule> OptimizedRules = new Dictionary<Rule, Rule>();
 
-        public RuleOptimizer(Grammar g)
+        private readonly TextWriter Logger;
+
+        public RuleOptimizer(Grammar g, TextWriter logger = null) :
+            this(logger)
         {
             foreach (var r in g.GetRules())
             {
@@ -17,18 +21,20 @@ namespace Ara3D.Parakeet
             }
         }
 
-        public RuleOptimizer()
-        { }
+        public RuleOptimizer(TextWriter logger = null)
+        {
+            Logger = logger ?? TextWriter.Null;
+        }
 
-        public static Rule Log(Rule r1, Rule r2, Rule result, string desc)
+        public Rule Log(Rule r1, Rule r2, Rule result, string desc)
         {
             if (r2 == null)
             {
-                Console.WriteLine($"{desc}: {r1.ToDefinition()} into {result.ToDefinition()}");
+                Logger.WriteLine($"{desc}: {r1.ToDefinition()} into {result.ToDefinition()}");
             }
             else
             {
-                Console.WriteLine($"{desc}: {r1.ToDefinition()} with {r2.ToDefinition()} into {result.ToDefinition()}");
+                Logger.WriteLine($"{desc}: {r1.ToDefinition()} with {r2.ToDefinition()} into {result.ToDefinition()}");
             }
 
             return result;
@@ -46,7 +52,7 @@ namespace Ara3D.Parakeet
             return new SequenceRule(seq.Rules.Skip(1).ToArray());
         }
 
-        public static Rule MergeChoiceRule(Rule r1, Rule r2)
+        public Rule MergeChoiceRule(Rule r1, Rule r2)
         {
             {
                 if (r1 is OptionalRule opt)
@@ -116,7 +122,7 @@ namespace Ara3D.Parakeet
             return null;
         }
 
-        public static Rule MergeSequenceRule(Rule r1, Rule r2)
+        public Rule MergeSequenceRule(Rule r1, Rule r2)
         {
             {
                 if (r1 is StringRule sr1)

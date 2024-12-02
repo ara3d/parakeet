@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -15,8 +15,8 @@ namespace Ara3D.Parakeet
     public abstract class Grammar : IGrammar
     {
         public abstract Rule StartRule { get; }
-        public virtual Rule WS { get; }
-        public Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
+        public virtual Rule WS => BooleanRule.True;
+        public readonly Dictionary<string, Rule> Lookup = new Dictionary<string, Rule>();
 
         public Rule GetRuleFromName(string name)
         {
@@ -43,6 +43,8 @@ namespace Ara3D.Parakeet
 
         public Rule Recursive(string inner)
             => new RecursiveRule(() => GetRuleFromName(inner));
+        public Rule Recursive(Func<Rule> func)
+            => new RecursiveRule(func);
 
         public Rule Named(Rule r, [CallerMemberName] string name = "")
         {

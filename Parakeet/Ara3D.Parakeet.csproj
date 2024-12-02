@@ -14,11 +14,10 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+  <ItemGroup Condition="!Exists('..\..\Utils\Ara3D.Utils\Ara3D.Utils.csproj') Or '$(Configuration)' == 'Release'">
     <PackageReference Include="Ara3D.Utils" Version="*" />
   </ItemGroup>
-
-  <ItemGroup>
+  <ItemGroup Condition="Exists('..\..\Utils\Ara3D.Utils\Ara3D.Utils.csproj')">
     <ProjectReference Include="..\..\Utils\Ara3D.Utils\Ara3D.Utils.csproj" />
   </ItemGroup>
 </Project>

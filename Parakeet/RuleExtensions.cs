@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System.IO;
+using System.Linq;
 
 namespace Ara3D.Parakeet
 {
@@ -52,8 +53,8 @@ namespace Ara3D.Parakeet
         public static string GetName(this Rule rule)
             => rule is NamedRule nr ? nr.Name : "__";
 
-        public static Rule Optimize(this Rule rule)
-            => new RuleOptimizer().Optimize(rule);
+        public static Rule Optimize(this Rule rule, TextWriter logger = null)
+            => new RuleOptimizer(logger).Optimize(rule);
 
         public static Rule RepeatUntilAt(this Rule repeat, Rule delimiter) 
             => repeat.Except(delimiter).ZeroOrMore();
