@@ -670,7 +670,7 @@ namespace Ara3D.Parakeet
             => obj is ChoiceRule ch && Rules.SequenceEqual(ch.Rules);
         
         public override int GetHashCode() 
-            => Hash(Rules);
+            => Hash(typeof(ChoiceRule), Hash(Rules));
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
