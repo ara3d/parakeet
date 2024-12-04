@@ -386,7 +386,7 @@ namespace Ara3D.Parakeet
             => obj is CharRule csr && Char == csr.Char;
 
         public override int GetHashCode() 
-            => Hash(Char);
+            => Hash(typeof(CharRule), Char);
     }
 
     /// <summary>
