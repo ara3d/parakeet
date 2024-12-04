@@ -741,7 +741,7 @@ namespace Ara3D.Parakeet
             => obj is OnFail rec && RecoveryRule.Equals(rec.RecoveryRule);
         
         public override int GetHashCode() 
-            => Hash(RecoveryRule);
+            => Hash(typeof(OnFail), RecoveryRule);
     }
 
     /// <summary>
