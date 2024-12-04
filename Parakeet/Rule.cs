@@ -226,7 +226,7 @@ namespace Ara3D.Parakeet
             => obj is CaseInvariantStringRule smr && smr.Pattern == Pattern;
 
         public override int GetHashCode()
-            => Hash(Pattern);
+            => Hash(typeof(CaseInvariantStringRule), Pattern);
     }
 
     /// <summary>
