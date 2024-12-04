@@ -543,7 +543,7 @@ namespace Ara3D.Parakeet
         }
 
         public override bool Equals(object obj) 
-            => obj is CountedRule o && o.Rule.Equals(Rule);
+            => obj is CountedRule o && Min == o.Min && Max == o.Max && o.Rule.Equals(Rule);
         
         public override int GetHashCode() 
             => Hash(typeof(CountedRule), Min, Max, Rule);
