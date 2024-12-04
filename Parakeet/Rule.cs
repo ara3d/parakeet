@@ -716,7 +716,7 @@ namespace Ara3D.Parakeet
             => obj is NotAtRule notAt && Rule.Equals(notAt.Rule);
         
         public override int GetHashCode() 
-            => Hash(Rule);
+            => Hash(typeof(NotAtRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
