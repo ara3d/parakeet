@@ -426,7 +426,7 @@ namespace Ara3D.Parakeet
             => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule);
 
         public override int GetHashCode() 
-            => Hash(Rule, Name);
+            => Hash(typeof(NodeRule), Rule, Name);
     }
 
     /// <summary>
