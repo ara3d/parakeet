@@ -214,7 +214,7 @@ namespace Ara3D.Parakeet
 
         public CaseInvariantStringRule(string s)
         {
-            if (s.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(s))
                 throw new ArgumentException("Pattern must be non-empty", nameof(s));
             Pattern = s;
         }
