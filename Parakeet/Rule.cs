@@ -201,7 +201,7 @@ namespace Ara3D.Parakeet
             => obj is StringRule smr && smr.Pattern == Pattern;
         
         public override int GetHashCode() 
-            => Hash(Pattern);
+            => Hash(typeof(StringRule), Pattern);
     }
 
     /// <summary>
