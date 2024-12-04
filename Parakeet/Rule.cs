@@ -648,7 +648,12 @@ namespace Ara3D.Parakeet
         public readonly Rule[] Rules;
         
         public ChoiceRule(params Rule[] rules) 
-            => Rules = rules;
+        {
+            var n = Array.IndexOf(rules, null);
+            if (n != -1)
+                throw new ArgumentNullException($"{nameof(rules)}[{n}]", "At least one of the rules is null");
+            Rules = rules;
+        }
         
         public int Count 
             => Rules.Count();
