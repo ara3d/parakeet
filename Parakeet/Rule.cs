@@ -546,7 +546,7 @@ namespace Ara3D.Parakeet
             => obj is CountedRule o && o.Rule.Equals(Rule);
         
         public override int GetHashCode() 
-            => Hash(Rule);
+            => Hash(typeof(CountedRule), Min, Max, Rule);
 
         public override IReadOnlyList<Rule> Children 
             => new[] { Rule };
