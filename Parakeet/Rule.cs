@@ -176,7 +176,7 @@ namespace Ara3D.Parakeet
             => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
         
         public override int GetHashCode() 
-            => Hash(RuleFunc);
+            => Hash(typeof(RecursiveRule), RuleFunc);
     }
 
     /// <summary>
