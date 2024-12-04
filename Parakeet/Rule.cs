@@ -138,7 +138,7 @@ namespace Ara3D.Parakeet
             => obj is NamedRule other && other.Rule.Equals(Rule) && Name == other.Name;
         
         public override int GetHashCode() 
-            => Hash(Rule, Name);
+            => Hash(typeof(NamedRule), Rule, Name);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
