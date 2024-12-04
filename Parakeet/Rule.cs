@@ -765,6 +765,6 @@ namespace Ara3D.Parakeet
             => obj is BooleanRule br && br.Value == Value;
 
         public override int GetHashCode()
-            => Hash(Value);
+            => Hash(typeof(BooleanRule), Value);
     }
 }
