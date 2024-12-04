@@ -633,7 +633,7 @@ namespace Ara3D.Parakeet
             => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
         
         public override int GetHashCode() 
-            => Hash(Rules);
+            => Hash(typeof(SequenceRule), Hash(Rules));
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
