@@ -693,7 +693,7 @@ namespace Ara3D.Parakeet
             => obj is AtRule at && Rule.Equals(at.Rule);
         
         public override int GetHashCode() 
-            => Hash(Rule);
+            => Hash(typeof(AtRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
