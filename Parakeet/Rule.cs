@@ -571,7 +571,7 @@ namespace Ara3D.Parakeet
             => obj is OptionalRule opt && opt.Rule.Equals(Rule);
         
         public override int GetHashCode() 
-            => Hash(Rule);
+            => Hash(typeof(OptionalRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
