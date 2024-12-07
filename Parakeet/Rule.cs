@@ -308,7 +308,7 @@ namespace Ara3D.Parakeet
             => obj is CharSetRule csr && Chars.SequenceEqual(csr.Chars);
 
         public override int GetHashCode() 
-            => Hash(typeof(CharSetRule), Hash(Chars));
+            => Hash(typeof(CharSetRule), Hash(Chars.Cast<object>().ToArray()));
 
         public CharSetRule Union(CharSetRule other)
         {
