@@ -459,7 +459,7 @@ namespace Ara3D.Parakeet
             => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
         
         public override int GetHashCode() 
-            => Hash (Rule);
+            => Hash(typeof(ZeroOrMoreRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
