@@ -244,7 +244,7 @@ namespace Ara3D.Parakeet
             => obj is AnyCharRule;
         
         public override int GetHashCode() 
-            => nameof(AnyCharRule).GetHashCode();
+            => Hash(typeof(AnyCharRule));
     }
 
     /// <summary>
