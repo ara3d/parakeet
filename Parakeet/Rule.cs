@@ -173,10 +173,56 @@ namespace Ara3D.Parakeet
             => Rule.Match(state);
         
         public override bool Equals(object obj) 
-            => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
+        {
+            if (!(obj is RecursiveRule other))
+                return false;
+
+            // compare the delegate Method's IL code  
+            var il1 = RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            var il2 = other.RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            if (!il1.SequenceEqual(il2))
+                return false;
+
+            // compare by delegate Target reference  
+            if (ReferenceEquals(RuleFunc.Target, other.RuleFunc.Target))
+                return true;
+
+            // compare by delegate Target type  
+            if (!Equals(RuleFunc.Target.GetType(), other.RuleFunc.Target.GetType()))
+                return false;
+
+            // compare the delegate Target content  
+            var fields = RuleFunc.Target.GetType().GetFields();
+            foreach (var field in fields)
+            {
+                var v1 = field.GetValue(RuleFunc.Target);
+                var v2 = field.GetValue(other.RuleFunc.Target);
+                if (!Equals(v1, v2))
+                    return false;
+            }
+
+            return true;
+        }
         
         public override int GetHashCode() 
-            => Hash(typeof(RecursiveRule), RuleFunc);
+        {
+            if (RuleFunc.Target is null)
+            {
+                return Hash(
+                    typeof(RecursiveRule),
+                    Hash(RuleFunc.Method.GetMethodBody().GetILAsByteArray().Cast<object>().ToArray())
+                );
+            }
+            else
+            {
+                var fields = RuleFunc.Target.GetType().GetFields();
+                return Hash(
+                    typeof(RecursiveRule),
+                    Hash(RuleFunc.Method.GetMethodBody().GetILAsByteArray().Cast<object>().ToArray()),
+                    Hash(fields.Select(f => f.GetValue(RuleFunc.Target)).ToArray())
+                );
+            }
+        }
     }
 
     /// <summary>
