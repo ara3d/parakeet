@@ -405,7 +405,7 @@ namespace Ara3D.Parakeet
             => obj is EndOfInputRule;
         
         public override int GetHashCode() 
-            => nameof(EndOfInputRule).GetHashCode();
+            => Hash(typeof(EndOfInputRule));
     }
 
     /// <summary>
