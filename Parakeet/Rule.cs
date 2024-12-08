@@ -177,18 +177,22 @@ namespace Ara3D.Parakeet
             if (!(obj is RecursiveRule other))
                 return false;
 
-            // compare the delegate Method's IL code  
-            var il1 = RuleFunc.Method.GetMethodBody().GetILAsByteArray();
-            var il2 = other.RuleFunc.Method.GetMethodBody().GetILAsByteArray();
-            if (!il1.SequenceEqual(il2))
-                return false;
-
-            // compare by delegate Target reference  
-            if (ReferenceEquals(RuleFunc.Target, other.RuleFunc.Target))
+            // compare by delegate Method and Target reference
+            if (ReferenceEquals(RuleFunc.Method, other.RuleFunc.Method) 
+                && ReferenceEquals(RuleFunc.Target, other.RuleFunc.Target))
                 return true;
 
             // compare by delegate Target type  
             if (!Equals(RuleFunc.Target.GetType(), other.RuleFunc.Target.GetType()))
+                return false;
+
+            // at this point, all fast-path failed, we have to compare the
+            // delegate Method's IL code and Target's content.
+
+            // compare the delegate Method's IL code  
+            var il1 = RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            var il2 = other.RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            if (!il1.SequenceEqual(il2))
                 return false;
 
             // compare the delegate Target content  
