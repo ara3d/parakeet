@@ -290,7 +290,7 @@ namespace Ara3D.Parakeet
                     Debug.Assert(!list.Any(t => t is ChoiceRule));
 
                     if (list.Count == 1)
-                        return Log(r, null, list[0], "(A+_) => A");
+                        return Log(r, null, list[0], "(A|_) => A");
 
                     return new ChoiceRule(list.ToArray());
                 }
