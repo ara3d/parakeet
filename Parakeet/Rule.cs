@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using Ara3D.Utils;
 
+#pragma warning disable CS0659 // class overrides Object.Equals(object o), but not Object.GetHashCode()
+
 namespace Ara3D.Parakeet
 {
     /// <summary>
@@ -21,6 +23,10 @@ namespace Ara3D.Parakeet
         /// A ParserState is immutable: it never changes. 
         /// </summary>
         protected abstract ParserState MatchImplementation(ParserState state);
+
+        protected virtual int GetHashCodeInternal() => throw new NotImplementedException();
+
+        public Rule() => LazyHashCode = new Lazy<int>(GetHashCodeInternal);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Match(ParserState state)
@@ -108,10 +114,11 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj)
             => throw new NotImplementedException();
 
-        public override int GetHashCode()
-            => throw new NotImplementedException();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly Lazy<int> LazyHashCode;
+        public override sealed int GetHashCode() => LazyHashCode.Value;
 
-        public virtual IReadOnlyList<Rule> Children 
+        public virtual IReadOnlyList<Rule> Children
             => Array.Empty<Rule>();
 
         public override string ToString()
@@ -131,14 +138,14 @@ namespace Ara3D.Parakeet
         public NamedRule(Rule r, string name) 
             => (Rule, Name) = (r, name);
         
-        protected override ParserState MatchImplementation(ParserState state) 
+        protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state);
         
         public override bool Equals(object obj) 
-            => obj is NamedRule other && other.Rule.Equals(Rule) && Name == other.Name;
+            => obj is NamedRule other && Equals(other.GetType(), typeof(NamedRule)) && other.Rule.Equals(Rule) && Name == other.Name;
         
-        public override int GetHashCode() 
-            => Hash(Rule, Name);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(NamedRule), Rule, Name);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -173,10 +180,60 @@ namespace Ara3D.Parakeet
             => Rule.Match(state);
         
         public override bool Equals(object obj) 
-            => obj is RecursiveRule other && other.RuleFunc == RuleFunc;
+        {
+            if (!(obj is RecursiveRule other))
+                return false;
+
+            // compare by delegate Method and Target reference
+            if (ReferenceEquals(RuleFunc.Method, other.RuleFunc.Method) 
+                && ReferenceEquals(RuleFunc.Target, other.RuleFunc.Target))
+                return true;
+
+            // compare by delegate Target type  
+            if (!Equals(RuleFunc.Target.GetType(), other.RuleFunc.Target.GetType()))
+                return false;
+
+            // at this point, all fast-path failed, we have to compare the
+            // delegate Method's IL code and Target's content.
+
+            // compare the delegate Method's IL code  
+            var il1 = RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            var il2 = other.RuleFunc.Method.GetMethodBody().GetILAsByteArray();
+            if (!il1.SequenceEqual(il2))
+                return false;
+
+            // compare the delegate Target content  
+            var fields = RuleFunc.Target.GetType().GetFields();
+            foreach (var field in fields)
+            {
+                var v1 = field.GetValue(RuleFunc.Target);
+                var v2 = field.GetValue(other.RuleFunc.Target);
+                if (!Equals(v1, v2))
+                    return false;
+            }
+
+            return true;
+        }
         
-        public override int GetHashCode() 
-            => Hash(RuleFunc);
+        protected override int GetHashCodeInternal() 
+        {
+            if (RuleFunc.Target is null)
+            {
+                return Hash(
+                    typeof(RecursiveRule),
+                    Hash(RuleFunc.Method.GetMethodBody().GetILAsByteArray().Cast<object>().ToArray())
+                );
+            }
+            else
+            {
+                var fields = RuleFunc.Target.GetType().GetFields();
+                return Hash(
+                    typeof(RecursiveRule),
+                    Hash(RuleFunc.Method.GetMethodBody().GetILAsByteArray().Cast<object>().ToArray()),
+                    Hash(fields.Select(f => f.GetValue(RuleFunc.Target)).ToArray())
+                );
+            }
+        }
     }
 
     /// <summary>
@@ -200,8 +257,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is StringRule smr && smr.Pattern == Pattern;
         
-        public override int GetHashCode() 
-            => Hash(Pattern);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(StringRule), Pattern);
     }
 
     /// <summary>
@@ -225,8 +282,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj)
             => obj is CaseInvariantStringRule smr && smr.Pattern == Pattern;
 
-        public override int GetHashCode()
-            => Hash(Pattern);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(CaseInvariantStringRule), Pattern);
     }
 
     /// <summary>
@@ -243,8 +300,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is AnyCharRule;
         
-        public override int GetHashCode() 
-            => nameof(AnyCharRule).GetHashCode();
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(AnyCharRule));
     }
 
     /// <summary>
@@ -265,7 +322,7 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj)
             => obj is CharRangeRule crr && crr.From == From && crr.To == To;
 
-        public override int GetHashCode()
+        protected override int GetHashCodeInternal()
             => Hash(From, To);
     }
 
@@ -291,24 +348,24 @@ namespace Ara3D.Parakeet
 
         public readonly bool[] Chars;
 
-        public CharSetRule(params char[] chars) 
-            : this(CharsToTable(chars)) 
+        public CharSetRule(params char[] chars)
+            : this(CharsToTable(chars))
         { }
 
-        public CharSetRule(bool[] chars) 
+        public CharSetRule(bool[] chars)
             => Chars = chars;
 
         protected override ParserState MatchImplementation(ParserState state)
-            => state.AtEnd() ? null 
-                : state.GetCurrent() < 128 && Chars[state.GetCurrent()] 
-                    ? state.Advance() 
+            => state.AtEnd() ? null
+                : state.GetCurrent() < 128 && Chars[state.GetCurrent()]
+                    ? state.Advance()
                     : null;
 
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
             => obj is CharSetRule csr && Chars.SequenceEqual(csr.Chars);
 
-        public override int GetHashCode() 
-            => Hash(nameof(CharSetRule));
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(CharSetRule), Hash(Chars.Cast<object>().ToArray()));
 
         public CharSetRule Union(CharSetRule other)
         {
@@ -385,8 +442,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is CharRule csr && Char == csr.Char;
 
-        public override int GetHashCode() 
-            => Hash(Char);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(CharRule), Char);
     }
 
     /// <summary>
@@ -404,8 +461,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is EndOfInputRule;
         
-        public override int GetHashCode() 
-            => nameof(EndOfInputRule).GetHashCode();
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(EndOfInputRule));
     }
 
     /// <summary>
@@ -415,18 +472,18 @@ namespace Ara3D.Parakeet
     /// </summary>
     public class NodeRule : NamedRule
     {
-        public NodeRule(Rule rule, string name) 
+        public NodeRule(Rule rule, string name)
             : base(rule, name)
         { }
 
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state.AddNode(Name, null))?.AddNode(Name, state);
 
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
             => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule);
 
-        public override int GetHashCode() 
-            => Hash(Rule, Name);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(NodeRule), Rule, Name);
     }
 
     /// <summary>
@@ -458,8 +515,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is ZeroOrMoreRule z && z.Rule.Equals(Rule);
         
-        public override int GetHashCode() 
-            => Hash (Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(ZeroOrMoreRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -495,8 +552,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is OneOrMoreRule o && o.Rule.Equals(Rule);
         
-        public override int GetHashCode() 
-            => Hash(Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(OneOrMoreRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -512,7 +569,7 @@ namespace Ara3D.Parakeet
         public readonly int Max;
         public readonly Rule Rule;
 
-        public CountedRule(Rule rule, int min, int max) 
+        public CountedRule(Rule rule, int min, int max)
             => (Rule, Min, Max) = (rule, min, max);
 
         protected override ParserState MatchImplementation(ParserState state)
@@ -543,10 +600,10 @@ namespace Ara3D.Parakeet
         }
 
         public override bool Equals(object obj) 
-            => obj is CountedRule o && o.Rule.Equals(Rule);
+            => obj is CountedRule o && Min == o.Min && Max == o.Max && o.Rule.Equals(Rule);
         
-        public override int GetHashCode() 
-            => Hash(Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(CountedRule), Min, Max, Rule);
 
         public override IReadOnlyList<Rule> Children 
             => new[] { Rule };
@@ -570,8 +627,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is OptionalRule opt && opt.Rule.Equals(Rule);
         
-        public override int GetHashCode() 
-            => Hash(Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(OptionalRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -632,8 +689,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is SequenceRule seq && Rules.SequenceEqual(seq.Rules);
         
-        public override int GetHashCode() 
-            => Hash(Rules);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(SequenceRule), Hash(Rules));
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
@@ -669,8 +726,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is ChoiceRule ch && Rules.SequenceEqual(ch.Rules);
         
-        public override int GetHashCode() 
-            => Hash(Rules);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(ChoiceRule), Hash(Rules));
 
         public override IReadOnlyList<Rule> Children => Rules;
     }
@@ -692,8 +749,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is AtRule at && Rule.Equals(at.Rule);
         
-        public override int GetHashCode() 
-            => Hash(Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(AtRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -715,8 +772,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is NotAtRule notAt && Rule.Equals(notAt.Rule);
         
-        public override int GetHashCode() 
-            => Hash(Rule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(NotAtRule), Rule);
 
         public override IReadOnlyList<Rule> Children => new[] { Rule };
     }
@@ -740,8 +797,8 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj) 
             => obj is OnFail rec && RecoveryRule.Equals(rec.RecoveryRule);
         
-        public override int GetHashCode() 
-            => Hash(RecoveryRule);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(OnFail), RecoveryRule);
     }
 
     /// <summary>
@@ -764,7 +821,7 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj)
             => obj is BooleanRule br && br.Value == Value;
 
-        public override int GetHashCode()
-            => Hash(Value);
+        protected override int GetHashCodeInternal()
+            => Hash(typeof(BooleanRule), Value);
     }
 }
