@@ -114,6 +114,7 @@ namespace Ara3D.Parakeet
         public override bool Equals(object obj)
             => throw new NotImplementedException();
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly Lazy<int> LazyHashCode;
         public override sealed int GetHashCode() => LazyHashCode.Value;
 
@@ -137,7 +138,7 @@ namespace Ara3D.Parakeet
         public NamedRule(Rule r, string name) 
             => (Rule, Name) = (r, name);
         
-        protected override ParserState MatchImplementation(ParserState state) 
+        protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state);
         
         public override bool Equals(object obj) 
@@ -471,14 +472,14 @@ namespace Ara3D.Parakeet
     /// </summary>
     public class NodeRule : NamedRule
     {
-        public NodeRule(Rule rule, string name) 
+        public NodeRule(Rule rule, string name)
             : base(rule, name)
         { }
 
         protected override ParserState MatchImplementation(ParserState state)
             => Rule.Match(state.AddNode(Name, null))?.AddNode(Name, state);
 
-        public override bool Equals(object obj) 
+        public override bool Equals(object obj)
             => obj is NodeRule nr && Name == nr.Name && Rule.Equals(nr.Rule);
 
         protected override int GetHashCodeInternal()
@@ -568,7 +569,7 @@ namespace Ara3D.Parakeet
         public readonly int Max;
         public readonly Rule Rule;
 
-        public CountedRule(Rule rule, int min, int max) 
+        public CountedRule(Rule rule, int min, int max)
             => (Rule, Min, Max) = (rule, min, max);
 
         protected override ParserState MatchImplementation(ParserState state)
