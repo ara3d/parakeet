@@ -1,12 +1,15 @@
 # Parakeet
 
-> **In this repo:** vendored under `toolchain/parakeet/` for Plato and IfcTypeGen. Not published
-> from `ara3d-sdk` (`IsPackable=false`; excluded from `build/packages.txt`).
+> **In this repo:** nested submodule at `submodules/Plato/parakeet/` in the
+> [Ara 3D studio](https://github.com/ara3d/studio) monorepo (canonical home:
+> [ara3d/parakeet](https://github.com/ara3d/parakeet)). Used by the Plato compiler and
+> IfcTypeGen. Not published from [ara3d-sdk](https://github.com/ara3d/ara3d-sdk)
+> (`IsPackable=false`; excluded from `build/packages.txt`).
 
 [![NuGet Version](https://img.shields.io/nuget/v/Ara3D.Parakeet)](https://www.nuget.org/packages/Ara3D.Parakeet)
 
 **Parakeet** is a text parsing library written in C#. Parakeet is the parsing library being used by the 
-[Plato programming language project](https://github.com/cdiggins/plato) to Parse both Plato and C# source code. 
+[Plato programming language project](https://github.com/cdiggins/plato) to parse both Plato and C# source code. 
 
 ![Parakeet1](https://user-images.githubusercontent.com/1759994/222930131-4edeb2ce-757f-4471-8905-8c24ecbc67f8.png)
 
@@ -78,12 +81,12 @@ in the relationship chain. This prevents stack overflow errors from occuring.
  
 ## Rules
 
-A Parakeet parser is defined by a class deriving from [`Rule`](https://github.com/cdiggins/parakeet/blob/master/Parakeet/Rule.cs). Some rules are defined by combining rules. 
+A Parakeet parser is defined by a class deriving from [`Rule`](https://github.com/ara3d/parakeet/blob/master/Parakeet/Rule.cs). Some rules are defined by combining rules. 
 Those combining rules are called "combinators". 
 
 Ever rule has a single function:
 
-```chsarp
+```csharp
 public ParserState Match(ParserState state, ParserCache cache)
 ```
 
@@ -101,7 +104,7 @@ Rules can be combined using a fluent syntax (aka method chaining).
 * `rule1.Or(rule2)` => `new Choice(rule1, rule2)`
 * `rule1.Except(rule2)` => `new Sequence(rule2.NotAt(), rule1)`
 * `rule.ZeroOrMore()` => `new ZeroOrMore(rule)`
-* `rule.OneOrMore()` => `new Sequence(rule, rule.ZeroOrMoree)`
+* `rule.OneOrMore()` => `new Sequence(rule, rule.ZeroOrMore())`
 * `char1.To(char2)` => `new CharRangeRule(char1, char2)`
 
 ### Overloaded Operators for Rules
@@ -166,14 +169,14 @@ is converted into a tree structure.
 
 A set of classes representing a strongly typed parse tree can be created automatically from a Parakeet grammar. This is called the 
 Concrete Syntax Tree. Concrete syntax trees are generated from the `Ara3D.Parakeet.Grammars` project using one of the 
-functions in the `Ara3d.Parakeet.Tests` project. 
+functions in the `Ara3D.Parakeet.Tests` project. 
 
 ## Examples of Using Parakeet 
 
 The following projects use Parakeet:
 
 * <https://github.com/ara3d/ara3d/tree/main/src/Ara3D.Parsing.Markdown>
-* <https://github.com/cdiggins/Plato>
+* <https://github.com/cdiggins/plato>
 
 ## History 
 
