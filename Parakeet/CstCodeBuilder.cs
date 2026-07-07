@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Ara3D.Utils;
 
 namespace Ara3D.Parakeet

@@ -10145,7 +10145,7 @@ ENTITY IfcTessellatedFaceSet
     (IfcPolygonalFaceSet
     ,IfcTriangulatedFaceSet))
  SUBTYPE OF (IfcTessellatedItem);
-	Coordinates : IfcCartesianPointList3D;
+	Coordinates : IfcCartesianPointList3D;	
  DERIVE
 	Dim : IfcDimensionCount := 3;
  INVERSE

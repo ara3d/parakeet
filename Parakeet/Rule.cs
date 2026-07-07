@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using Ara3D.Utils;
 
 #pragma warning disable CS0659 // class overrides Object.Equals(object o), but not Object.GetHashCode()
 

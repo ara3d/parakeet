@@ -65,7 +65,10 @@ namespace Ara3D.Parakeet
                     yield return node;
         }
 
+        // BUG: this has a surprising consequence. A zero-width node appearing just before this node,
+        // might be intended as a "previous" sibling, or as a "child" sibling. We have no way of telling the intent for sure. 
+        // This is because the nodes are added when they are completed. 
         public bool IsParentOf(ParserNode other)
-            => Start <= other.Start && End >= other.End;
+            => Start <= other.Start && End >= other.End ;
     }
 }

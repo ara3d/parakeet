@@ -1,5 +1,8 @@
 # Parakeet
 
+> **In this repo:** vendored under `toolchain/parakeet/` for Plato and IfcTypeGen. Not published
+> from `ara3d-sdk` (`IsPackable=false`; excluded from `build/packages.txt`).
+
 [![NuGet Version](https://img.shields.io/nuget/v/Ara3D.Parakeet)](https://www.nuget.org/packages/Ara3D.Parakeet)
 
 **Parakeet** is a text parsing library written in C#. Parakeet is the parsing library being used by the 

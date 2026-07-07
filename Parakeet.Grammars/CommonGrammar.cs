@@ -90,7 +90,10 @@ namespace Ara3D.Parakeet.Grammars
         public Rule Sym(string s) => Named(s + WS, $"Symbol('{s}')");
         public Rule Symbols(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Sym).ToArray());
         public Rule Keywords(params string[] strings) => Choice(strings.OrderByDescending(x => x.Length).Select(Keyword).ToArray());
-        
+
+        // Special keyword rule that does not eat whitespace
+        public Rule KeywordNoWS(string s) => Named(s + IdentifierChar.NotAt(), $"Keyword('{s}')");
+
         // Basic strings with escaping
         public Rule EscapedChar(char c) => $"\\{c}";
         public Rule EscapedDoubleQuote => EscapedChar('"');

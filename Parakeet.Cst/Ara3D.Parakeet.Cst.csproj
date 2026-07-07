@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>A library of strongly typed CST nodes and factories for select Parakeet grammars. Mostly auto-generated. </Description>
     <PackageProjectUrl>https://github.com/ara3d/parakeet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ara3d/parakeet</RepositoryUrl>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release'">
     <PackageReference Include="Ara3D.Parakeet" Version="*" />
