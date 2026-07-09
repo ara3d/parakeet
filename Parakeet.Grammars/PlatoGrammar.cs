@@ -161,7 +161,10 @@
         public Rule Constraint => Node(Identifier + TypeAnnotation);
         public Rule ConstraintList => Node(Optional(Keyword("where") + AdvanceOnFail + List(Constraint)));
 
-        public Rule Type => Node(Keyword("type") + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
+        // Optional affine-type modifier (roadmap Phase 6): "unique type List<T> { }".
+        public Rule UniqueKeyword => Node(Keyword("unique"));
+
+        public Rule Type => Node(UniqueKeyword.Optional() + Keyword("type") + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
                                  Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail));
 
         // Both "concept" (the original keyword) and "interface" are accepted.
