@@ -62,6 +62,16 @@
         public Rule FunctionArg => Node(FunctionArgKeyword.ZeroOrMore() + Expression);
         public Rule FunctionArgs => Node(ParenthesizedList(FunctionArg));
 
+        // Sum-type pattern matching (an EXPRESSION form, usable anywhere an expression is).
+        // "match (scrutinee) { Case(a, b) => expr; Bare => expr; }". Binders are positional
+        // identifiers bound to the case's fields in declaration order; a no-payload case arm omits
+        // the parentheses. Must precede Identifier in LeafExpression so "match (x) { ... }" is not
+        // parsed as an invocation of a function named "match".
+        public Rule MatchArmBinders => Node(ParenthesizedList(Identifier));
+        public Rule MatchArm => Node(Identifier + MatchArmBinders.Optional() + Sym("=>") + AdvanceOnFail + Expression + EOS);
+        public Rule MatchExpression => Node(Keyword("match") + AdvanceOnFail + ParenthesizedExpression +
+                                            Braced(MatchArm.ZeroOrMore(), AdvanceOnFail));
+
         public Rule LeafExpression => Node(
             LambdaExpr
             | CastExpression
@@ -74,6 +84,7 @@
             | Default
             | NewOperation
             | StringInterpolation
+            | MatchExpression
             | Identifier
         );
 
@@ -164,8 +175,17 @@
         // Optional affine-type modifier (roadmap Phase 6): "unique type List<T> { }".
         public Rule UniqueKeyword => Node(Keyword("unique"));
 
+        // Sum-type (tagged-union) body: an "=" form used as an alternative to the braced field body.
+        //   type FillRule = NonZero | EvenOdd;
+        //   type PathSegment2D implements Value = Move(EndPoint: Point2D) | ... | Close;
+        // A case is an Identifier optionally followed by a parenthesized "name: Type" list (same shape
+        // as FunctionParameter). A no-payload case has no parentheses. At least one case is required
+        // (an empty list "type X = ;" is rejected); cases are separated by "|" and terminated by ";".
+        public Rule CaseDeclaration => Node(Identifier + FunctionParameterList.Optional());
+        public Rule SumTypeBody => Node(Sym("=") + AdvanceOnFail + CaseDeclaration + (Sym("|") + CaseDeclaration).ZeroOrMore() + EOS);
+
         public Rule Type => Node(UniqueKeyword.Optional() + Keyword("type") + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
-                                 Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail));
+                                 (SumTypeBody | Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail)));
 
         // Both "concept" (the original keyword) and "interface" are accepted.
         public Rule Concept => Node((Keyword("concept") | Keyword("interface")) + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + InheritsList +
