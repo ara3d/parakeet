@@ -184,7 +184,14 @@
         public Rule CaseDeclaration => Node(Identifier + FunctionParameterList.Optional());
         public Rule SumTypeBody => Node(Sym("=") + AdvanceOnFail + CaseDeclaration + (Sym("|") + CaseDeclaration).ZeroOrMore() + EOS);
 
-        public Rule Type => Node(UniqueKeyword.Optional() + Keyword("type") + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
+        // Primitive-type declaration keyword (plato-367): "primitive Number implements Real { }".
+        // A primitive is a type the compiler assumes to exist by name — its representation comes from
+        // the runtime, not from this declaration. Syntactically identical to "type" in every other
+        // respect; the keyword only records the fact, so the language is honest about which types
+        // cannot be defined in Plato itself.
+        public Rule PrimitiveKeyword => Node(Keyword("primitive"));
+
+        public Rule Type => Node(UniqueKeyword.Optional() + (PrimitiveKeyword | Keyword("type")) + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
                                  (SumTypeBody | Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail)));
 
         // Both "concept" (the original keyword) and "interface" are accepted.
