@@ -169,7 +169,11 @@
 
         public Rule ImplementsList => Node(Optional(Keyword("implements") + AdvanceOnFail + List(TypeExpr)));
         public Rule InheritsList => Node(Optional(Keyword("inherits") + AdvanceOnFail + List(TypeExpr)));
-        public Rule Constraint => Node(Identifier + TypeAnnotation);
+        // A bound names the variable it constrains exactly as the DECLARATION SPELLS IT: a type or
+        // concept parameter is bare ("where T: Additive"), a library function's own signature
+        // variable keeps its "$" ("where $T: Interpolatable"), because that is how the signature
+        // itself writes it. One rule serves both so the clause reads identically wherever it sits.
+        public Rule Constraint => Node((TypeVar | Identifier) + TypeAnnotation);
         public Rule ConstraintList => Node(Optional(Keyword("where") + AdvanceOnFail + List(Constraint)));
 
         // Optional affine-type modifier (roadmap Phase 6): "unique type List<T> { }".
@@ -191,7 +195,10 @@
         // cannot be defined in Plato itself.
         public Rule PrimitiveKeyword => Node(Keyword("primitive"));
 
-        public Rule Type => Node(UniqueKeyword.Optional() + (PrimitiveKeyword | Keyword("type")) + AdvanceOnFail + Identifier + TypeParameterList + ImplementsList +
+        // The "where" clause sits between the type parameters and "implements", the same position it
+        // occupies on Concept (TypeParameterList + ConstraintList + InheritsList), so that both kinds of
+        // declaration read identically: "<params> where <bounds> <base-list> { ... }".
+        public Rule Type => Node(UniqueKeyword.Optional() + (PrimitiveKeyword | Keyword("type")) + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + ImplementsList +
                                  (SumTypeBody | Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail)));
 
         // Both "concept" (the original keyword) and "interface" are accepted.
@@ -209,8 +216,14 @@
         public Rule FunctionBody => Node(ExpressionBody | CompoundStatement | EOS);
         public Rule TypeAnnotation => Node(Sym(":") + AdvanceOnFail + TypeExpr);
 
+        // The "where" clause sits after the return type and before the body — the last thing in the
+        // signature, exactly as it is the last thing before the body on Type and Concept
+        // ("<params> where <bounds> <base-list> { ... }"). Everything after a function's return type
+        // IS its body, so this is the only slot that keeps the reading "signature, then bounds on
+        // that signature, then body":
+        //     DeCasteljau(xs: Array<$T>, t: Number): $T where $T: Interpolatable => ...;
         public Rule MethodDeclaration =>
-            Node(Identifier + FunctionParameterList + AdvanceOnFail + TypeAnnotation + FunctionBody);
+            Node(Identifier + FunctionParameterList + AdvanceOnFail + TypeAnnotation + ConstraintList + FunctionBody);
 
         public Rule FieldDeclaration => Node(Identifier + Sym(":") + TypeExpr + EOS);
 
