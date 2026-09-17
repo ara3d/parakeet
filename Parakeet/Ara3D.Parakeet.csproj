@@ -1,10 +1,18 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
+    <!--
+      Ara3D.Utils comes from a sibling ara3d-sdk checkout when this repo sits inside
+      the studio monorepo (plato/parakeet beside ara3d-sdk). Anywhere else it is the
+      NuGet package; a host that builds the SDK from source can redirect that reference.
+    -->
+    <Ara3DUtilsProject Condition="'$(Ara3DUtilsProject)' == '' And Exists('..\..\..\..\ara3d-sdk\src\Ara3D.Utils\Ara3D.Utils.csproj')">..\..\..\..\ara3d-sdk\src\Ara3D.Utils\Ara3D.Utils.csproj</Ara3DUtilsProject>
+    <Ara3DSdkVersion Condition="'$(Ara3DSdkVersion)' == ''">1.6.1</Ara3DSdkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\ara3d-sdk\src\Ara3D.Utils\Ara3D.Utils.csproj" />
+    <ProjectReference Include="$(Ara3DUtilsProject)" Condition="'$(Ara3DUtilsProject)' != ''" />
+    <PackageReference Include="Ara3D.Utils" Version="$(Ara3DSdkVersion)" Condition="'$(Ara3DUtilsProject)' == ''" />
   </ItemGroup>
 </Project>
