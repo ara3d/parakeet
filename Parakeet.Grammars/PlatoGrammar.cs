@@ -168,6 +168,9 @@
         public Rule TypeParameterList => Node(AngleBracketedList(TypeParameter).Optional());
 
         public Rule ImplementsList => Node(Optional(Keyword("implements") + AdvanceOnFail + List(TypeExpr)));
+        // The only functions whose bodies may construct the type (TKT-444): "sealed by CheckMesh, Merge".
+        // Plato has no visibility, so this is how a proof type says which functions can build it.
+        public Rule SealedList => Node(Optional(Keyword("sealed") + AdvanceOnFail + Keyword("by") + List(Identifier)));
         public Rule InheritsList => Node(Optional(Keyword("inherits") + AdvanceOnFail + List(TypeExpr)));
         // A bound names the variable it constrains exactly as the DECLARATION SPELLS IT: a type or
         // concept parameter is bare ("where T: Additive"), a library function's own signature
@@ -198,7 +201,7 @@
         // The "where" clause sits between the type parameters and "implements", the same position it
         // occupies on Concept (TypeParameterList + ConstraintList + InheritsList), so that both kinds of
         // declaration read identically: "<params> where <bounds> <base-list> { ... }".
-        public Rule Type => Node(UniqueKeyword.Optional() + (PrimitiveKeyword | Keyword("type")) + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + ImplementsList +
+        public Rule Type => Node(UniqueKeyword.Optional() + (PrimitiveKeyword | Keyword("type")) + AdvanceOnFail + Identifier + TypeParameterList + ConstraintList + ImplementsList + SealedList +
                                  (SumTypeBody | Braced(FieldDeclaration.ZeroOrMore(), AdvanceOnFail)));
 
         // Both "concept" (the original keyword) and "interface" are accepted.
