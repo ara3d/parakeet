@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Ara3D.Utils;
 
 namespace Ara3D.Parakeet
@@ -12,6 +12,7 @@ namespace Ara3D.Parakeet
         public readonly int Position;
         public readonly ParserNode Node;
         public readonly ParserError LastError;
+        internal readonly ParserFailure Failure;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserRange GetRange()
@@ -26,15 +27,25 @@ namespace Ara3D.Parakeet
             => Input[Position];
 
         public ParserState(ParserInput input, int position = 0, ParserNode node = null, ParserError error = null)
-            => (Input, Position, Node, LastError) = (input, position, node, error);
+            : this(input, position, node, error, null)
+        { }
+
+        internal ParserState(ParserInput input, int position, ParserNode node, ParserError error, ParserFailure failure)
+            => (Input, Position, Node, LastError, Failure) = (input, position, node, error, failure);
+
+        internal ParserState WithFailure(ParserFailure failure)
+            => ReferenceEquals(Failure, failure) ? this : new ParserState(Input, Position, Node, LastError, failure);
+
+        internal void RecordFailure()
+            => Failure?.Record(Position);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance(int amount)
-            => new ParserState(Input, Position + amount, Node, LastError);
+            => new ParserState(Input, Position + amount, Node, LastError, Failure);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState Advance()
-            => new ParserState(Input, Position + 1, Node, LastError);
+            => new ParserState(Input, Position + 1, Node, LastError, Failure);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ParserState AdvanceIf(char c)
@@ -67,10 +78,10 @@ namespace Ara3D.Parakeet
             => Input.GetIndicator(Position);
 
         public ParserState ClearNodes()
-            => new ParserState(Input, Position);
+            => new ParserState(Input, Position, null, null, Failure);
 
         public ParserState WithError(ParserError error)
-            => new ParserState(Input, Position, Node, error);
+            => new ParserState(Input, Position, Node, error, Failure);
 
         public int CharsLeft
             => Input.Length - Position;
@@ -110,7 +121,7 @@ namespace Ara3D.Parakeet
             => (state != null) && Position == state.Position;
         
         public ParserState AddNode(string name, ParserState prev)
-            => new ParserState(Input, Position, new ParserNode(name, ParserRange.Create(prev, this), Node), LastError);
+            => new ParserState(Input, Position, new ParserNode(name, ParserRange.Create(prev, this), Node), LastError, Failure);
 
         public override int GetHashCode()
             => Position.GetHashCode();

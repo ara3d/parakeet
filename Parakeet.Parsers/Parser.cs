@@ -1,4 +1,4 @@
-﻿    using System;
+    using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ara3D.Logging;
@@ -114,6 +114,20 @@ namespace Ara3D.Parsing
             ErrorMessages.Add(msg);
         }
 
+        private void LogFailureLocation()
+        {
+            try
+            {
+                var failedAt = ParseRule.FurthestFailurePosition(Input);
+                var position = failedAt >= 0 ? failedAt : ParseResult?.Position ?? 0;
+                LogError($"Parse error at line {Input.GetLineIndex(position) + 1}, column {Input.GetColumn(position) + 1} (furthest grammar failure)");
+            }
+            catch (Exception error)
+            {
+                LogError($"Failure location unavailable: {error.Message}");
+            }
+        }
+
         //---
         // The main constructor 
 
@@ -178,6 +192,8 @@ namespace Ara3D.Parsing
                     LogInfo($"{ParserNodes.Count} parse nodes");
                 }
 
+                if (!succeeded)
+                    LogFailureLocation();
                 Succeeded = succeeded;
 
                 if (Succeeded)

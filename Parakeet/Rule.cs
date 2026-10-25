@@ -35,11 +35,16 @@ namespace Ara3D.Parakeet
             {
                 Debug.WriteLine($"Starting parse - {this.GetName()} {state}");
                 var r = MatchImplementation(state);
+                if (r == null)
+                    state.RecordFailure();
                 var result = r?.ToString() ?? "FAILED";
                 Debug.WriteLine($"Finished parse - {this.GetName()} {state} - {result}");
                 return r;
             }
-            return MatchImplementation(state);
+            var matched = MatchImplementation(state);
+            if (matched == null)
+                state.RecordFailure();
+            return matched;
         }
 
         public static SequenceRule operator +(Rule left, Rule right)
@@ -675,7 +680,7 @@ namespace Ara3D.Parakeet
                             var error = new ParserError(this, state, rule, prevState, prevState.LastError);
                             prevState = prevState.WithError(error);
                             var recovery = onFail.RecoveryRule;
-                            var result = recovery.Match(prevState);
+                            var result = recovery.Match(prevState.WithFailure(null))?.WithFailure(prevState.Failure);
                             return result;
                         }
                         return null;
@@ -749,7 +754,7 @@ namespace Ara3D.Parakeet
             => Rule = rule;
         
         protected override ParserState MatchImplementation(ParserState state)
-            => Rule.Match(state) != null ? state : null;
+            => Rule.Match(state.WithFailure(null)) != null ? state : null;
 
         public override bool Equals(object obj) 
             => obj is AtRule at && Rule.Equals(at.Rule);
@@ -772,7 +777,7 @@ namespace Ara3D.Parakeet
             => (Rule) = (rule);
         
         protected override ParserState MatchImplementation(ParserState state)
-            => Rule.Match(state) == null ? state : null;
+            => Rule.Match(state.WithFailure(null)) == null ? state : null;
 
         public override bool Equals(object obj) 
             => obj is NotAtRule notAt && Rule.Equals(notAt.Rule);
